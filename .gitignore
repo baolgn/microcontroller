@@ -1,0 +1,20 @@
+# keep generated builds and local tools outside source control.
+__pycache__/
+*.py[cod]
+/build/
+/.release-runs/
+/tools/
+
+# exclude simulation outputs and generated evidence.
+*.vcd
+*.fst
+core
+core.*
+**/evidence/
+
+# exclude local archives and editor state.
+*.tar.gz
+*.zip
+.DS_Store
+.vscode/
+.idea/
