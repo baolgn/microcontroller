@@ -16,6 +16,8 @@ The [local fabric](../rtl/cpu5_local_fabric.sv) supplies synchronous memory and 
 
 The timer/interrupt register decoder in [cpu5_irq_platform.sv](../rtl/cpu5_irq_platform.sv) is authoritative for individual offsets, permissions and side effects. It exposes split `mtime` and `mtimecmp`, machine software interrupt state, external pending/enables, counted event acknowledgment and overflow status. Undefined addresses and unsupported access shapes return errors; reserving a window does not make every offset legal.
 
+Each clock edge with synchronous `notification_i` high supplies one notification. `NOTIFICATION_CAPACITY` bounds the counter, `notification_count_o` reports it, and `overflow_o` stays set after an overflow until platform reset. Writing bit zero at `0x40001020` acknowledges one notification. A full counter accepts a simultaneous arrival and acknowledgment without overflow. Acknowledging an empty counter faults; a coincident arrival is still counted.
+
 ## Ownership and ordering
 
 A request becomes owned when valid is first presented. Its address, size, data, byte enables and tag remain stable until acceptance. The response belongs to that same owner and remains stable under response backpressure. Request acceptance delay and response delay are independent simulation inputs. A redirect does not cancel an already offered transaction.

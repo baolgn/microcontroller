@@ -4,7 +4,7 @@ This guide supports a learning project in CPU architecture, RTL design and verif
 
 ## Installation
 
-Use Python 3.11 or newer. Simulation additionally needs Verilator, a C++ compiler and Make. Synthesis, formal verification, firmware and debugger workflows have separate dependencies. Run commands from the repository root and use checkout, tool and build paths without whitespace.
+Use Python 3.11 or newer. Simulation additionally needs Verilator, a C++ compiler and Make. Synthesis, formal verification, firmware and debugger workflows have separate dependencies. Run commands from the repository root. Use checkout, tool and build paths containing only ASCII letters, digits, `/`, `.`, `_` and `-`; the acceptance runner enforces this alphabet, including the resolved tool paths.
 
 Shell blocks marked `sh` run in Linux or macOS. On Windows, run those blocks inside Ubuntu under WSL; `powershell` blocks run in PowerShell. A tool's installed version is not proof that a test passed with it.
 
@@ -70,7 +70,7 @@ cd microcontroller
 uname -m
 ```
 
-For native Windows source access, install [Git for Windows](https://git-scm.com/install/windows) and Python. Native Python can inspect scripts and run their `--help` options, but it does not replace the Linux compiler, simulator, FPGA toolchain or debugger services. The Linux-oriented integration runners require the WSL environment described above. USB programming and graphical waveform inspection also require device/display access and separate validation.
+For native Windows source access, install [Git for Windows](https://git-scm.com/install/windows) and Python. Native Python is useful for source inspection, but the documented build and integration commands run in the Linux environment. Windows Python does not provide the Linux compiler, simulator, FPGA toolchain or debugger services. The Linux-oriented integration runners require the WSL environment described above. USB programming and graphical waveform inspection also require device/display access and separate validation.
 
 ### macOS Terminal
 

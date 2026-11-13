@@ -113,7 +113,7 @@ def main():
                'limits': ['two-state simulation; no formal proof',
                           'caller supplies synchronous events and one pulse per accepted physical transaction',
                           'no CPU, CDC or bus-response bridge is implemented here',
-                          'overflow explicitly reports an unretained notification and requires hardware stop',
+                          'overflow explicitly reports an unretained notification through its sticky MMIO flag',
                           'generic synthesis, when requested, establishes no FPGA timing or physical qualification']}
     (build / 'summary.json').write_text(json.dumps(summary, indent=2, sort_keys=True) + '\n')
     print('IRQ_PLATFORM_QUALIFICATION_PASS seeds=3 capacities=3 detectors=7 structure=' + str(bool(args.yosys)).lower())

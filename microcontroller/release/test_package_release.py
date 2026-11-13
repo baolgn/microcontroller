@@ -56,15 +56,28 @@ def main():
         (root / 'microcontroller/__pycache__').mkdir(); (root / 'microcontroller/__pycache__/secret.pyc').write_bytes(b'cache')
         (root / 'microcontroller/verification/evidence/fixed/__pycache__').mkdir(parents=True)
         (root / 'microcontroller/verification/evidence/fixed/__pycache__/sealed.pyc').write_bytes(b'retained historical bytes')
+        # repository entry points accompany component sources without admitting private files.
+        for name in package.ROOT_FILES:
+            (root / name).write_text('entry point ' + name + '\n')
+        (root / '.env').write_text('fixture private data\n')
         first = package.build(root, base / 'first'); second = package.build(root, base / 'second')
         require(first['sha256'] == second['sha256'], 'archive is not deterministic')
         results.append({'name': 'identical-input-identical-archive', 'passed': True})
         archive = base / 'first' / first['archive']; extracted = base / 'extracted'
-        check = package.verify(archive, extracted); require(check['files'] == 4, 'cache or source inventory mismatch')
+        check = package.verify(archive, extracted); require(check['files'] == 7, 'cache or source inventory mismatch')
         require(package.digest(extracted / package.PREFIX / 'microcontroller/rtl/core.sv') == package.digest(root / 'microcontroller/rtl/core.sv'), 'extraction differs')
         require((extracted / package.PREFIX / 'microcontroller/run.sh').stat().st_mode & 0o777 == 0o755, 'wrapper mode differs')
         require((extracted / package.PREFIX / 'microcontroller/verification/evidence/fixed/__pycache__/sealed.pyc').read_bytes() == b'retained historical bytes', 'historical seal input omitted')
         results.append({'name': 'roundtrip-bytes-modes-cache-exclusion', 'passed': True})
+        # all entry-point bytes survive extraction and unrelated root files remain excluded.
+        for name in package.ROOT_FILES:
+            require((extracted / package.PREFIX / name).read_bytes() == (root / name).read_bytes(), 'root file missing or changed')
+        require(not (extracted / package.PREFIX / '.env').exists(), 'private root file packaged')
+        results.append({'name': 'root-entry-points-and-private-file-exclusion', 'passed': True})
+        original_readme = (root / 'README.md').read_bytes(); (root / 'README.md').unlink()
+        (root / 'README.md').symlink_to(base / 'first' / first['archive'])
+        rejected('root-file-symlink', lambda: package.inventory(root))
+        (root / 'README.md').unlink(); (root / 'README.md').write_bytes(original_readme)
         rejected('existing-build-output', lambda: package.build(root, base / 'first'))
         rejected('recursive-output', lambda: package.build(root, root / 'docs/output'))
         rejected('existing-extraction', lambda: package.verify(archive, extracted))
@@ -126,6 +139,7 @@ def main():
         rejected('self-listed-metadata-hash', lambda: package.verify(damaged, None))
         # direct inventory fixtures check malformed type and canonical-path boundaries.
         for name, key, row in [
+                ('inventory-unlisted-root', '.env', {'sha256': '0' * 64, 'bytes': 1, 'mode': 0o644}),
                 ('inventory-parent', 'docs/../escape', {'sha256': '0' * 64, 'bytes': 1, 'mode': 0o644}),
                 ('inventory-alias', 'docs//file', {'sha256': '0' * 64, 'bytes': 1, 'mode': 0o644}),
                 ('inventory-boolean-size', 'docs/file', {'sha256': '0' * 64, 'bytes': True, 'mode': 0o644}),

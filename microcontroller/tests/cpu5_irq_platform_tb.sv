@@ -5,21 +5,21 @@ module cpu5_irq_platform_tb;
   logic [1:0] size_i = 2;
   logic [3:0] wstrb_i = 0;
   logic [31:1] event_set_i = 0;
-  logic block_ready_i = 0;
-  logic [2:0] error_o, msip_o, overflow_o, stop_o;
+  logic notification_i = 0;
+  logic [2:0] error_o, msip_o, overflow_o;
   logic [31:0] rdata_o [0:2], mip_levels_o [0:2];
   logic [63:0] mtime_o [0:2], mtimecmp_o [0:2];
-  logic [31:0] ext_pending_o [0:2], ext_enable_o [0:2], block_count_o [0:2];
+  logic [31:0] ext_pending_o [0:2], ext_enable_o [0:2], notification_count_o [0:2];
 
   /* minimum, small and intended capacities share the same independent command stream. */
   for (genvar profile = 0; profile < 3; profile++) begin : platforms
-    cpu5_irq_platform #(.BLOCK_CAPACITY(profile == 0 ? 1 : profile == 1 ? 4 : 64)) dut (
+    cpu5_irq_platform #(.NOTIFICATION_CAPACITY(profile == 0 ? 1 : profile == 1 ? 4 : 64)) dut (
       .clk_i, .system_reset_i, .command_i, .write_i, .addr_i, .wdata_i, .size_i, .wstrb_i,
-      .event_set_i, .block_ready_i, .error_o(error_o[profile]), .rdata_o(rdata_o[profile]),
+      .event_set_i, .notification_i, .error_o(error_o[profile]), .rdata_o(rdata_o[profile]),
       .mip_levels_o(mip_levels_o[profile]), .mtime_o(mtime_o[profile]),
       .mtimecmp_o(mtimecmp_o[profile]), .msip_o(msip_o[profile]),
       .ext_pending_o(ext_pending_o[profile]), .ext_enable_o(ext_enable_o[profile]),
-      .block_count_o(block_count_o[profile]), .overflow_o(overflow_o[profile]), .stop_o(stop_o[profile])
+      .notification_count_o(notification_count_o[profile]), .overflow_o(overflow_o[profile])
     );
   end
 
@@ -42,9 +42,9 @@ module cpu5_irq_platform_tb;
   function automatic void check(input bit condition, input string reason, input int profile);
     checks++;
     /* an intended corruption must fail the ordinary comparator. */
-    if (!condition) $fatal(1, "edge=%0d profile=%0d seed=%0d reset=%b command=%b write=%b addr=%08x data=%08x size=%0d strobe=%x events=%08x block=%b: %s",
+    if (!condition) $fatal(1, "edge=%0d profile=%0d seed=%0d reset=%b command=%b write=%b addr=%08x data=%08x size=%0d strobe=%x events=%08x notification=%b: %s",
         edges, profile, seed, system_reset_i, command_i, write_i, addr_i, wdata_i,
-        size_i, wstrb_i, event_set_i, block_ready_i, reason);
+        size_i, wstrb_i, event_set_i, notification_i, reason);
   endfunction
 
   /* capacities are separately declared test expectations. */
@@ -126,8 +126,8 @@ module cpu5_irq_platform_tb;
       model[profile].events = (old_events & ~clear_mask) | event_set_i;
       /* consume one pre-edge notification before admitting a simultaneous arrival. */
       if (pop) model[profile].count = old_count - 1;
-      /* new blocks are added after any accepted acknowledgement. */
-      if (block_ready_i) begin
+      /* new notifications are added after any accepted acknowledgement. */
+      if (notification_i) begin
         /* a full ledger reports its inability to retain an additional notification. */
         if (model[profile].count == capacity(profile)) begin
           model[profile].overflow = 1;
@@ -155,10 +155,10 @@ module cpu5_irq_platform_tb;
       /* simultaneous assertions must remain pending after a clear. */
       if (|(clear_mask & event_set_i)) set_clear_collisions++;
       /* a rejected empty acknowledgement must retain the new arrival. */
-      if (command_i && write_i && index == 8 && wdata_i[0] && old_count == 0 && block_ready_i)
+      if (command_i && write_i && index == 8 && wdata_i[0] && old_count == 0 && notification_i)
         empty_ack_arrivals++;
       /* a valid pop provides capacity even when the queue started full. */
-      if (pop && old_count == capacity(profile) && block_ready_i) full_ack_arrivals++;
+      if (pop && old_count == capacity(profile) && notification_i) full_ack_arrivals++;
       /* the visible queue and sticky events survive platform delivery masking. */
       if (pending(profile) != 0 && model[profile].enables == 0) masked_pending_edges++;
       /* count actual unsigned timer wrap edges rather than a near-boundary value. */
@@ -209,7 +209,7 @@ module cpu5_irq_platform_tb;
     for (int profile = 0; profile < 3; profile++) begin
       observed_time = mtime_o[profile];
       observed_pending = ext_pending_o[profile];
-      observed_count = block_count_o[profile];
+      observed_count = notification_count_o[profile];
       observed_irq = mip_levels_o[profile];
       observed_overflow = overflow_o[profile];
       expected_irq = 0;
@@ -227,7 +227,7 @@ module cpu5_irq_platform_tb;
         mutation_applied = 1;
       end
       /* losing a counted notification cannot be hidden behind a single external IRQ bit. */
-      if ($test$plusargs("mutate_count") && !mutation_applied && block_ready_i && !system_reset_i) begin
+      if ($test$plusargs("mutate_count") && !mutation_applied && notification_i && !system_reset_i) begin
         observed_count ^= 1;
         mutation_applied = 1;
       end
@@ -247,7 +247,7 @@ module cpu5_irq_platform_tb;
       check(observed_pending == pending(profile), "external pending mismatch", profile);
       check(ext_enable_o[profile] == model[profile].enables, "external enables mismatch", profile);
       check(observed_count == model[profile].count, "notification count mismatch", profile);
-      check(observed_overflow == model[profile].overflow && stop_o[profile] == model[profile].overflow,
+      check(observed_overflow == model[profile].overflow,
           "overflow containment mismatch", profile);
       check(observed_irq == expected_irq, "interrupt level mismatch", profile);
     end
@@ -257,7 +257,7 @@ module cpu5_irq_platform_tb;
   /* inactive commands preserve platform state except the normal timer and source evolution. */
   task automatic defaults();
     system_reset_i = 0; command_i = 0; write_i = 0; addr_i = 0; wdata_i = 0;
-    size_i = 2; wstrb_i = 0; event_set_i = 0; block_ready_i = 0;
+    size_i = 2; wstrb_i = 0; event_set_i = 0; notification_i = 0;
   endtask
 
   /* explicit reset is a platform event, never an alias for CPU hart reset. */
@@ -306,16 +306,16 @@ module cpu5_irq_platform_tb;
     reset_platform();
     /* empty acknowledgement is rejected while a simultaneous arrival remains queued. */
     defaults(); command_i = 1; write_i = 1; addr_i = 32'h40001020;
-    wdata_i = 1; wstrb_i = 15; block_ready_i = 1; step();
+    wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
     /* repeated pulses fill every capacity without depending on the delivery mask. */
     for (int event_index = 0; event_index < 64; event_index++) begin
-      defaults(); block_ready_i = 1; step();
+      defaults(); notification_i = 1; step();
     end
     command(1, 24, 1);
     /* full queue pop plus push conserves notifications and does not create a new overflow. */
     defaults(); command_i = 1; write_i = 1; addr_i = 32'h40001020;
-    wdata_i = 1; wstrb_i = 15; block_ready_i = 1; step();
-    /* a pending-word write cannot acknowledge the counted block source. */
+    wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
+    /* a pending-word write cannot acknowledge the counted notification source. */
     command(1, 20, 1); command(0, 28); command(0, 36);
     /* accepted acknowledgements consume one notification rather than clearing the whole queue. */
     for (int event_index = 0; event_index < 66; event_index++) command(1, 32, 1);
@@ -325,11 +325,11 @@ module cpu5_irq_platform_tb;
       reset_platform();
       /* fill the selected profile exactly, retaining a clean overflow flag. */
       for (int event_index = 0; event_index < int'(capacity(profile)); event_index++) begin
-        defaults(); block_ready_i = 1; step();
+        defaults(); notification_i = 1; step();
       end
       check(!overflow_o[profile], "clean full queue unexpectedly overflowed", profile);
       defaults(); command_i = 1; write_i = 1; addr_i = 32'h40001020;
-      wdata_i = 1; wstrb_i = 15; block_ready_i = 1; step();
+      wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
       check(!overflow_o[profile], "full pop/push newly overflowed", profile);
     end
     /* decoded reserved words and nearby aliases reject in both directions. */
@@ -348,13 +348,13 @@ module cpu5_irq_platform_tb;
       end
     end
     /* this idle interval represents an always-clocked platform while the CPU is inactive. */
-    defaults(); event_set_i = '1; block_ready_i = 1; step();
+    defaults(); event_set_i = '1; notification_i = 1; step();
     defaults();
     /* neither waiting software nor absent MMIO traffic may stop the timer. */
     repeat (128) step();
     /* reset dominates coincident source sets, commands, acknowledgements and ticks. */
     defaults(); system_reset_i = 1; command_i = 1; write_i = 1;
-    addr_i = 32'h40001018; wdata_i = '1; wstrb_i = 15; event_set_i = '1; block_ready_i = 1; step();
+    addr_i = 32'h40001018; wdata_i = '1; wstrb_i = 15; event_set_i = '1; notification_i = 1; step();
     defaults(); step();
     /* random full-width operands and event/control collisions supplement directed cases. */
     for (int vector = 0; vector < 12000; vector++) begin
@@ -369,7 +369,7 @@ module cpu5_irq_platform_tb;
       /* some random accesses use canonical width/strobes to reach actual register effects. */
       if (draw[19]) begin size_i = 2; wstrb_i = write_i ? 15 : 0; end
       draw = random_word(); event_set_i = draw[31:1];
-      draw = random_word(); block_ready_i = draw[31]; step();
+      draw = random_word(); notification_i = draw[31]; step();
     end
     check(address_bins == 'hffff && direction_bins == 3 && width_bins == 15, "random coverage incomplete", 0);
     check(timer_overrides > 10 && set_clear_collisions >= 93 && empty_ack_arrivals >= 3 &&

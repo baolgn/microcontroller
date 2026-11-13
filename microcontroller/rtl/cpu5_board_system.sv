@@ -42,7 +42,7 @@ module cpu5_board_system #(
       .FORWARDING(FORWARDING)) soc (
     .clk_i, .reset_i, .isolated_i(reset_i), .permit_i(!uart_overflow_o), .hold_i(5'b0),
     .i_accept_delay_i(4'b0), .i_response_delay_i(4'd1),
-    .d_accept_delay_i(4'b0), .d_response_delay_i(4'd1), .event_set_i(events), .block_ready_i(1'b0),
+    .d_accept_delay_i(4'b0), .d_response_delay_i(4'd1), .event_set_i(events), .notification_i(1'b0),
     .i_req_valid_o(iv), .i_req_ready_o(ir), .i_req_addr_o(ia), .i_req_tag_o(it), .i_req_parcels_o(ip),
     .i_rsp_valid_o(rv), .i_rsp_ready_o(rr), .i_rsp_tag_o(rt), .i_rsp_data_o(rd),
     .i_rsp_parcels_o(rp), .i_rsp_fault_o(rf), .i_rsp_status_o(rs),

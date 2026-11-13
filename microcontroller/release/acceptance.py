@@ -21,6 +21,7 @@ TOOLS = Path('/tmp/cpu5-control-tools-20260301/oss-cad-suite')
 ARCH = Path('/tmp/cpu5-arch-tools')
 PREFIX = str(ARCH / 'gcc/xpack-riscv-none-elf-gcc-15.2.0-1/bin/riscv-none-elf-')
 GDB = Path('/tmp/cpu5-debug-gdb/usr/bin/gdb-multiarch')
+ROOT_FILES = ('README.md', 'CHANGELOG.md', '.gitignore')
 SUITES = {
     'smoke': ['firmware', 'image', 'host', 'boot'],
     'units': ['datapath', 'regfile', 'arithmetic', 'forward', 'muldiv', 'decompress', 'fetch', 'fetch-buffer'],
@@ -128,7 +129,7 @@ def plan(output, suite, tools=TOOLS, arch=ARCH, prefix=PREFIX, gdb=GDB):
     return {'schema': 'CPU5-RELEASE-ACCEPTANCE-1', 'suite': suite, 'output': str(output),
             'workspace': str(workspace), 'hardware_operations': False, 'full_release_pass': False,
             'temporary_storage': str(output / 'temporary'),
-            'child_environment_overrides': {'TMPDIR': '<new short private /tmp/d5-*/t alias>'},
+            'child_environment_overrides': {'TMPDIR': '<new short private /tmp/c5-*/t alias>'},
             'commands': [{'name': name, 'argv': commands[name], 'expected_scope':
                 'qualification remains open; nonzero status is retained' if name == 'act4' else 'native checker scope only'} for name in jobs],
             'limitations': ['no board programming or physical observation is performed',
@@ -160,13 +161,29 @@ def source_inventory(root=ROOT):
         # active inputs include ROM images, constraints and build configuration files.
         if path.is_file() and not any(part in {'evidence', 'revisions', '__pycache__'} for part in parts):
             paths.append(path)
-    # retain the architecture documents consumed by the selected CPU runners.
-    for path in (root / 'docs').glob('*'):
+    # retain nested documentation without importing generated campaign records.
+    for path in (root / 'docs').rglob('*'):
+        parts = path.relative_to(root).parts
+        # generated outputs are never staged as current implementation inputs.
+        if any(part in {'evidence', 'revisions', '__pycache__'} for part in parts):
+            continue
         # documentation inputs follow the same closed-source-tree rule.
         if path.is_symlink():
             raise ValueError('documentation source symlink: ' + str(path))
         # archive bundles are historical evidence, not active design inputs.
         if path.is_file() and path.suffix in {'.md', '.mmd', '.svg', '.json'}:
+            paths.append(path)
+    # preserve repository entry points so staged guide links remain usable.
+    for name in ROOT_FILES:
+        path = root / name
+        # a root-file symlink cannot import content outside the checked source tree.
+        if path.is_symlink():
+            raise ValueError('root source symlink: ' + str(path))
+        # optional root files do not exclude minimal unit-test source fixtures.
+        if path.exists():
+            # only ordinary files may enter the staged inventory.
+            if not path.is_file():
+                raise ValueError('nonregular root source: ' + str(path))
             paths.append(path)
     return {str(path.relative_to(root)): digest(path) for path in sorted(paths)}
 
@@ -189,7 +206,7 @@ def stage_sources(workspace, hashes, root=ROOT):
 def temporary_alias(target):
     """give classic ABC a short path while keeping compiler data in owned storage."""
     # only a private directory and symlink consume space on the system temporary filesystem.
-    with tempfile.TemporaryDirectory(prefix='d5-', dir='/tmp') as directory:
+    with tempfile.TemporaryDirectory(prefix='c5-', dir='/tmp') as directory:
         alias = Path(directory) / 't'; alias.symlink_to(target, target_is_directory=True)
         # the bounded native reproduction uses this literal path rather than resolving it.
         if len(str(alias)) >= 32 or alias.resolve() != target.resolve():

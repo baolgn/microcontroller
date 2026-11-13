@@ -216,7 +216,7 @@ public:
         check(bool(layout),"missing startup layout");
         trace.open(argv[4]);check(bool(trace),"capture open failed");trace<<"{\"schema\":\"CPU5-ARCH1\"}\n";
         defined[0]=true;dut.clk_i=0;dut.reset_i=1;dut.isolated_i=1;dut.permit_i=0;dut.hold_i=0;
-        dut.event_set_i=0;dut.block_ready_i=0;dut.i_accept_delay_i=0;dut.d_accept_delay_i=0;
+        dut.event_set_i=0;dut.notification_i=0;dut.i_accept_delay_i=0;dut.d_accept_delay_i=0;
         dut.i_response_delay_i=1;dut.d_response_delay_i=1;
         /* qualified whole-platform reset leaves initialized memories and poison RAM intact. */
         for (unsigned n=0;n<4;++n) {dut.clk_i=0;dut.eval();dut.clk_i=1;dut.eval();}

@@ -13,7 +13,7 @@ module cpu5_soc #(
   input logic [3:0] i_accept_delay_i, i_response_delay_i,
   input logic [3:0] d_accept_delay_i, d_response_delay_i,
   input logic [31:1] event_set_i,
-  input logic block_ready_i,
+  input logic notification_i,
   output logic i_req_valid_o, i_req_ready_o,
   output logic [31:0] i_req_addr_o, i_req_tag_o,
   output logic [1:0] i_req_parcels_o,
@@ -70,7 +70,7 @@ module cpu5_soc #(
     .d_req_valid_i(d_req_valid_o), .d_req_ready_o, .d_req_addr_i(d_req_addr_o), .d_req_wdata_i(d_req_wdata_o),
     .d_req_tag_i(d_req_tag_o), .d_req_write_i(d_req_write_o), .d_req_size_i(d_req_size_o),
     .d_req_wstrb_i(d_req_wstrb_o), .d_rsp_valid_o, .d_rsp_ready_i(d_rsp_ready_o),
-    .d_rsp_tag_o, .d_rsp_rdata_o, .d_rsp_status_o, .event_set_i, .block_ready_i,
+    .d_rsp_tag_o, .d_rsp_rdata_o, .d_rsp_status_o, .event_set_i, .notification_i,
     .mip_levels_o(mip_levels), .ext_pending_o, .ext_enable_o, .mtime_o,
     .status_write_o, .status_o, .output_valid_o, .output_data_o, .busy_o(fabric_busy)
   );

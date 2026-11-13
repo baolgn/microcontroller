@@ -123,7 +123,7 @@ def main():
             "instruction ownership indication clears within four clocks; actual fetch RAM is tested separately",
             "at most eight additional serialized X hold clocks after data response in endpoint schedules",
             "vector delivery adapter delays sixteen clocks before raw32 packets resume",
-            "the handler uses sixteen actual register-save stores, block ACK, sixteen loads and MRET",
+            "the handler uses sixteen actual register-save stores, notification ACK, sixteen loads and MRET",
             "handler RAM/MMIO accept one clock after launch and respond one later, without DMA contention",
             "handler packets have no extra delivery stalls; saved context includes the completed divide result",
             "uncertain responses enter containment; healthy IRQ bounds exclude timeout/containment"],

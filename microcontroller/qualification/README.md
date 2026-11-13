@@ -37,8 +37,8 @@ sudo apt install python3 build-essential curl ca-certificates tar gzip
 ```sh
 (
   set -eu
-  mkdir /tmp/cpu5-tools-20260301
-  cd /tmp/cpu5-tools-20260301
+  mkdir /tmp/cpu5-control-tools-20260301
+  cd /tmp/cpu5-control-tools-20260301
   curl --fail --location --output oss-cad-suite-linux-x64-20260301.tgz \
     https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-01/oss-cad-suite-linux-x64-20260301.tgz
   printf '%s\n' '3558d8cf5b88ba224cf8bae872f83bed11cffdde163b130412e20352029c85f1  oss-cad-suite-linux-x64-20260301.tgz' | sha256sum --check
@@ -50,8 +50,8 @@ From the repository root, with a graphical display available for GTKWave:
 
 ```sh
 python3 microcontroller/qualification/run.py \
-  --tools /tmp/cpu5-tools-20260301/oss-cad-suite \
-  --archive /tmp/cpu5-tools-20260301/oss-cad-suite-linux-x64-20260301.tgz \
+  --tools /tmp/cpu5-control-tools-20260301/oss-cad-suite \
+  --archive /tmp/cpu5-control-tools-20260301/oss-cad-suite-linux-x64-20260301.tgz \
   --build /tmp/cpu5-tool-smoke-build-new \
   --output /tmp/cpu5-tool-smoke-results-new
 ```

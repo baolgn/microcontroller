@@ -42,21 +42,21 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
   logic [31:0] irq_pc_o, irq_cause_o;
 
   /* keep the persistent platform clocked independently of CPU issue and reset. */
-  logic platform_command, platform_error, block_ready = 0;
+  logic platform_command, platform_error, notification_arrival = 0;
   logic [30:0] event_set = 0;
   logic [31:0] platform_data, platform_levels, platform_pending, platform_enable, platform_count;
   logic [63:0] platform_time, platform_compare;
-  logic platform_msip, platform_overflow, platform_stop;
+  logic platform_msip, platform_overflow;
   assign platform_command = d_req_valid_o && d_req_ready_i && d_req_addr_o[31:12] == 20'h40001;
   assign mip_levels_i = manual_levels | platform_levels;
   cpu5_irq_platform platform (
     .clk_i(clk_i), .system_reset_i(cold_reset_i), .command_i(platform_command),
     .addr_i(d_req_addr_o), .write_i(d_req_write_o), .wdata_i(d_req_wdata_o),
     .size_i(d_req_size_o), .wstrb_i(d_req_wstrb_o), .event_set_i(event_set),
-    .block_ready_i(block_ready), .error_o(platform_error), .rdata_o(platform_data),
+    .notification_i(notification_arrival), .error_o(platform_error), .rdata_o(platform_data),
     .mip_levels_o(platform_levels), .mtime_o(platform_time), .mtimecmp_o(platform_compare),
     .msip_o(platform_msip), .ext_pending_o(platform_pending), .ext_enable_o(platform_enable),
-    .block_count_o(platform_count), .overflow_o(platform_overflow), .stop_o(platform_stop)
+    .notification_count_o(platform_count), .overflow_o(platform_overflow)
   );
 
   /* qualify exact M enablement separately from occupancy and forwarding choices. */
@@ -86,7 +86,7 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
   logic [31:0] owner_addr = 0, owner_data = 0, owner_tag = 0, owner_reply = 0;
   bit owner_write = 0;
   logic [63:0] time_ref = 0, peripheral_clocks = 0;
-  logic [31:0] block_ref = 0, enable_platform_ref = 0;
+  logic [31:0] notification_ref = 0, enable_platform_ref = 0;
   logic [63:0] compare_ref = '1;
   bit msip_ref = 0;
   int effects = 0, reads = 0, writes = 0, replies = 0, offers = 0;
@@ -186,7 +186,7 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
       'h341: return epc_ref;
       'h342: return cause_ref;
       'h343: return tval_ref;
-      'h344: return (manual_levels & 'h888) | (block_ref != 0 && enable_platform_ref[0] ? 'h800 : 0) |
+      'h344: return (manual_levels & 'h888) | (notification_ref != 0 && enable_platform_ref[0] ? 'h800 : 0) |
           (msip_ref ? 8 : 0) | (time_ref >= compare_ref ? 'h80 : 0);
       'hb00: return cycles_ref[31:0];
       'hb02: return retired_ref[31:0];
@@ -248,13 +248,13 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
     platform_fire = platform_command; pre_platform_data = platform_data; pre_platform_error = platform_error;
     accepted_input = input_fire;
     /* the platform retention model never observes its own output as expected pending state. */
-    expected_levels = (block_ref != 0 && enable_platform_ref[0] ? 'h800 : 0) |
+    expected_levels = (notification_ref != 0 && enable_platform_ref[0] ? 'h800 : 0) |
         (msip_ref ? 8 : 0) | (time_ref >= compare_ref ? 'h80 : 0);
-    if (!cold_reset_i) check(platform_levels == expected_levels && platform_count == block_ref &&
-        platform_enable == enable_platform_ref && platform_pending == (block_ref != 0 ? 1 : 0),
+    if (!cold_reset_i) check(platform_levels == expected_levels && platform_count == notification_ref &&
+        platform_enable == enable_platform_ref && platform_pending == (notification_ref != 0 ? 1 : 0),
         "persistent platform event mismatch");
     if (!cold_reset_i) check(platform_time == time_ref && platform_compare == compare_ref && platform_msip == msip_ref &&
-        !platform_overflow && !platform_stop, "independent platform clock/state mismatch");
+        !platform_overflow, "independent platform clock/state mismatch");
     check(mem_busy_o == owner && d_req_valid_o == (owner && !accepted), "physical IRQ owner mismatch");
     /* an exposed descriptor stays stable even while interrupt entry waits for service. */
     if (owner) check(d_req_addr_o == owner_addr && d_req_wdata_o == owner_data &&
@@ -605,16 +605,16 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
       end
     end
     /* the small platform reference covers the exact accepted command subset used here. */
-    if (cold_reset_i) begin time_ref = 0; block_ref = 0; enable_platform_ref = 0; compare_ref = '1; msip_ref = 0; end
+    if (cold_reset_i) begin time_ref = 0; notification_ref = 0; enable_platform_ref = 0; compare_ref = '1; msip_ref = 0; end
     /* CPU sleep and hart reset never gate the independent peripheral/timer domain. */
     else begin
       time_ref++;
-      /* acknowledge consumes one queued block, while same-edge arrival remains retained. */
-      if (platform_fire && owner_write && owner_addr == 'h40001020 && owner_data[0] && block_ref != 0) block_ref--;
-      if (block_ready) block_ref++;
+      /* acknowledge consumes one queued notification, while same-edge arrival remains retained. */
+      if (platform_fire && owner_write && owner_addr == 'h40001020 && owner_data[0] && notification_ref != 0) notification_ref--;
+      if (notification_arrival) notification_ref++;
       /* apply only the command accepted on this edge to the platform reference. */
       if (platform_fire && owner_write) begin
-        /* timer, software and block enables use independent pre-edge command fields. */
+        /* timer, software and notification enables use independent pre-edge command fields. */
         case (owner_addr)
           'h40001000: time_ref = {old_platform_time[63:32],owner_data};
           'h40001004: time_ref = {owner_data,old_platform_time[31:0]};
@@ -727,7 +727,7 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
   /* start a case with positively isolated cold reset and a cleared external source. */
   task automatic reset_case();
     cases++; manual_levels = 0; fetch_busy_i = 0; hold_i = 0;
-    in_valid_i = 0; flush_valid_i = 0; block_ready = 0; event_set = 0;
+    in_valid_i = 0; flush_valid_i = 0; notification_arrival = 0; event_set = 0;
     accept_delay = 0; response_delay = 1; response_status = 0; allow_fatal = 0;
     cold_reset_i = 1; hart_reset_i = 0; tick(); cold_reset_i = 0; tick(); tick(); issue_pc = 0;
   endtask
@@ -1051,7 +1051,7 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
       end
       x_delay = scenario < 2 ? 8 : int'(unused_choice[10:8]);
       hold_i[2] = 1; count_irq = interrupts; fetch_busy_i = 1;
-      block_ready = 1; tick(); block_ready = 0; origin = edges;
+      notification_arrival = 1; tick(); notification_arrival = 0; origin = edges;
       /* this origin is the edge at which the retained platform level becomes visible. */
       repeat (4) tick(); fetch_busy_i = 0;
       /* endpoint cases serialize the hold after memory for a conservative occupancy test. */
@@ -1079,10 +1079,10 @@ module cpu5_muldiv_control_tb #(parameter bit M_ENABLED = 1, DIAGNOSTIC = 0, FOR
       for (int index = 0; index < 16; index++) check(ram[index] == saved_values[index], "ISR register save mismatch");
       check(saves == start_saves + 16, "ISR save count mismatch");
       if (edges - origin > max_saved) max_saved = edges - origin;
-      /* the accepted ACK consumes exactly one block after the complete software save. */
+      /* the accepted ACK consumes exactly one notification after the complete software save. */
       constant(5, 'h40001020); constant(6, 1); send(store_word(6, 5, 0)); drain();
       check(platform_count == 0 && ack_edge > saved_edge && ack_complete_edge - handler_edge <= 640,
-          "ISR block ACK order or service budget mismatch");
+          "ISR notification ACK order or service budget mismatch");
       if (ack_complete_edge - handler_edge > max_ack) max_ack = ack_complete_edge - handler_edge;
       /* restore the original caller state with real loads before returning to the saved PC. */
       for (int index = 0; index < 16; index++)

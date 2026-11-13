@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This directory contains freestanding firmware for the local CPU5 CPU platform. The application exercises startup, calls, stack frames, arrays, arithmetic, traps, interrupts and local-memory behavior.
+This directory contains freestanding firmware for the local CPU5 platform. The application exercises startup, calls, stack frames, arrays, arithmetic, traps, interrupts and local-memory behavior.
 
 ## Instructions
 

@@ -1,6 +1,6 @@
 /* retain machine interrupt sources independently of CPU issue, idle and hart reset. */
 module cpu5_irq_platform #(
-  parameter integer BLOCK_CAPACITY = 64
+  parameter integer NOTIFICATION_CAPACITY = 64
 ) (
   input logic clk_i, system_reset_i,
   input logic command_i, write_i,
@@ -8,15 +8,15 @@ module cpu5_irq_platform #(
   input logic [1:0] size_i,
   input logic [3:0] wstrb_i,
   input logic [31:1] event_set_i,
-  input logic block_ready_i,
+  input logic notification_i,
   output logic error_o,
   output logic [31:0] rdata_o, mip_levels_o,
   output logic [63:0] mtime_o, mtimecmp_o,
   output logic msip_o,
-  output logic [31:0] ext_pending_o, ext_enable_o, block_count_o,
-  output logic overflow_o, stop_o
+  output logic [31:0] ext_pending_o, ext_enable_o, notification_count_o,
+  output logic overflow_o
 );
-  localparam integer COUNT_BITS = BLOCK_CAPACITY < 2 ? 1 : $clog2(BLOCK_CAPACITY + 1);
+  localparam integer COUNT_BITS = NOTIFICATION_CAPACITY < 2 ? 1 : $clog2(NOTIFICATION_CAPACITY + 1);
   logic [COUNT_BITS-1:0] count_q;
   logic [31:1] events_q, clear_events;
   logic known, direction_ok, legal_write, acknowledge;
@@ -24,8 +24,8 @@ module cpu5_irq_platform #(
 `ifndef SYNTHESIS
   /* a finite notification ledger must fit its software-visible count. */
   initial begin
-    assert (BLOCK_CAPACITY >= 1 && BLOCK_CAPACITY <= 65535)
-      else $fatal(1, "invalid block notification capacity");
+    assert (NOTIFICATION_CAPACITY >= 1 && NOTIFICATION_CAPACITY <= 65535)
+      else $fatal(1, "invalid notification capacity");
   end
 `endif
 
@@ -62,7 +62,7 @@ module cpu5_irq_platform #(
         32'h40001010: rdata_o = {31'b0, msip_o};
         32'h40001014: rdata_o = ext_pending_o;
         32'h40001018: rdata_o = ext_enable_o;
-        32'h4000101c: rdata_o = block_count_o;
+        32'h4000101c: rdata_o = notification_count_o;
         32'h40001024: rdata_o = {31'b0, overflow_o};
         default: rdata_o = 0;
       endcase
@@ -71,13 +71,12 @@ module cpu5_irq_platform #(
 
   /* source levels remain visible while CPU or platform enable bits mask delivery. */
   always_comb begin
-    block_count_o = 32'(count_q);
+    notification_count_o = 32'(count_q);
     ext_pending_o = {events_q, count_q != 0};
     mip_levels_o = 0;
     mip_levels_o[3] = msip_o;
     mip_levels_o[7] = mtime_o >= mtimecmp_o;
     mip_levels_o[11] = |(ext_pending_o & ext_enable_o);
-    stop_o = overflow_o;
   end
 
   /* only qualified system reset clears the platform; hart reset has no connection. */
@@ -96,15 +95,15 @@ module cpu5_irq_platform #(
     else begin
       mtime_o <= mtime_o + 64'd1;
       events_q <= (events_q & ~clear_events) | event_set_i;
-      /* an accepted decrement creates capacity for a same-edge block arrival. */
-      if (block_ready_i && !acknowledge) begin
-        /* saturation reports an unretained notification and requests hardware stop. */
-        if (count_q == COUNT_BITS'(BLOCK_CAPACITY)) overflow_o <= 1;
+      /* an accepted decrement creates capacity for a same-edge notification arrival. */
+      if (notification_i && !acknowledge) begin
+        /* saturation latches an observable notification overflow. */
+        if (count_q == COUNT_BITS'(NOTIFICATION_CAPACITY)) overflow_o <= 1;
         /* no notification wraps the count back to an apparently empty queue. */
         else count_q <= count_q + 1'b1;
       end
       /* simultaneous arrival and acknowledgement retain the previous count. */
-      else if (acknowledge && !block_ready_i) begin
+      else if (acknowledge && !notification_i) begin
         count_q <= count_q - 1'b1;
       end
       /* a command pulse represents exactly one already accepted physical transaction. */

@@ -1,7 +1,7 @@
 {
   "schema": "CPU5-SOURCE-PUBLICATION-CHECKS-1",
   "date": "2026-11-13",
-  "scope": "selected checks of the standalone CPU source publication",
+  "scope": "selected checks of the initial standalone CPU publication; this historical record does not certify subsequent source changes",
   "selected_checks_passed": true,
   "complete_architectural_qualification": false,
   "hardware_qualified": false,
@@ -383,5 +383,8 @@
       "published_sha256": "a3403cb1a184090b5c9bc5104994c4768a999f56cae0d80a4000049b90863b7c",
       "change": "trailing whitespace and blank lines at EOF only; non-whitespace tokens unchanged"
     }
-  ]
+  ],
+  "source_commit": "f71c80944f17288e8cf31a981f8ce7f94eb9b3ce",
+  "current_tree_claim": false,
+  "later_audit": "audit-validation.json"
 }

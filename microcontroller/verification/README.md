@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This directory coordinates checks across the CPU, platform, reference model and evidence ledger. It distinguishes a new execution against current source from replay of an existing capture and from an audit of a complete campaign. The public source does not constitute a fully qualified CPU release.
+This directory coordinates checks across the CPU, platform and reference model, with a requirement-to-runner map. A fresh execution, replay of an existing capture and audit of a supplied campaign establish different kinds of evidence. The public source does not constitute a fully qualified CPU release.
 
 ## Instructions
 
@@ -29,7 +29,7 @@ python3 microcontroller/verification/run_verification.py \
   --build /tmp/cpu5-verification-new
 ```
 
-The [requirements ledger](requirements.json) distinguishes requirement descriptions from current-source results. A missing run or record remains unverified. Reports from different source hashes, configurations or tool installations cannot be merged into a conformance claim.
+The [requirements map](requirements.json) links declared behaviors to existing executable check entry points. Its `not_evaluated_in_this_ledger` fields are not test verdicts: the file does not automatically consume execution reports. Earlier campaign counts remain explicitly undistributed historical context. Read fresh source-bound reports for actual results; reports from different source hashes, configurations or tool installations cannot be merged into a conformance claim.
 
 ## Implementation
 
@@ -43,7 +43,7 @@ The [requirements ledger](requirements.json) distinguishes requirement descripti
 | [execution/run_random.py](execution/run_random.py) | Builds generated programs and compares DUT retirement against Sail using the fixed compiler/reference installation. |
 | [execution/comparison.py](execution/comparison.py) | Implements independent trace decoding/comparison used by reference runs and replay. |
 | [act4/run_campaign.py](act4/README.md) | Coordinates pinned ACT4 generation, reference signatures, bounded DUT execution and inventory. |
-| [requirements.json](requirements.json) | Lists requirements and current-source verification status; it is a ledger, not an executable checker. |
+| [requirements.json](requirements.json) | Maps requirements to executable runners and separates unevaluated entries from unshipped historical context. |
 
 ```mermaid
 flowchart TD
@@ -54,7 +54,7 @@ flowchart TD
   F --> E
   R --> E
   E --> Q[Review scope and open gates]
-  Q --> L[Requirement ledger]
+  Q --> L[Requirement map and separately reviewed results]
 ```
 
 A comparison pass covers the modeled architectural events and memory contract. A bounded proof covers its stated assumptions and depth. A synthesis result covers the mapped configuration and tools. Hardware behavior, unsupported configurations and omitted test cases require their own evidence.

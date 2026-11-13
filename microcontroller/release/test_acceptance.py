@@ -133,6 +133,31 @@ class AcceptanceChecks(unittest.TestCase):
         self.assertIn('--evidence-dir', command)
         self.assertFalse(report['hardware_operations'])
 
+    def test_inventory_stages_entry_points_and_nested_docs(self):
+        """staged documentation retains entry points without private or generated inputs."""
+        (self.base / 'microcontroller').mkdir()
+        nested = self.base / 'docs/guides/usage.md'; nested.parent.mkdir(parents=True)
+        nested.write_text('usage\n')
+        old = self.base / 'docs/evidence/old.json'; old.parent.mkdir()
+        old.write_text('historical\n')
+        # root entry points retain their own exact bytes.
+        for name in acceptance.ROOT_FILES:
+            (self.base / name).write_text(name + '\n')
+        (self.base / '.env').write_text('private\n')
+        records = acceptance.source_inventory(self.base)
+        self.assertEqual(set(records), {*acceptance.ROOT_FILES, 'docs/guides/usage.md'})
+        output = self.base / 'stage'
+        acceptance.stage_sources(output, records, self.base)
+        self.assertEqual((output / nested.relative_to(self.base)).read_bytes(), nested.read_bytes())
+
+    def test_root_file_source_symlink_rejected(self):
+        """root entry points cannot redirect staged content outside the source tree."""
+        (self.base / 'microcontroller').mkdir(); (self.base / 'docs').mkdir()
+        (self.base / 'README.md').symlink_to(self.base / 'missing')
+        # dangling links are rejected before existence checks can hide them.
+        with self.assertRaisesRegex(ValueError, 'root source symlink'):
+            acceptance.source_inventory(self.base)
+
     def test_inventory_excludes_evidence(self):
         """staging copies active source bytes without recursively importing test records."""
         source = self.base / 'microcontroller/rtl/core.sv'; source.parent.mkdir(parents=True)

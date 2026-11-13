@@ -113,7 +113,7 @@ def main():
             "handler instruction packets are supplied as raw32 encodings without additional input delivery stalls",
             "handler local RAM and MMIO accept one clock after launch and respond one later; no DMA contention",
             "64-byte reserved save area holds ra,t0-t2,a0-a7,t3-t6; ACK effect and response are separate endpoints",
-            "actual stores, block ACK, loads and MRET execute; timeout/uncertain responses are containment cases outside healthy bounds"],
+            "actual stores, notification ACK, loads and MRET execute; timeout/uncertain responses are containment cases outside healthy bounds"],
         "limits": ["not an ACT4/Sail qualification or a complete CPU",
                    "C1 exercises alignment only in this fixture; raw C execution has separate qualification",
                    "synthetic held arithmetic models a future occupancy budget and does not execute division",

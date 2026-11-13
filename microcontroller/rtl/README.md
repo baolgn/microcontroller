@@ -123,10 +123,10 @@ Reset and redirect behavior is implemented by [control](cpu5_control.sv) and [fe
 ```mermaid
 %%{init: {"theme":"neutral","themeVariables":{"fontFamily":"Arial,sans-serif","fontSize":"14px"},"flowchart":{"htmlLabels":true,"minNodeWidth":0,"wrappingWidth":240,"nodeSpacing":28,"rankSpacing":32,"curve":"linear"}}}%%
 flowchart TB
-    RESET["Supported reset / physical qualification loss<br/>block new offers; abort core tokens once"] --> OWN["Surviving request managers<br/>hold offered valid; accept / drain old responses<br/>or obtain positive isolation fence"]
-    OWN --> READY{"Clock / ROM / isolation ready?<br/>old traffic cannot reach released epoch"}
+    RESET["Hart reset / platform-qualified cold reset<br/>block new offers; abort core tokens once"] --> OWN["Hart reset retains request managers<br/>hold offered valid; accept / drain old responses<br/>cold reset requires platform isolation"]
+    OWN --> READY{"Reset released and owned work resolved?<br/>old traffic cannot enter the new stream"}
     READY -->|"no"| OWN
-    READY -->|"yes"| BOOT["Boot PC = 0x00000000<br/>new reset serial / fetch epoch"]
+    READY -->|"yes"| BOOT["RESET_PC, default 0x00000000<br/>new reset serial / fetch epoch"]
     W["W: committed branch / jump<br/>trap / MRET / FENCE.I / debug"] --> ARB["Age + boundary arbiter"]
     BR["X: branch / jump result"] -->|"carry through M to ordered disposition"| W
     SEQ["Frontend packet accepted by F<br/>sequential fetch PC + 2 / 4"] --> ARB
@@ -350,7 +350,7 @@ flowchart TB
 
 ## CPU-11 · Load/store unit
 
-The [LSU helper](cpu5_lsu.sv) checks address shape and formats data. The surviving request manager is implemented inside [control](cpu5_control.sv). Recording-buffer leases are a proposed system responsibility and are not implemented by this CPU helper.
+The [LSU helper](cpu5_lsu.sv) checks address shape and formats data. The surviving request manager is implemented inside [control](cpu5_control.sv).
 
 ```mermaid
 %%{init: {"theme":"neutral","themeVariables":{"fontFamily":"Arial,sans-serif","fontSize":"14px"},"flowchart":{"htmlLabels":true,"minNodeWidth":0,"wrappingWidth":240,"nodeSpacing":28,"rankSpacing":32,"curve":"linear"}}}%%

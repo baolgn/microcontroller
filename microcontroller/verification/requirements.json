@@ -1,170 +1,181 @@
 {
-  "schema": "CPU5-REQUIREMENTS-1",
+  "schema": "CPU5-REQUIREMENTS-2",
   "date": "2026-11-13",
   "status": "unqualified_source_inventory",
   "normative_manifest": "microcontroller/rtl/README.md",
-  "scope": "CPU requirement-to-check map; historical evidence is not shipped and each changed source requires fresh validation",
+  "scope": "CPU requirement-to-check map; runner paths are delivered source files, not links to missing reports; this ledger does not certify any execution",
   "evidence": {
     "base": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/base-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_base.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "memory": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/memory-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_memory.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "control-flow": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/control-flow-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_control_flow.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "control-events": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/control-events-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_control_events.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "csr": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/csr-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_csr.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "csr-control": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/csr-control-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_csr_control.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "irq-control": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/irq-control-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_irq_control.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "muldiv-control": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/muldiv-control-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_muldiv_control.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "compressed-execution": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/compressed-execution-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_compressed_execution.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "fence-execution": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/fence-execution-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_fence_execution.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "fence-events": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/directed/fence-events-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_fence_events.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "decompress": {
-      "path": "microcontroller/tests/evidence/decompress-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_decompress.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "forward-unit": {
-      "path": "microcontroller/tests/evidence/forward-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_forward.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "lsu-unit": {
-      "path": "microcontroller/tests/evidence/lsu-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_lsu.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "m-unit": {
-      "path": "microcontroller/tests/evidence/muldiv-unit-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_muldiv.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
-    "fetch-formal-historical": {
-      "path": "microcontroller/verification/evidence/fetch-2026-11-04/formal-summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+    "fetch-formal": {
+      "runner": "microcontroller/tests/run_fetch_formal.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "debug-core": {
-      "path": "microcontroller/tests/evidence/debug-core-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_core.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "debug-module": {
-      "path": "microcontroller/tests/evidence/debug-module-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_module.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "debug-system": {
-      "path": "microcontroller/tests/evidence/debug-system-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_system.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "debug-remote-0": {
-      "path": "microcontroller/tests/evidence/debug-remote-2026-11-04/revisions/10-qualification/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_remote.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger",
+      "arguments": [
+        "--seed",
+        "0"
+      ]
     },
     "debug-remote-1": {
-      "path": "microcontroller/tests/evidence/debug-remote-2026-11-04/revisions/11-qualification/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_remote.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger",
+      "arguments": [
+        "--seed",
+        "1"
+      ]
     },
     "debug-remote-305419896": {
-      "path": "microcontroller/tests/evidence/debug-remote-2026-11-04/revisions/12-qualification/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_debug_remote.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger",
+      "arguments": [
+        "--seed",
+        "305419896"
+      ]
     },
     "irq-fetch": {
-      "path": "microcontroller/verification/evidence/debug-2026-11-04/compatibility/revisions/07-irq-fetch/result/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_irq_fetch.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "structure": {
-      "path": "microcontroller/verification/evidence/debug-2026-11-04/structure/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/synth/run_programmable.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "units": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/units/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/verification/run_units.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "datapath-map": {
-      "path": "microcontroller/verification/evidence/datapath-2026-11-04/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/synth/check_datapath.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "counter-execution": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/counter-execution/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/tests/run_counter_execution.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "execution": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/execution/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/verification/execution/run_random.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "formal": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/formal/campaign-20261105T023106052242Z/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/verification/formal/run_formal.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "act4": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/act4/campaigns/20261105T023106052242Z/manifest.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/verification/act4/run_campaign.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "publication-guards": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/act4/publisher-negative-checks.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree",
-      "source_base": "microcontroller/verification/act4"
+      "runner": "microcontroller/verification/act4/check_evidence.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     },
     "formal-admission": {
-      "path": "microcontroller/verification/evidence/verification-2026-11-04/formal/admission-campaign-20261105T023106052242Z/summary.json",
-      "kind": "expected_output",
-      "status": "not_run_for_standalone_tree"
+      "runner": "microcontroller/verification/formal/run_admission_formal.py",
+      "kind": "check_entrypoint",
+      "status": "not_evaluated_in_this_ledger"
     }
   },
   "requirements": [
@@ -179,7 +190,7 @@
         "fence-execution",
         "debug-core"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "B0-B3/F remain unqualified; default parameter profiles are separately reported",
       "release_gate": "open"
     },
@@ -191,7 +202,7 @@
         "execution",
         "act4"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "matching compiler/model/CPU flags verified in generated programs; ACT4 retains mcause legalization and absent-timeh platform-address mismatches",
       "release_gate": "open"
     },
@@ -205,7 +216,7 @@
         "datapath-map",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite programs and declared decoder vectors; no exhaustive 2^32 encoding enumeration",
       "release_gate": "open"
     },
@@ -219,7 +230,7 @@
         "datapath-map",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "standalone arithmetic/shifter SAT covers all two-state operands; finite pipeline programs do not establish whole-core all-input equivalence",
       "release_gate": "open"
     },
@@ -234,7 +245,7 @@
         "datapath-map",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "unreset x1-x31 require initialization; two-state simulation is not proof of unknown-state safety",
       "release_gate": "open"
     },
@@ -248,7 +259,7 @@
         "units",
         "datapath-map"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "standalone RF and FF/distributed/BRAM candidates have individually tested latency; controller uses its own register array, tested through committed execution",
       "release_gate": "open"
     },
@@ -262,7 +273,7 @@
         "forward-unit",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite integrated dependency programs plus independent forwarding-unit induction",
       "release_gate": "open"
     },
@@ -277,7 +288,7 @@
         "muldiv-control",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite profile/seed matrix; not whole-core formal data equivalence",
       "release_gate": "open"
     },
@@ -291,7 +302,7 @@
         "compressed-execution",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "C0/C1 target alignment tested; dependent/untaken and wrap cases are fixture-scoped",
       "release_gate": "open"
     },
@@ -304,7 +315,7 @@
         "control-events",
         "memory"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "bounded directed event permutations, not every simultaneous input vector",
       "release_gate": "open"
     },
@@ -319,8 +330,8 @@
         "formal",
         "formal-admission"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "current production-control SBY BMC depth16 (checked steps0-15) covers held F/D/X/W packets and selected M fields; all exposed request fields retained; separate no-flush singleton profile proves admission by reset-relative edge4 and checks the full32-clock post-admission terminal window within SBY BMC depth40 (checked steps0-39); constrained packet profile, no whole-core induction",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical production-control SBY BMC depth16 (checked steps0-15) covers held F/D/X/W packets and selected M fields; all exposed request fields retained; separate no-flush singleton profile proves admission by reset-relative edge4 and checks the full32-clock post-admission terminal window within SBY BMC depth40 (checked steps0-39); constrained packet profile, no whole-core induction",
       "release_gate": "open"
     },
     {
@@ -334,7 +345,7 @@
         "fence-events",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "external diagnostic flush has a narrower contract than final platform reset",
       "release_gate": "open"
     },
@@ -348,7 +359,7 @@
         "fence-execution",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "cycle counts may differ; equality of tested streams does not prove all streams",
       "release_gate": "open"
     },
@@ -361,7 +372,7 @@
         "fence-execution",
         "irq-fetch"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "fixture timing domains and explicit timeout assumptions remain authoritative",
       "release_gate": "open"
     },
@@ -372,11 +383,11 @@
       "evidence": [
         "compressed-execution",
         "fence-events",
-        "fetch-formal-historical",
+        "fetch-formal",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "fresh and historical source-bound fetch BMC20 use2generation bits/4tag bits and8-clock deadline; no unbounded stream proof",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical source-bound fetch BMC20 use2generation bits/4tag bits and8-clock deadline; no unbounded stream proof",
       "release_gate": "open"
     },
     {
@@ -384,12 +395,12 @@
       "requirement": "generation reuse cannot revive an old response",
       "configured_behavior": "reallocate only after live obligation drainage; wrap safety checked with small counters",
       "evidence": [
-        "fetch-formal-historical",
+        "fetch-formal",
         "fence-execution",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "fresh reduced-width fetch BMC20 plus live revoked-owner wrap witness; no full-width unbounded proof",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical reduced-width fetch BMC20 plus live revoked-owner wrap witness; no full-width unbounded proof",
       "release_gate": "open"
     },
     {
@@ -401,7 +412,7 @@
         "fence-execution",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "intentional test-only apertures are enabled only in named fixtures",
       "release_gate": "open"
     },
@@ -416,7 +427,7 @@
         "debug-system",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "request and completion channels checked separately; normal progress requires responder contract",
       "release_gate": "open"
     },
@@ -430,7 +441,7 @@
         "debug-system",
         "formal"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "checker negative controls prove selected duplicate/missing-effect detectors, not all possible checker faults",
       "release_gate": "open"
     },
@@ -443,7 +454,7 @@
         "irq-control",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "containment is not successful retirement and automatic replay is forbidden",
       "release_gate": "open"
     },
@@ -457,7 +468,7 @@
         "base",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "fixture word-only MMIO restrictions are distinct from RAM byte/halfword support",
       "release_gate": "open"
     },
@@ -471,7 +482,7 @@
         "debug-system",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "fixed physical guards, no PMP/MMU/virtual memory",
       "release_gate": "open"
     },
@@ -484,7 +495,7 @@
         "base",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "retirement-only checking is insufficient; device ledger is required",
       "release_gate": "open"
     },
@@ -497,7 +508,7 @@
         "csr-control",
         "debug-core"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "standalone bank and raw CSR controller have different caller boundaries",
       "release_gate": "open"
     },
@@ -510,7 +521,7 @@
         "csr",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "normalized bank read/write inputs alone do not verify encoded suppression",
       "release_gate": "open"
     },
@@ -523,7 +534,7 @@
         "csr-control",
         "act4"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "directed bank/controller checks pass; ACT4 mcause write8 retains7 as manifest requires while Sail expects8; reference legal-value mismatch remains open",
       "release_gate": "open"
     },
@@ -537,7 +548,7 @@
         "irq-control",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "M-only, no delegation or nested hardware shadow state",
       "release_gate": "open"
     },
@@ -551,7 +562,7 @@
         "debug-core",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "debug-routed EBREAK has its own distinct terminal event",
       "release_gate": "open"
     },
@@ -563,7 +574,7 @@
         "irq-control",
         "irq-fetch"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "persistent simulated platform; physical interrupt queue/CDC not qualified",
       "release_gate": "open"
     },
@@ -576,7 +587,7 @@
         "csr-control",
         "fence-events"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no stale latched cause; finite concurrent-event schedules",
       "release_gate": "open"
     },
@@ -589,7 +600,7 @@
         "debug-core",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "CPU idle tests do not establish physical peripheral-clock behavior",
       "release_gate": "open"
     },
@@ -602,7 +613,7 @@
         "muldiv-control",
         "irq-fetch"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite measured schedules and analytic assumptions; not all-schedule firmware WCET",
       "release_gate": "open"
     },
@@ -615,7 +626,7 @@
         "muldiv-control",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "unit directed/seeded arithmetic and controller dependencies; no exhaustive all 64-bit operand pairs",
       "release_gate": "open"
     },
@@ -628,7 +639,7 @@
         "muldiv-control",
         "debug-core"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "downstream stalls are additional to unit latency; healthy-memory bounds needed for IRQ/debug total",
       "release_gate": "open"
     },
@@ -639,7 +650,7 @@
       "evidence": [
         "decompress"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "exhaustive encoding classification against independent table; does not exhaust dynamic operands or PCs",
       "release_gate": "open"
     },
@@ -653,7 +664,7 @@
         "debug-system",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite alignment/stall/redirect/fault matrix",
       "release_gate": "open"
     },
@@ -667,7 +678,7 @@
         "fence-events",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no incoherent external-agent completion is implied",
       "release_gate": "open"
     },
@@ -679,7 +690,7 @@
         "fence-execution",
         "fence-events"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no cache does not remove obligations; data effects checked independently",
       "release_gate": "open"
     },
@@ -692,7 +703,7 @@
         "debug-system",
         "debug-remote-0"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "simulated writer completion; actual external-writer ownership protocol is not qualified",
       "release_gate": "open"
     },
@@ -705,8 +716,8 @@
         "debug-core",
         "counter-execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "12 fresh full-frontend runs with independent edge replay; timed counter semantics are not compared against instruction-time Sail",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical 12-run full-frontend matrix with independent edge replay; timed counter semantics are not compared against instruction-time Sail",
       "release_gate": "open"
     },
     {
@@ -717,8 +728,8 @@
         "csr",
         "counter-execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "fresh standalone bank induction and 12-run end-to-end counter matrix; halfword counter timing is independently modeled",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical standalone bank induction and 12-run end-to-end counter matrix; halfword counter timing is independently modeled",
       "release_gate": "open"
     },
     {
@@ -731,7 +742,7 @@
         "debug-remote-0",
         "act4"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "machine counters are not Zicntr; ACT4 counter test also traps on timeh correctly but leaks different platform-address literals into its signature",
       "release_gate": "open"
     },
@@ -744,7 +755,7 @@
         "debug-system",
         "debug-remote-0"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no formal or physical Debug certification; IDCODE remains unassigned",
       "release_gate": "open"
     },
@@ -757,7 +768,7 @@
         "debug-system",
         "debug-remote-1"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "simulated transport/reset schedules; physical reset and CDC timing not qualified",
       "release_gate": "open"
     },
@@ -770,7 +781,7 @@
         "debug-system",
         "debug-remote-305419896"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no Program Buffer, trigger, abstract memory command or authentication",
       "release_gate": "open"
     },
@@ -784,8 +795,8 @@
         "debug-remote-1",
         "debug-remote-305419896"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "actual OpenOCD/GDB exercised through simulated JTAG; GDB bare-metal OSABI required",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical OpenOCD/GDB simulation used JTAG; GDB bare-metal OSABI required",
       "release_gate": "open"
     },
     {
@@ -796,7 +807,7 @@
         "debug-module",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "optional address rules differ between DMI and hart CSR spaces",
       "release_gate": "open"
     },
@@ -808,8 +819,8 @@
         "counter-execution",
         "debug-remote-0"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "fresh CPU5-OBS1 counter replay plus exact-source debug auxiliary captures; not full planned CPU5-TRACE1 or RVFI",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical CPU5-OBS1 counter replay plus exact-source debug auxiliary captures; not full planned CPU5-TRACE1 or RVFI",
       "release_gate": "open"
     },
     {
@@ -822,7 +833,7 @@
         "debug-remote-0",
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "coverage depends on exact replay schema; no unseen-field comparison claim",
       "release_gate": "open"
     },
@@ -835,7 +846,7 @@
         "csr-control",
         "compressed-execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "selected representative and compressed exhaustive encodings; all unsupported 32-bit space not enumerated",
       "release_gate": "open"
     },
@@ -848,7 +859,7 @@
         "debug-core",
         "debug-module"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "address enumeration is distinct from exhaustive write-value/legalization verification",
       "release_gate": "open"
     },
@@ -857,7 +868,7 @@
       "requirement": "unsupported build and image attributes",
       "configured_behavior": "RV32E/ILP32E, incompatible ISA/endianness/ABI images rejected by qualification tooling",
       "evidence": [],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no architecture-specific forbidden-image corpus executed yet",
       "release_gate": "open"
     },
@@ -869,7 +880,7 @@
         "act4",
         "publication-guards"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "279selected;274built;5capacity omissions;272pass+2retained profile/model mismatches at each seed1/24301; no complete ACT4 qualification; checks after each failed test first mismatch remain unqualified",
       "release_gate": "open"
     },
@@ -880,7 +891,7 @@
       "evidence": [
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "8 deterministic generation seeds in4CPU profiles; finite programs, no asynchronous IRQ/debug/cycle equivalence to Sail; platform-specific MMIO tail checked independently",
       "release_gate": "open"
     },
@@ -891,12 +902,12 @@
       "evidence": [
         "forward-unit",
         "lsu-unit",
-        "fetch-formal-historical",
+        "fetch-formal",
         "formal",
         "formal-admission"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "controller safety SBY BMC depth16 (checked steps0-15) with100assertions/3assumptions; arbitrary-flush singleton progress SBY BMC depth40 (checked steps0-39) with conditional32-clock disposition bound and20assertions/12assumptions, no admission bound and no extended observation of late accepts; separate no-flush singleton SBY BMC depth40 (checked steps0-39) with22assertions/13assumptions proves admission by reset-relative edge4 and checks the complete32-clock acceptance-to-terminal window; no arbitrary-stream liveness; fresh fetch Yosys SAT -seq20 (steps1-20) and independent unit proofs; final outer wrapper executed end to end with its launch bytes retained; earlier metadata-only catalog remains historical",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "controller safety SBY BMC depth16 (checked steps0-15) with100assertions/3assumptions; arbitrary-flush singleton progress SBY BMC depth40 (checked steps0-39) with conditional32-clock disposition bound and20assertions/12assumptions, no admission bound and no extended observation of late accepts; separate no-flush singleton SBY BMC depth40 (checked steps0-39) with22assertions/13assumptions proves admission by reset-relative edge4 and checks the complete32-clock acceptance-to-terminal window; no arbitrary-stream liveness; historical fetch Yosys SAT -seq20 (steps1-20) and independent unit proofs; final outer wrapper executed end to end with its launch bytes retained; earlier metadata-only catalog remains historical",
       "release_gate": "open"
     },
     {
@@ -909,7 +920,7 @@
         "act4",
         "publication-guards"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "physical programming and full frontend/backend flow qualification are separate gates",
       "release_gate": "open"
     },
@@ -918,7 +929,7 @@
       "requirement": "exact board/part/package/programmer can be programmed",
       "configured_behavior": "small target design synth/place/route/program passes on selected hardware",
       "evidence": [],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no physical FPGA/programmer access; no physical program result may be inferred from family support",
       "release_gate": "open"
     },
@@ -929,8 +940,8 @@
       "evidence": [
         "structure"
       ],
-      "coverage": "not_run_for_standalone_tree",
-      "limits": "current native mapped core exceeds allocation; full SoC placed timing absent",
+      "coverage": "not_evaluated_in_this_ledger",
+      "limits": "historical standalone debug mapping exceeded its allocation; historical programmable 25 MHz routing passed its guard, but current-source integrated resource/timing qualification requires a new run",
       "release_gate": "open"
     },
     {
@@ -942,7 +953,7 @@
         "irq-control",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "fixtures measure stated schedules; real complete fabric not qualified",
       "release_gate": "open"
     },
@@ -955,7 +966,7 @@
         "debug-core",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "transport service and physical TCK/CDC bounds remain unqualified",
       "release_gate": "open"
     },
@@ -964,7 +975,7 @@
       "requirement": "physical CDC/reset/unknown behavior",
       "configured_behavior": "synchronized stable inputs, reset recovery and unreset GPR initialization assumptions named",
       "evidence": [],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "two-state simulation/formal cannot establish analog metastability, physical reset or X-propagation safety",
       "release_gate": "open"
     },
@@ -975,7 +986,7 @@
       "evidence": [
         "execution"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "finite deterministic reference scope; timer/cycle/debug/IRQ timing and model-specific CSR legalization remain independently directed, not normalized",
       "release_gate": "open"
     },
@@ -988,7 +999,7 @@
         "debug-core",
         "debug-system"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "physical reset/isolation and CDC timing require separate hardware qualification",
       "release_gate": "open"
     },
@@ -1001,7 +1012,7 @@
         "irq-control",
         "debug-module"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no exhaustive hostile electrical input or security qualification; unsupported guarantee is documented absence",
       "release_gate": "open"
     },
@@ -1013,39 +1024,20 @@
         "act4",
         "publication-guards"
       ],
-      "coverage": "not_run_for_standalone_tree",
+      "coverage": "not_evaluated_in_this_ledger",
       "limits": "no complete HDL line/toggle/functional coverage closure or exhaustive simultaneous-event cross-product has been collected",
       "release_gate": "open"
     }
   ],
   "status_rules": {
-    "passed": "only a source-bound positive run with required detector/semantic checks",
-    "reused_exact_sources": "historical run, exact declared sources and immutable archive revalidated; not new execution",
-    "historical_only": "result retained with an explicit current-source gap",
-    "not_executed": "no supporting execution in this campaign",
-    "scope_limited": "finite or component evidence does not close an unrestricted release gate"
+    "passed": "only a source-bound positive report with all required detectors and semantic checks",
+    "not_evaluated_in_this_ledger": "runner entrypoint is supplied; consult a separately generated source-bound report for execution status",
+    "scope_limited": "finite or component evidence does not close an unrestricted qualification gate"
   },
-  "coverage_statement": "No numeric whole-CPU functional or code-coverage percentage is claimed; directed bins and ACT4 selected-test dispositions remain local evidence.",
+  "coverage_statement": "No numeric whole-CPU functional or code-coverage percentage is claimed; use runner help for arguments and inspect newly generated reports before attributing results to the current source.",
   "execution_history": {
-    "integrated_attempt": "microcontroller/verification/evidence/verification-2026-11-04/campaigns/20261105T023106052242Z/summary.json",
-    "targeted_recovery": "microcontroller/verification/evidence/verification-2026-11-04/campaigns/20261105T023106052242Z/recovery-results.json",
-    "integrated_exit": 1,
-    "retained_infrastructure_failures": [
-      "directed CSR-control compilation",
-      "counter execution compilation/publication",
-      "generated-program publication"
-    ],
-    "infrastructure_cause": "temporary-storage quota exhausted; exact original failures retained",
-    "recovered_without_test_or_RTL_changes": [
-      "remaining six directed families",
-      "counter matrix",
-      "generated-program Sail matrix"
-    ],
-    "recovery_exit_codes": [
-      0,
-      0,
-      0
-    ],
-    "architectural_qualification": "open: five capacity omissions and two retained reference/applicability mismatches per timing seed"
+    "status": "not_distributed",
+    "scope": "historical observations in requirement limits are context only; no historical reports or recovery logs are shipped here",
+    "architectural_qualification": "open: the historical ACT4 campaign had five capacity omissions and two reference/applicability mismatches per timing seed; current-source full qualification is not established"
   }
 }

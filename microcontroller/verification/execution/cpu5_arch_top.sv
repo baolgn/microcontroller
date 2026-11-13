@@ -49,8 +49,8 @@ module cpu5_arch_top #(
   logic [31:0] irq_pc, irq_cause, inspect_value, mstatus, mtvec, mscratch, mie, mip, inhibit;
   fatal_record_t fatal_record;
   logic [63:0] mtime, mtimecmp;
-  logic msip, overflow, stop;
-  logic [31:0] ext_pending, ext_enable, block_count;
+  logic msip, overflow;
+  logic [31:0] ext_pending, ext_enable, notification_count;
   logic [31:1] events;
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
@@ -65,10 +65,10 @@ module cpu5_arch_top #(
   cpu5_irq_platform interrupt_sources (
     .clk_i, .system_reset_i(reset_i), .command_i(platform_command_o), .write_i(d_req_write_o),
     .addr_i(d_req_addr_o), .wdata_i(d_req_wdata_o), .size_i(d_req_size_o), .wstrb_i(d_req_wstrb_o),
-    .event_set_i(events), .block_ready_i(1'b0), .error_o(platform_error_o), .rdata_o(platform_rdata_o),
+    .event_set_i(events), .notification_i(1'b0), .error_o(platform_error_o), .rdata_o(platform_rdata_o),
     .mip_levels_o(mip_levels), .mtime_o(mtime), .mtimecmp_o(mtimecmp), .msip_o(msip),
-    .ext_pending_o(ext_pending), .ext_enable_o(ext_enable), .block_count_o(block_count),
-    .overflow_o(overflow), .stop_o(stop)
+    .ext_pending_o(ext_pending), .ext_enable_o(ext_enable), .notification_count_o(notification_count),
+    .overflow_o(overflow)
   );
   assign fatal_o = core_fatal || fetch_fatal;
   assign irq_event_o = {irq_valid, irq_pc, irq_cause, mtvec};
@@ -116,5 +116,5 @@ module cpu5_arch_top #(
       stage_tokens[3], stage_tokens[4], kill_uids[0], kill_uids[1], kill_uids[2], kill_uids[3], kill_uids[4],
       transfers, fetch_generation, packet_generation, fetch_discard, fetch_launch, fetch_accept, fetch_complete,
       fetch_drop, fetch_reason, flush_ready, flush_aborted, mem_launch, mem_busy, inspect_value, inspect_defined,
-      mstatus, mscratch, mie, mip, inhibit, fatal_record, mtime, mtimecmp, msip, ext_pending, ext_enable, block_count, overflow, stop};
+      mstatus, mscratch, mie, mip, inhibit, fatal_record, mtime, mtimecmp, msip, ext_pending, ext_enable, notification_count, overflow};
 endmodule

@@ -12,7 +12,7 @@ import tarfile
 ROOT = Path(__file__).resolve().parents[2]
 PREFIX = 'cpu5-r1-engineering'
 TREES = ('microcontroller', 'docs')
-EXCLUDED = {'__pycache__'}
+ROOT_FILES = ('README.md', 'CHANGELOG.md', '.gitignore')
 
 
 def digest(path):
@@ -57,6 +57,16 @@ def inventory(root):
             info = path.stat()
             records[name] = {'sha256': digest(path), 'bytes': info.st_size,
                              'mode': 0o755 if info.st_mode & 0o111 else 0o644}
+    # standalone entry points must remain available after archive extraction.
+    for name in ROOT_FILES:
+        path = root / name
+        require(not path.is_symlink(), 'symlink root file: ' + name)
+        # minimal component fixtures may omit optional repository entry points.
+        if path.exists():
+            require(path.is_file(), 'nonregular root file: ' + name)
+            info = path.stat()
+            records[name] = {'sha256': digest(path), 'bytes': info.st_size,
+                             'mode': 0o755 if info.st_mode & 0o111 else 0o644}
     require(bool(records), 'empty release inventory')
     return records
 
@@ -68,8 +78,8 @@ def validate_inventory(records):
     for name, row in records.items():
         require(isinstance(name, str), 'nontext inventory path')
         path = PurePosixPath(name)
-        require(name == path.as_posix() and not path.is_absolute() and len(path.parts) > 1 and
-                path.parts[0] in TREES and '..' not in path.parts and '\\' not in name and
+        require(name == path.as_posix() and not path.is_absolute() and
+                (name in ROOT_FILES or (len(path.parts) > 1 and path.parts[0] in TREES)) and '..' not in path.parts and '\\' not in name and
                 '\n' not in name and '\r' not in name, 'unsafe or reserved inventory path')
         require(isinstance(row, dict) and set(row) == {'sha256', 'bytes', 'mode'}, 'malformed inventory record')
         require(type(row['bytes']) is int and row['bytes'] >= 0, 'invalid inventory size')
@@ -97,9 +107,9 @@ def build(root, output):
     output.mkdir(parents=True)
     manifest = {'schema': 'CPU5-RELEASE-PACKAGE-1', 'prefix': PREFIX,
         'overall_system_pass': False, 'trees': list(TREES), 'files': records,
-        'exclusions': ['tool installation directories', 'vendor datasheet PDFs outside docs',
+        'exclusions': ['tool installation directories', 'unselected root files',
                        'private configuration', 'active Python caches; historical evidence caches retained', 'package output directory'],
-        'license_scope': 'dependency notices retained; project license is not assigned by this package'}
+        'license_scope': 'only supplied notices are included; this package does not assign a project license'}
     payload = (json.dumps(manifest, indent=2, sort_keys=True) + '\n').encode()
     checksums = ''.join(row['sha256'] + '  ' + name + '\n' for name, row in sorted(records.items())).encode()
     target = output / (PREFIX + '.tar.gz')

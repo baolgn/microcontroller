@@ -10,7 +10,7 @@ module cpu5_local_fabric_tb;
   logic [1:0] dsize, dstatus;
   logic [3:0] ds;
   logic [31:1] events;
-  logic block_ready;
+  logic notification_arrival;
   logic [31:0] mip, pending, enabled, status;
   logic [63:0] mtime;
   logic status_write, output_valid, busy;
@@ -28,7 +28,7 @@ module cpu5_local_fabric_tb;
     .d_req_valid_i(dv), .d_req_ready_o(dy), .d_req_addr_i(daddr), .d_req_wdata_i(dwdata),
     .d_req_tag_i(dtag), .d_req_write_i(dw), .d_req_size_i(dsize), .d_req_wstrb_i(ds),
     .d_rsp_valid_o(drv), .d_rsp_ready_i(dry), .d_rsp_tag_o(drtag), .d_rsp_rdata_o(drdata), .d_rsp_status_o(dstatus),
-    .event_set_i(events), .block_ready_i(block_ready), .mip_levels_o(mip),
+    .event_set_i(events), .notification_i(notification_arrival), .mip_levels_o(mip),
     .ext_pending_o(pending), .ext_enable_o(enabled), .mtime_o(mtime), .status_write_o(status_write),
     .output_valid_o(output_valid), .status_o(status), .output_data_o(output_data), .busy_o(busy)
   );
@@ -137,7 +137,7 @@ module cpu5_local_fabric_tb;
     clk = 0; reset = 1; isolated = 1; ia = 0; ir = 1; da = 0; dr = 1;
     iv = 0; iry = 0; iaddr = 0; itag = 0; ip = 0;
     dv = 0; dry = 0; daddr = 0; dwdata = 0; dtag = 0; dw = 0; dsize = 0; ds = 0;
-    events = 0; block_ready = 0; checks = 0; transfers = 0; tag = 0; status_effects = 0; output_effects = 0;
+    events = 0; notification_arrival = 0; checks = 0; transfers = 0; tag = 0; status_effects = 0; output_effects = 0;
     dut.rom[0] = 32'hfedcba98;
     dut.iram[0] = 32'h12345678;
     dut.dram[0] = 32'ha5a5a5a5;

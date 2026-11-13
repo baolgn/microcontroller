@@ -26,7 +26,7 @@ module cpu5_local_fabric #(
   output logic [31:0] d_rsp_tag_o, d_rsp_rdata_o,
   output logic [1:0] d_rsp_status_o,
   input logic [31:1] event_set_i,
-  input logic block_ready_i,
+  input logic notification_i,
   output logic [31:0] mip_levels_o, ext_pending_o, ext_enable_o,
   output logic [63:0] mtime_o,
   output logic status_write_o, output_valid_o,
@@ -54,10 +54,10 @@ module cpu5_local_fabric #(
   logic [3:0] d_strobes, expected_strobes;
   logic i_accept, d_accept, i_rom, i_iram, d_rom, d_iram, d_dram;
   logic i_legal, d_shape, d_mmio, timer_command, timer_error, d_error;
-  logic [31:0] timer_rdata, block_count;
+  logic [31:0] timer_rdata, notification_count;
   logic [63:0] mtimecmp;
   logic [31:1] injected_events;
-  logic msip, overflow, stop;
+  logic msip, overflow;
   logic unused_observation;
 
   /* FPGA initialization loads images; reset never initializes ordinary RAM. */
@@ -135,9 +135,9 @@ module cpu5_local_fabric #(
   cpu5_irq_platform interrupt_sources (
     .clk_i, .system_reset_i(reset_i), .command_i(timer_command), .write_i(d_write),
     .addr_i(d_addr), .wdata_i(d_wdata), .size_i(d_size), .wstrb_i(d_strobes),
-    .event_set_i(injected_events), .block_ready_i, .error_o(timer_error), .rdata_o(timer_rdata),
+    .event_set_i(injected_events), .notification_i, .error_o(timer_error), .rdata_o(timer_rdata),
     .mip_levels_o, .mtime_o, .mtimecmp_o(mtimecmp), .msip_o(msip),
-    .ext_pending_o, .ext_enable_o, .block_count_o(block_count), .overflow_o(overflow), .stop_o(stop)
+    .ext_pending_o, .ext_enable_o, .notification_count_o(notification_count), .overflow_o(overflow)
   );
 
   /* synchronous memory reads capture the requested word at acceptance, never at presentation. */
@@ -304,5 +304,5 @@ module cpu5_local_fabric #(
 `endif
 
   /* retain named timer diagnostics without introducing control dependencies. */
-  assign unused_observation = ^{mtimecmp, msip, block_count, overflow, stop, isolated_i};
+  assign unused_observation = ^{mtimecmp, msip, notification_count, overflow, isolated_i};
 endmodule

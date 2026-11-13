@@ -17,9 +17,11 @@ python3 microcontroller/release/acceptance.py \
   --output /tmp/cpu5-acceptance-units-new
 ```
 
-The output location must be new, must not overlap a sealed evidence directory, and must satisfy the runner's restricted path syntax. A location inside the checkout is permitted only under `.release-runs/`. Execution copies the selected current source into a separate workspace, runs the planned software checks with timeouts and retains logs, hashes and a summary. Review the printed plan before adding `--execute`; use a new output directory for each attempt.
+The output location must be new, must not overlap a sealed evidence directory, and must satisfy the runner's restricted path syntax. A location inside the checkout is permitted only under `.release-runs/`. Execution copies current CPU sources, nested documentation and the allowed root files into a separate workspace, excludes generated evidence, runs the planned software checks with timeouts and retains logs, hashes and a summary. Review the printed plan before adding `--execute`; use a new output directory for each attempt.
 
 The suite names cover smoke, units, firmware, directed, formal, reference, architectural, debug, debug-host and route checks. `all` combines their jobs; it does not turn open architectural omissions or untested physical behavior into a release pass. Several child runners fix the GCC, architectural-tool or OSS CAD Suite location. The planner rejects incompatible overrides for affected suites. Its default smoke suite builds firmware, checks images and host programming logic, and simulates SPI boot; it is not a Python-only self-test.
+
+The `debug` and `debug-host` suites also require a working RV32-capable GDB installation. Use `--gdb` to select its executable or a launcher that supplies matching runtime libraries, Python support and GDB data files. The default `/tmp/cpu5-debug-gdb/usr/bin/gdb-multiarch` path does not install those dependencies; copying a binary to that path is insufficient. The interoperability test uses loopback TCP connections between the simulator, OpenOCD and GDB, so the host must permit local socket binding. It does not access a physical probe.
 
 [bootstrap_tools.py](bootstrap_tools.py) requires `--root` and an explicit `--manifest`. The complete dependency manifest is not distributed here. Consequently, this checkout cannot independently reproduce that installer from a documented download command alone. A supplied manifest must define the expected archive/package hashes and installation layout; the bootstrap checks those inputs, uses a new installation root, and retains success or failure logs. `--cache` selects existing downloads and `--download` permits network retrieval. It does not infer substitute versions when inputs are absent.
 
@@ -32,7 +34,7 @@ python3 microcontroller/release/package_release.py verify \
   --archive /tmp/cpu5-package-new/cpu5-r1-engineering.tar.gz
 ```
 
-The package contains the `microcontroller/` and `docs/` trees with a deterministic inventory, normalized permissions and checksums. It does not include root-level project files, so this archive is not a complete mirror of the repository. Verification checks each declared member, size, mode and digest. Optional `--extract` requires a nonexistent destination. A package includes the available files; it does not create absent campaign records or refresh source attribution.
+The package contains the `microcontroller/` and `docs/` trees and the root `README.md`, `CHANGELOG.md` and `.gitignore` when present, with a deterministic inventory, normalized permissions and checksums. Git history, installed toolchains and other root files are excluded. Verification checks each declared member, size, mode and digest. Optional `--extract` requires a nonexistent destination. A package includes the available files; it does not create absent campaign records or refresh source attribution.
 
 ## Implementation
 
