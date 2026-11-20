@@ -66,7 +66,7 @@ The [RTL guide](microcontroller/rtl/README.md) explains the implemented modules 
 
 ## [Development and verification](docs/README.md)
 
-The development guide connects setup, first simulations and broader CPU checks. Verification includes directed corner cases, reproducible random programs, retirement-level comparison, independent memory-effect checks and formal properties under stated environmental assumptions. Architectural tests complement these checks; they do not establish correctness by themselves.
+The development guide connects setup, first simulations and broader CPU checks. Verification includes directed corner cases, reproducible random programs, retirement-level comparison, independent memory-effect checks and formal properties under stated environmental assumptions. Architectural tests complement these checks; they do not establish correctness by themselves. [Waveform figures](microcontroller/tests/README.md#waveform-figures) cropped from passing bench runs show how the pipeline, memory requests, traps, interrupts, fences and debug halt behave cycle by cycle.
 
 The [verification guide](microcontroller/verification/README.md) records the limits of the ACT4/Sail integration and scoped proofs. Historical routing and simulation observations are distinct from fresh results for this source tree and from measurements on a physical board. The [initial publication checks](docs/validation.json) and [follow-up audit checks](docs/audit-validation.json) identify their separate source snapshots and selected regressions.
 

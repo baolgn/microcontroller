@@ -75,6 +75,10 @@ flowchart LR
     M --> W["W · retire / trap / CSR<br/>CPU-12–13"]
 ```
 
+![Diagnostic profile with one instruction in flight](../../docs/waveforms/diagnostic-mode.svg)
+
+The diagnostic profile runs the same base program with at most one stage occupied. `in_ready_o` admits the next instruction only in the cycle of the previous retirement record, so each instruction takes six clock cycles from F entry to the next admission. The forwarded profile in the [CPU overview](../README.md#pipeline) keeps five instructions in flight. The [waveform guide](../tests/README.md#waveform-figures) explains how these figures are produced and read.
+
 ## Pipeline control and retirement
 
 The [control module](cpu5_control.sv) selects attempts, applies holds and kills, and commits architectural updates. The branch helper supplies a candidate result in X; redirect publication waits for successful W retirement.
@@ -140,6 +144,10 @@ flowchart TB
     W -.-> BOUND["boundary_pc changes only at architectural events<br/>speculative fetch cannot change it"]
 ```
 
+![Hart reset with an offered data request](../../docs/waveforms/hart-reset-request.svg)
+
+A hart reset arrives in clock cycle 1345 while `lw x0, 0(x1)` offers an MMIO read of `0x40000000` with `d_req_ready_i` low. The reset removes the instruction token, but the request keeps its valid and payload, is accepted in cycle 1346 and receives its response in cycle 1350. `in_ready_o` stays low until the retained request has drained.
+
 ## CPU-02 · Fetch adapter and buffer
 
 The [fetch manager](cpu5_fetch.sv), [execute guard](cpu5_fetch_guard.sv) and [buffer](cpu5_fetch_buffer.sv) retain tags, parcel state and stale-response disposition. Latency and generation widths are configuration parameters rather than fixed performance guarantees.
@@ -197,6 +205,10 @@ flowchart TB
     ERR --> TOK
     STEP["Single-step: only selected instruction parcels<br/>no following allocation / target / handler fetch"] -.-> WAIT
 ```
+
+![A 32-bit instruction assembled from two fetch words](../../docs/waveforms/straddled-fetch.svg)
+
+The frontend requests only the parcels it needs. The low parcel of word `0x88` holds `c.nop`; the high parcel, returned in clock cycle 1602, begins a 32-bit `mul` at `0x8a`. The frontend then requests only the low parcel of word `0x8c` (`i_req_parcels_o` = `01`) and delivers the assembled instruction in cycle 1615.
 
 ## CPU-04 · Decoder and immediates
 
@@ -260,6 +272,10 @@ flowchart TB
     KILL["Older redirect / trap"] --> FLUSH["Kill younger cancellable tokens<br/>never forward killed results"]
 ```
 
+![Load-use hazard](../../docs/waveforms/load-use-stall.svg)
+
+`addi x6, x5, 1` reaches D while `lw x5, 0(x1)` is in X. The newest matching producer is an unfinished load, so `d_hazard` holds the consumer in D from clock cycle 611 instead of forwarding the older `x5` value from `addi x5, x0, 7`. The load request is offered in cycle 613, accepted in cycle 614 and answered in cycle 619; the consumer advances only after that completion.
+
 ## CPU-07 · ALU and shifter
 
 The [ALU](cpu5_alu.sv) and [shifter](cpu5_shifter.sv) provide 32-bit integer results. [Control](cpu5_control.sv) captures operands and carries results to ordered retirement.
@@ -306,6 +322,10 @@ flowchart TB
     ENTRY -->|"yes"| DRAIN["Branch has retired<br/>halt / IRQ boundary uses architectural next PC<br/>step halts before target fetch"]
 ```
 
+![Taken branch redirect at W](../../docs/waveforms/branch-redirect.svg)
+
+`beq x1, x2, 0x118` is taken. X calculates the target in clock cycle 197, but the redirect is committed only when the branch leaves W and appears on `redirect_valid_o` in cycle 200. The four younger tokens, including the wrong-path `addi x3, x0, 1`, are discarded at that edge and marked killed in the listing; fetch restarts at `0x118`.
+
 ## CPU-09 · Multiplier
 
 Multiplication and division share [cpu5_muldiv.sv](cpu5_muldiv.sv). The multiplier uses four 16-bit partial products and a registered sum; result-valid begins two clocks after start acceptance. Backpressure can extend the time before consumption, and the complete instruction latency also includes pipeline admission and retirement.
@@ -348,6 +368,10 @@ flowchart TB
     ITER -.-> WAIT["Hold younger work<br/>IRQ / halt waits for completion"]
 ```
 
+![Divide latency](../../docs/waveforms/divide-latency.svg)
+
+`div x5, x2, x3` starts at the edge that ends clock cycle 7145. `md_valid` appears 33 edges later in cycle 7179; the instruction leaves X two edges after that and its retirement record appears in cycle 7183. The dependent `addi x6, x5, 1` waits in D for the whole operation. These edge counts match the multiply/divide control measurements in the [audit checks](../../docs/audit-validation.json).
+
 ## CPU-11 · Load/store unit
 
 The [LSU helper](cpu5_lsu.sv) checks address shape and formats data. The surviving request manager is implemented inside [control](cpu5_control.sv).
@@ -371,6 +395,10 @@ flowchart TB
     FAULT --> W
     FATAL --> REC["Coordinated recovery"]
 ```
+
+![First-valid data request](../../docs/waveforms/data-request.svg)
+
+When `lbu x3, 0(x1)` enters M in clock cycle 87, `launch` reserves the request descriptor. The request becomes valid in cycle 88, keeps its address while `d_req_ready_i` is low, and is accepted once in cycle 90. The response in cycle 91 belongs to the same owner, after which the load retires through W.
 
 ## CPU-11 · First-valid MMIO obligation
 
@@ -417,6 +445,10 @@ flowchart TB
     RULE["Older fault wins<br/>wrong-path faults discarded"] -.-> FAULT
 ```
 
+![Precise load access fault](../../docs/waveforms/access-fault.svg)
+
+`lw x0, 0(x1)` performs its access even though its destination is x0. The request for `0x50001000` is accepted in clock cycle 939 and an error response arrives in cycle 940. The load reaches W and its trap record follows in cycle 943 with `mcause` 5, `mepc` `0x104` and `mtval` `0x50001000`, while `redirect_valid_o` sends execution to the trap vector.
+
 ## CPU-13 · CSR and system instructions
 
 The [CSR bank](cpu5_csr.sv) implements access permissions and state transitions, while [control](cpu5_control.sv) derives instruction read/write suppression and ordered commit. The [CSR integration bench](../tests/cpu5_csr_control_tb.sv) checks encoded execution separately from standalone-bank properties.
@@ -436,6 +468,10 @@ flowchart TB
     SYS --> W["Precise architectural boundary"]
     KIND -->|"illegal system encoding"| BAD
 ```
+
+![Serialized CSR write](../../docs/waveforms/csr-serialization.svg)
+
+`csrrw x0, mscratch, x31` closes instruction input: `in_ready_o` falls when the CSR instruction enters F in clock cycle 12. W holds it for a preparation cycle and a commit cycle (16 and 17). `mscratch` changes with the retirement record in cycle 18, and input reopens in the same cycle.
 
 ## CPU-14 · Interrupts and idle
 
@@ -462,6 +498,14 @@ flowchart TB
     PEND --> WAKE
 ```
 
+![Software interrupt entry](../../docs/waveforms/interrupt-entry.svg)
+
+After `csrrw x0, mstatus, x1` retires, `mstatus` shows MIE set in clock cycle 625 while a machine software interrupt is pending (`mip` 8). The controller takes the interrupt in cycle 627 with cause `0x80000003`, saves `mepc` `0x30`, the next instruction, moves MIE into MPIE (`mstatus` `0x1880`) and redirects to `mtvec` `0x100`.
+
+![WFI wake-up](../../docs/waveforms/wfi-wake.svg)
+
+With MIE already enabled, `wfi` retires and `idle_o` rises in clock cycle 5855 as the timer interrupt becomes pending. The core wakes in the next cycle and enters the handler in cycle 5857 with cause `0x80000007` and `mepc` `0x34`, the instruction after `wfi`.
+
 ## CPU-15 · FENCE and FENCE.I
 
 The [control module](cpu5_control.sv) serializes the CPU's data effects and commits instruction restart. The [fetch manager](cpu5_fetch.sv) drains obsolete obligations. Completion of a separate external writer must be established before CPU synchronization; a CPU fence does not complete an unrelated transfer.
@@ -482,6 +526,10 @@ flowchart TB
     EXT["External writer"] --> DONE["Independent completion / publication<br/>before hart synchronization"]
     DONE -.-> VIS
 ```
+
+![FENCE.I invalidation](../../docs/waveforms/fence-i.svg)
+
+While `fence.i` moves to W, the frontend's request for the next word `0x1000c` is accepted in fetch generation 1. Retirement publishes the redirect to PC+4 in clock cycle 4229, and the frontend raises `discard_o` and moves to generation 2. The obsolete response arrives in cycle 4233 and is dropped; only then is `0x1000c` requested again in the new generation.
 
 ## CPU-16 · Counters and trace
 
@@ -542,6 +590,10 @@ flowchart TB
     HALT --> STATUS
     STATUS --> DM["Debug Module status"]
 ```
+
+![Debug halt with an offered load](../../docs/waveforms/debug-halt.svg)
+
+The halt request arrives in clock cycle 1003, when `lw x0, 0(x1)` has already offered an MMIO read. The offer is neither withdrawn nor replayed: it is accepted in cycle 1006 and its error response arrives in cycle 1007. The load traps at W with `mcause` 5, and the hart halts in cycle 1011 with `dpc` at the trap vector `0x100`, before the handler executes.
 
 ## CPU verification boundaries
 

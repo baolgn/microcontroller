@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="412" viewBox="0 0 750 412" role="img" aria-label="overlapped five-stage execution with forwarding">
+<title>overlapped five-stage execution with forwarding</title>
+<style>
+.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
+.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
+.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
+.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
+.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
+.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
+.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
+.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
+.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
+.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
+.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
+.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
+.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
+.mark{stroke:#d29922}.mtext{fill:#d29922}
+.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
+.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
+</style>
+<rect class="bg" x="0" y="0" width="750" height="412" rx="6"/>
+<rect class="frame" x="0.5" y="0.5" width="749" height="411" rx="6"/>
+<text class="title" x="14" y="22">overlapped five-stage execution with forwarding</text>
+<text class="sub" x="14" y="40">cpu5_base_tb DIAGNOSTIC=0 FORWARDING=1 · seed 1 · clock cycles 3-18</text>
+<text class="num" x="209.0" y="96" text-anchor="middle">3</text>
+<text class="num" x="243.0" y="96" text-anchor="middle">4</text>
+<text class="num" x="277.0" y="96" text-anchor="middle">5</text>
+<text class="num" x="311.0" y="96" text-anchor="middle">6</text>
+<text class="num" x="345.0" y="96" text-anchor="middle">7</text>
+<text class="num" x="379.0" y="96" text-anchor="middle">8</text>
+<text class="num" x="413.0" y="96" text-anchor="middle">9</text>
+<text class="num" x="447.0" y="96" text-anchor="middle">10</text>
+<text class="num" x="481.0" y="96" text-anchor="middle">11</text>
+<text class="num" x="515.0" y="96" text-anchor="middle">12</text>
+<text class="num" x="549.0" y="96" text-anchor="middle">13</text>
+<text class="num" x="583.0" y="96" text-anchor="middle">14</text>
+<text class="num" x="617.0" y="96" text-anchor="middle">15</text>
+<text class="num" x="651.0" y="96" text-anchor="middle">16</text>
+<text class="num" x="685.0" y="96" text-anchor="middle">17</text>
+<text class="num" x="719.0" y="96" text-anchor="middle">18</text>
+<line class="grid" x1="192" y1="102" x2="192" y2="256"/>
+<line class="grid" x1="226" y1="102" x2="226" y2="256"/>
+<line class="grid" x1="260" y1="102" x2="260" y2="256"/>
+<line class="grid" x1="294" y1="102" x2="294" y2="256"/>
+<line class="grid" x1="328" y1="102" x2="328" y2="256"/>
+<line class="grid" x1="362" y1="102" x2="362" y2="256"/>
+<line class="grid" x1="396" y1="102" x2="396" y2="256"/>
+<line class="grid" x1="430" y1="102" x2="430" y2="256"/>
+<line class="grid" x1="464" y1="102" x2="464" y2="256"/>
+<line class="grid" x1="498" y1="102" x2="498" y2="256"/>
+<line class="grid" x1="532" y1="102" x2="532" y2="256"/>
+<line class="grid" x1="566" y1="102" x2="566" y2="256"/>
+<line class="grid" x1="600" y1="102" x2="600" y2="256"/>
+<line class="grid" x1="634" y1="102" x2="634" y2="256"/>
+<line class="grid" x1="668" y1="102" x2="668" y2="256"/>
+<line class="grid" x1="702" y1="102" x2="702" y2="256"/>
+<line class="grid" x1="736" y1="102" x2="736" y2="256"/>
+<text class="lbl" x="184" y="117.0" text-anchor="end">clk</text>
+<polyline class="clk" points="192,120 192,106 209.0,106 209.0,120 226,120 226,106 243.0,106 243.0,120 260,120 260,106 277.0,106 277.0,120 294,120 294,106 311.0,106 311.0,120 328,120 328,106 345.0,106 345.0,120 362,120 362,106 379.0,106 379.0,120 396,120 396,106 413.0,106 413.0,120 430,120 430,106 447.0,106 447.0,120 464,120 464,106 481.0,106 481.0,120 498,120 498,106 515.0,106 515.0,120 532,120 532,106 549.0,106 549.0,120 566,120 566,106 583.0,106 583.0,120 600,120 600,106 617.0,106 617.0,120 634,120 634,106 651.0,106 651.0,120 668,120 668,106 685.0,106 685.0,120 702,120 702,106 719.0,106 719.0,120 736,120"/>
+<text class="lbl" x="184" y="139.0" text-anchor="end">F</text>
+<polygon class="bus c0" points="192,135.0 196.0,128 222.0,128 226,135.0 222.0,142 196.0,142"/>
+<text class="val" x="209.0" y="138.5" text-anchor="middle">nop</text>
+<polygon class="bus c1" points="226,135.0 230.0,128 256.0,128 260,135.0 256.0,142 230.0,142"/>
+<text class="val" x="243.0" y="138.5" text-anchor="middle">lui</text>
+<polygon class="bus c2" points="260,135.0 264.0,128 290.0,128 294,135.0 290.0,142 264.0,142"/>
+<text class="val" x="277.0" y="138.5" text-anchor="middle">addi</text>
+<polygon class="bus c3" points="294,135.0 298.0,128 324.0,128 328,135.0 324.0,142 298.0,142"/>
+<text class="val" x="311.0" y="138.5" text-anchor="middle">lui</text>
+<polygon class="bus c4" points="328,135.0 332.0,128 358.0,128 362,135.0 358.0,142 332.0,142"/>
+<text class="val" x="345.0" y="138.5" text-anchor="middle">addi</text>
+<polygon class="bus c5" points="362,135.0 366.0,128 392.0,128 396,135.0 392.0,142 366.0,142"/>
+<text class="val" x="379.0" y="138.5" text-anchor="middle">lui</text>
+<polygon class="bus c6" points="396,135.0 400.0,128 426.0,128 430,135.0 426.0,142 400.0,142"/>
+<text class="val" x="413.0" y="138.5" text-anchor="middle">addi</text>
+<polygon class="bus c7" points="430,135.0 434.0,128 460.0,128 464,135.0 460.0,142 434.0,142"/>
+<text class="val" x="447.0" y="138.5" text-anchor="middle">lui</text>
+<polygon class="bus c0" points="464,135.0 468.0,128 494.0,128 498,135.0 494.0,142 468.0,142"/>
+<text class="val" x="481.0" y="138.5" text-anchor="middle">addi</text>
+<polygon class="bus c1" points="498,135.0 502.0,128 528.0,128 532,135.0 528.0,142 502.0,142"/>
+<text class="val" x="515.0" y="138.5" text-anchor="middle">add</text>
+<polygon class="bus c2" points="532,135.0 536.0,128 562.0,128 566,135.0 562.0,142 536.0,142"/>
+<text class="val" x="549.0" y="138.5" text-anchor="middle">sll</text>
+<polygon class="bus c3" points="566,135.0 570.0,128 596.0,128 600,135.0 596.0,142 570.0,142"/>
+<text class="val" x="583.0" y="138.5" text-anchor="middle">slt</text>
+<polygon class="bus c4" points="600,135.0 604.0,128 630.0,128 634,135.0 630.0,142 604.0,142"/>
+<text class="val" x="617.0" y="138.5" text-anchor="middle">sltu</text>
+<polygon class="bus c5" points="634,135.0 638.0,128 664.0,128 668,135.0 664.0,142 638.0,142"/>
+<text class="val" x="651.0" y="138.5" text-anchor="middle">xor</text>
+<polygon class="bus c6" points="668,135.0 672.0,128 698.0,128 702,135.0 698.0,142 672.0,142"/>
+<text class="val" x="685.0" y="138.5" text-anchor="middle">srl</text>
+<polygon class="bus c7" points="702,135.0 706.0,128 732.0,128 736,135.0 732.0,142 706.0,142"/>
+<text class="val" x="719.0" y="138.5" text-anchor="middle">or</text>
+<text class="lbl" x="184" y="161.0" text-anchor="end">D</text>
+<line class="idle" x1="192" y1="157.0" x2="226" y2="157.0"/>
+<polygon class="bus c0" points="226,157.0 230.0,150 256.0,150 260,157.0 256.0,164 230.0,164"/>
+<text class="val" x="243.0" y="160.5" text-anchor="middle">nop</text>
+<polygon class="bus c1" points="260,157.0 264.0,150 290.0,150 294,157.0 290.0,164 264.0,164"/>
+<text class="val" x="277.0" y="160.5" text-anchor="middle">lui</text>
+<polygon class="bus c2" points="294,157.0 298.0,150 324.0,150 328,157.0 324.0,164 298.0,164"/>
+<text class="val" x="311.0" y="160.5" text-anchor="middle">addi</text>
+<polygon class="bus c3" points="328,157.0 332.0,150 358.0,150 362,157.0 358.0,164 332.0,164"/>
+<text class="val" x="345.0" y="160.5" text-anchor="middle">lui</text>
+<polygon class="bus c4" points="362,157.0 366.0,150 392.0,150 396,157.0 392.0,164 366.0,164"/>
+<text class="val" x="379.0" y="160.5" text-anchor="middle">addi</text>
+<polygon class="bus c5" points="396,157.0 400.0,150 426.0,150 430,157.0 426.0,164 400.0,164"/>
+<text class="val" x="413.0" y="160.5" text-anchor="middle">lui</text>
+<polygon class="bus c6" points="430,157.0 434.0,150 460.0,150 464,157.0 460.0,164 434.0,164"/>
+<text class="val" x="447.0" y="160.5" text-anchor="middle">addi</text>
+<polygon class="bus c7" points="464,157.0 468.0,150 494.0,150 498,157.0 494.0,164 468.0,164"/>
+<text class="val" x="481.0" y="160.5" text-anchor="middle">lui</text>
+<polygon class="bus c0" points="498,157.0 502.0,150 528.0,150 532,157.0 528.0,164 502.0,164"/>
+<text class="val" x="515.0" y="160.5" text-anchor="middle">addi</text>
+<polygon class="bus c1" points="532,157.0 536.0,150 562.0,150 566,157.0 562.0,164 536.0,164"/>
+<text class="val" x="549.0" y="160.5" text-anchor="middle">add</text>
+<polygon class="bus c2" points="566,157.0 570.0,150 596.0,150 600,157.0 596.0,164 570.0,164"/>
+<text class="val" x="583.0" y="160.5" text-anchor="middle">sll</text>
+<polygon class="bus c3" points="600,157.0 604.0,150 630.0,150 634,157.0 630.0,164 604.0,164"/>
+<text class="val" x="617.0" y="160.5" text-anchor="middle">slt</text>
+<polygon class="bus c4" points="634,157.0 638.0,150 664.0,150 668,157.0 664.0,164 638.0,164"/>
+<text class="val" x="651.0" y="160.5" text-anchor="middle">sltu</text>
+<polygon class="bus c5" points="668,157.0 672.0,150 698.0,150 702,157.0 698.0,164 672.0,164"/>
+<text class="val" x="685.0" y="160.5" text-anchor="middle">xor</text>
+<polygon class="bus c6" points="702,157.0 706.0,150 732.0,150 736,157.0 732.0,164 706.0,164"/>
+<text class="val" x="719.0" y="160.5" text-anchor="middle">srl</text>
+<text class="lbl" x="184" y="183.0" text-anchor="end">X</text>
+<line class="idle" x1="192" y1="179.0" x2="260" y2="179.0"/>
+<polygon class="bus c0" points="260,179.0 264.0,172 290.0,172 294,179.0 290.0,186 264.0,186"/>
+<text class="val" x="277.0" y="182.5" text-anchor="middle">nop</text>
+<polygon class="bus c1" points="294,179.0 298.0,172 324.0,172 328,179.0 324.0,186 298.0,186"/>
+<text class="val" x="311.0" y="182.5" text-anchor="middle">lui</text>
+<polygon class="bus c2" points="328,179.0 332.0,172 358.0,172 362,179.0 358.0,186 332.0,186"/>
+<text class="val" x="345.0" y="182.5" text-anchor="middle">addi</text>
+<polygon class="bus c3" points="362,179.0 366.0,172 392.0,172 396,179.0 392.0,186 366.0,186"/>
+<text class="val" x="379.0" y="182.5" text-anchor="middle">lui</text>
+<polygon class="bus c4" points="396,179.0 400.0,172 426.0,172 430,179.0 426.0,186 400.0,186"/>
+<text class="val" x="413.0" y="182.5" text-anchor="middle">addi</text>
+<polygon class="bus c5" points="430,179.0 434.0,172 460.0,172 464,179.0 460.0,186 434.0,186"/>
+<text class="val" x="447.0" y="182.5" text-anchor="middle">lui</text>
+<polygon class="bus c6" points="464,179.0 468.0,172 494.0,172 498,179.0 494.0,186 468.0,186"/>
+<text class="val" x="481.0" y="182.5" text-anchor="middle">addi</text>
+<polygon class="bus c7" points="498,179.0 502.0,172 528.0,172 532,179.0 528.0,186 502.0,186"/>
+<text class="val" x="515.0" y="182.5" text-anchor="middle">lui</text>
+<polygon class="bus c0" points="532,179.0 536.0,172 562.0,172 566,179.0 562.0,186 536.0,186"/>
+<text class="val" x="549.0" y="182.5" text-anchor="middle">addi</text>
+<polygon class="bus c1" points="566,179.0 570.0,172 596.0,172 600,179.0 596.0,186 570.0,186"/>
+<text class="val" x="583.0" y="182.5" text-anchor="middle">add</text>
+<polygon class="bus c2" points="600,179.0 604.0,172 630.0,172 634,179.0 630.0,186 604.0,186"/>
+<text class="val" x="617.0" y="182.5" text-anchor="middle">sll</text>
+<polygon class="bus c3" points="634,179.0 638.0,172 664.0,172 668,179.0 664.0,186 638.0,186"/>
+<text class="val" x="651.0" y="182.5" text-anchor="middle">slt</text>
+<polygon class="bus c4" points="668,179.0 672.0,172 698.0,172 702,179.0 698.0,186 672.0,186"/>
+<text class="val" x="685.0" y="182.5" text-anchor="middle">sltu</text>
+<polygon class="bus c5" points="702,179.0 706.0,172 732.0,172 736,179.0 732.0,186 706.0,186"/>
+<text class="val" x="719.0" y="182.5" text-anchor="middle">xor</text>
+<text class="lbl" x="184" y="205.0" text-anchor="end">M</text>
+<line class="idle" x1="192" y1="201.0" x2="294" y2="201.0"/>
+<polygon class="bus c0" points="294,201.0 298.0,194 324.0,194 328,201.0 324.0,208 298.0,208"/>
+<text class="val" x="311.0" y="204.5" text-anchor="middle">nop</text>
+<polygon class="bus c1" points="328,201.0 332.0,194 358.0,194 362,201.0 358.0,208 332.0,208"/>
+<text class="val" x="345.0" y="204.5" text-anchor="middle">lui</text>
+<polygon class="bus c2" points="362,201.0 366.0,194 392.0,194 396,201.0 392.0,208 366.0,208"/>
+<text class="val" x="379.0" y="204.5" text-anchor="middle">addi</text>
+<polygon class="bus c3" points="396,201.0 400.0,194 426.0,194 430,201.0 426.0,208 400.0,208"/>
+<text class="val" x="413.0" y="204.5" text-anchor="middle">lui</text>
+<polygon class="bus c4" points="430,201.0 434.0,194 460.0,194 464,201.0 460.0,208 434.0,208"/>
+<text class="val" x="447.0" y="204.5" text-anchor="middle">addi</text>
+<polygon class="bus c5" points="464,201.0 468.0,194 494.0,194 498,201.0 494.0,208 468.0,208"/>
+<text class="val" x="481.0" y="204.5" text-anchor="middle">lui</text>
+<polygon class="bus c6" points="498,201.0 502.0,194 528.0,194 532,201.0 528.0,208 502.0,208"/>
+<text class="val" x="515.0" y="204.5" text-anchor="middle">addi</text>
+<polygon class="bus c7" points="532,201.0 536.0,194 562.0,194 566,201.0 562.0,208 536.0,208"/>
+<text class="val" x="549.0" y="204.5" text-anchor="middle">lui</text>
+<polygon class="bus c0" points="566,201.0 570.0,194 596.0,194 600,201.0 596.0,208 570.0,208"/>
+<text class="val" x="583.0" y="204.5" text-anchor="middle">addi</text>
+<polygon class="bus c1" points="600,201.0 604.0,194 630.0,194 634,201.0 630.0,208 604.0,208"/>
+<text class="val" x="617.0" y="204.5" text-anchor="middle">add</text>
+<polygon class="bus c2" points="634,201.0 638.0,194 664.0,194 668,201.0 664.0,208 638.0,208"/>
+<text class="val" x="651.0" y="204.5" text-anchor="middle">sll</text>
+<polygon class="bus c3" points="668,201.0 672.0,194 698.0,194 702,201.0 698.0,208 672.0,208"/>
+<text class="val" x="685.0" y="204.5" text-anchor="middle">slt</text>
+<polygon class="bus c4" points="702,201.0 706.0,194 732.0,194 736,201.0 732.0,208 706.0,208"/>
+<text class="val" x="719.0" y="204.5" text-anchor="middle">sltu</text>
+<text class="lbl" x="184" y="227.0" text-anchor="end">W</text>
+<line class="idle" x1="192" y1="223.0" x2="328" y2="223.0"/>
+<polygon class="bus c0" points="328,223.0 332.0,216 358.0,216 362,223.0 358.0,230 332.0,230"/>
+<text class="val" x="345.0" y="226.5" text-anchor="middle">nop</text>
+<polygon class="bus c1" points="362,223.0 366.0,216 392.0,216 396,223.0 392.0,230 366.0,230"/>
+<text class="val" x="379.0" y="226.5" text-anchor="middle">lui</text>
+<polygon class="bus c2" points="396,223.0 400.0,216 426.0,216 430,223.0 426.0,230 400.0,230"/>
+<text class="val" x="413.0" y="226.5" text-anchor="middle">addi</text>
+<polygon class="bus c3" points="430,223.0 434.0,216 460.0,216 464,223.0 460.0,230 434.0,230"/>
+<text class="val" x="447.0" y="226.5" text-anchor="middle">lui</text>
+<polygon class="bus c4" points="464,223.0 468.0,216 494.0,216 498,223.0 494.0,230 468.0,230"/>
+<text class="val" x="481.0" y="226.5" text-anchor="middle">addi</text>
+<polygon class="bus c5" points="498,223.0 502.0,216 528.0,216 532,223.0 528.0,230 502.0,230"/>
+<text class="val" x="515.0" y="226.5" text-anchor="middle">lui</text>
+<polygon class="bus c6" points="532,223.0 536.0,216 562.0,216 566,223.0 562.0,230 536.0,230"/>
+<text class="val" x="549.0" y="226.5" text-anchor="middle">addi</text>
+<polygon class="bus c7" points="566,223.0 570.0,216 596.0,216 600,223.0 596.0,230 570.0,230"/>
+<text class="val" x="583.0" y="226.5" text-anchor="middle">lui</text>
+<polygon class="bus c0" points="600,223.0 604.0,216 630.0,216 634,223.0 630.0,230 604.0,230"/>
+<text class="val" x="617.0" y="226.5" text-anchor="middle">addi</text>
+<polygon class="bus c1" points="634,223.0 638.0,216 664.0,216 668,223.0 664.0,230 638.0,230"/>
+<text class="val" x="651.0" y="226.5" text-anchor="middle">add</text>
+<polygon class="bus c2" points="668,223.0 672.0,216 698.0,216 702,223.0 698.0,230 672.0,230"/>
+<text class="val" x="685.0" y="226.5" text-anchor="middle">sll</text>
+<polygon class="bus c3" points="702,223.0 706.0,216 732.0,216 736,223.0 732.0,230 706.0,230"/>
+<text class="val" x="719.0" y="226.5" text-anchor="middle">slt</text>
+<text class="lbl" x="184" y="249.0" text-anchor="end">trace_o</text>
+<line class="idle" x1="192" y1="245.0" x2="362" y2="245.0"/>
+<polygon class="bus c0" points="362,245.0 366.0,238 392.0,238 396,245.0 392.0,252 366.0,252"/>
+<text class="val" x="379.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c1" points="396,245.0 400.0,238 426.0,238 430,245.0 426.0,252 400.0,252"/>
+<text class="val" x="413.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c2" points="430,245.0 434.0,238 460.0,238 464,245.0 460.0,252 434.0,252"/>
+<text class="val" x="447.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c3" points="464,245.0 468.0,238 494.0,238 498,245.0 494.0,252 468.0,252"/>
+<text class="val" x="481.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c4" points="498,245.0 502.0,238 528.0,238 532,245.0 528.0,252 502.0,252"/>
+<text class="val" x="515.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c5" points="532,245.0 536.0,238 562.0,238 566,245.0 562.0,252 536.0,252"/>
+<text class="val" x="549.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c6" points="566,245.0 570.0,238 596.0,238 600,245.0 596.0,252 570.0,252"/>
+<text class="val" x="583.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c7" points="600,245.0 604.0,238 630.0,238 634,245.0 630.0,252 604.0,252"/>
+<text class="val" x="617.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c0" points="634,245.0 638.0,238 664.0,238 668,245.0 664.0,252 638.0,252"/>
+<text class="val" x="651.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c1" points="668,245.0 672.0,238 698.0,238 702,245.0 698.0,252 672.0,252"/>
+<text class="val" x="685.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c2" points="702,245.0 706.0,238 732.0,238 736,245.0 732.0,252 706.0,252"/>
+<text class="val" x="719.0" y="248.5" text-anchor="middle">ret</text>
+<line class="mark" x1="328" y1="70" x2="328" y2="256"/>
+<text class="mtext" x="331" y="74">all five stages occupied</text>
+<rect class="bus c0" x="14.0" y="271" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="280">00000100  nop</text>
+<rect class="bus c1" x="14.0" y="286" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="295">00000104  lui x1, 0x0</text>
+<rect class="bus c2" x="14.0" y="301" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="310">00000108  addi x1, x1, -2</text>
+<rect class="bus c3" x="14.0" y="316" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="325">0000010c  lui x2, 0x0</text>
+<rect class="bus c4" x="14.0" y="331" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="340">00000110  addi x2, x2, 33</text>
+<rect class="bus c5" x="14.0" y="346" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="355">00000114  lui x3, 0x80000</text>
+<rect class="bus c6" x="14.0" y="361" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="370">00000118  addi x3, x3, 0</text>
+<rect class="bus c7" x="14.0" y="376" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="385">0000011c  lui x4, 0x80000</text>
+<rect class="bus c0" x="9.0" y="271" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="280">00000120  addi x4, x4, -1</text>
+<rect class="bus c1" x="9.0" y="286" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="295">00000124  add x8, x1, x2</text>
+<rect class="bus c2" x="9.0" y="301" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="310">00000128  sll x9, x1, x2</text>
+<rect class="bus c3" x="9.0" y="316" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="325">0000012c  slt x10, x1, x2</text>
+<rect class="bus c4" x="9.0" y="331" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="340">00000130  sltu x11, x1, x2</text>
+<rect class="bus c5" x="9.0" y="346" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="355">00000134  xor x12, x1, x2</text>
+<rect class="bus c6" x="9.0" y="361" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="370">00000138  srl x13, x1, x2</text>
+<rect class="bus c7" x="9.0" y="376" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="385">0000013c  or x14, x1, x2</text>
+</svg>

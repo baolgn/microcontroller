@@ -32,6 +32,29 @@ The [Makefile](Makefile) provides shortcuts. Inspect the corresponding runner's 
 
 The [directed coordinator](../verification/run_directed.py) stages current sources and runs selected families with their negative controls. [Architectural/reference tests](../verification/README.md) and [formal checks](../verification/formal/README.md) supply different kinds of evidence. No one family establishes complete CPU correctness.
 
+## Waveform figures
+
+[run_waveforms.py](run_waveforms.py) regenerates the waveform figures in the [CPU overview](../README.md#pipeline), the [RTL guide](../rtl/README.md) and the [memory guide](../memory/README.md). For each figure it repeats the owning runner's sources and parameters, adds Verilator `--trace --trace-structs` and binds [cpu5_wave_dump.sv](cpu5_wave_dump.sv) to the bench top. The bench must reach its normal pass marker. The runner then crops a window around a defined trigger event, checks the properties its caption states and draws a self-contained SVG with [waveform_render.py](waveform_render.py). If a changed source no longer reproduces a trigger, marker or stated property, the run stops instead of leaving a stale figure.
+
+Use a new build directory. The command rewrites `docs/waveforms/` and its [manifest](../../docs/waveforms/manifest.json), which records each figure's bench, parameters, seed, cycle window, commands, Verilator identity and source hashes:
+
+```sh
+python3 -B microcontroller/tests/run_waveforms.py \
+  --verilator /tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/verilator \
+  --build /tmp/cpu5-waveforms-new
+```
+
+`--list` prints the figure names. Repeated `--figure NAME` options render a subset without rewriting the manifest. Each complete dump stays in the build directory beside its build and run logs, for example `/tmp/cpu5-waveforms-new/base-forwarded/s1.vcd`, and opens in GTKWave or Surfer for unrestricted inspection.
+
+Read the figures as follows:
+
+- Each column is one clock period, sampled just before the next rising edge. A valid/ready pair that is high in a column transfers at that column's right edge.
+- Stage rows name the instruction that owns F, D, X, M or W. One color follows one instruction instance, and the listing below the figure gives its address and disassembly.
+- A cross marks a token discarded at the following edge. `kill_valid_o` and `trace_o` are registered reports, so a kill or retirement record appears one cycle after the edge that caused it.
+- Dashed markers name the first edge in the window where an event is visible. A bus value drawn as a flat line is not qualified by its valid signal in that cycle.
+
+Each figure illustrates one passing run of the sources and tool recorded in the manifest. It does not extend a result to other seeds or profiles and does not qualify hardware timing.
+
 ## Interpreting results
 
 Retain exact source/tool identities, configurations, seeds, commands, summaries and failure traces. Successful arithmetic comparison does not prove memory ordering; retirement comparison alone can miss an extra MMIO read. Bus-effect, request-ownership and stale-response checks must remain independent.
