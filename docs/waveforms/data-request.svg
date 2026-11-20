@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="417" viewBox="0 0 580 417" role="img" aria-label="first-valid data request: stable offer, single acceptance, owned response">
+<title>first-valid data request: stable offer, single acceptance, owned response</title>
+<style>
+.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
+.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
+.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
+.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
+.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
+.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
+.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
+.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
+.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
+.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
+.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
+.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
+.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
+.mark{stroke:#d29922}.mtext{fill:#d29922}
+.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
+.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
+</style>
+<rect class="bg" x="0" y="0" width="580" height="417" rx="6"/>
+<rect class="frame" x="0.5" y="0.5" width="579" height="416" rx="6"/>
+<text class="title" x="14" y="22">first-valid data request: stable offer, single acceptance, owned response</text>
+<text class="sub" x="14" y="40">cpu5_memory_tb PROFILE=0 MAX_WAIT=128 SCENARIO=0 · seed 1 · clock cycles 85-95</text>
+<text class="num" x="209.0" y="96" text-anchor="middle">85</text>
+<text class="num" x="243.0" y="96" text-anchor="middle">86</text>
+<text class="num" x="277.0" y="96" text-anchor="middle">87</text>
+<text class="num" x="311.0" y="96" text-anchor="middle">88</text>
+<text class="num" x="345.0" y="96" text-anchor="middle">89</text>
+<text class="num" x="379.0" y="96" text-anchor="middle">90</text>
+<text class="num" x="413.0" y="96" text-anchor="middle">91</text>
+<text class="num" x="447.0" y="96" text-anchor="middle">92</text>
+<text class="num" x="481.0" y="96" text-anchor="middle">93</text>
+<text class="num" x="515.0" y="96" text-anchor="middle">94</text>
+<text class="num" x="549.0" y="96" text-anchor="middle">95</text>
+<line class="grid" x1="192" y1="102" x2="192" y2="366"/>
+<line class="grid" x1="226" y1="102" x2="226" y2="366"/>
+<line class="grid" x1="260" y1="102" x2="260" y2="366"/>
+<line class="grid" x1="294" y1="102" x2="294" y2="366"/>
+<line class="grid" x1="328" y1="102" x2="328" y2="366"/>
+<line class="grid" x1="362" y1="102" x2="362" y2="366"/>
+<line class="grid" x1="396" y1="102" x2="396" y2="366"/>
+<line class="grid" x1="430" y1="102" x2="430" y2="366"/>
+<line class="grid" x1="464" y1="102" x2="464" y2="366"/>
+<line class="grid" x1="498" y1="102" x2="498" y2="366"/>
+<line class="grid" x1="532" y1="102" x2="532" y2="366"/>
+<line class="grid" x1="566" y1="102" x2="566" y2="366"/>
+<text class="lbl" x="184" y="117.0" text-anchor="end">clk</text>
+<polyline class="clk" points="192,120 192,106 209.0,106 209.0,120 226,120 226,106 243.0,106 243.0,120 260,120 260,106 277.0,106 277.0,120 294,120 294,106 311.0,106 311.0,120 328,120 328,106 345.0,106 345.0,120 362,120 362,106 379.0,106 379.0,120 396,120 396,106 413.0,106 413.0,120 430,120 430,106 447.0,106 447.0,120 464,120 464,106 481.0,106 481.0,120 498,120 498,106 515.0,106 515.0,120 532,120 532,106 549.0,106 549.0,120 566,120"/>
+<text class="lbl" x="184" y="139.0" text-anchor="end">F</text>
+<line class="idle" x1="192" y1="135.0" x2="566" y2="135.0"/>
+<text class="lbl" x="184" y="161.0" text-anchor="end">D</text>
+<polygon class="bus c1" points="192,157.0 196.0,150 222.0,150 226,157.0 222.0,164 196.0,164"/>
+<text class="val" x="209.0" y="160.5" text-anchor="middle">lbu</text>
+<line class="idle" x1="226" y1="157.0" x2="566" y2="157.0"/>
+<text class="lbl" x="184" y="183.0" text-anchor="end">X</text>
+<line class="idle" x1="192" y1="179.0" x2="226" y2="179.0"/>
+<polygon class="bus c1" points="226,179.0 230.0,172 256.0,172 260,179.0 256.0,186 230.0,186"/>
+<text class="val" x="243.0" y="182.5" text-anchor="middle">lbu</text>
+<line class="idle" x1="260" y1="179.0" x2="566" y2="179.0"/>
+<text class="lbl" x="184" y="205.0" text-anchor="end">M</text>
+<line class="idle" x1="192" y1="201.0" x2="260" y2="201.0"/>
+<polygon class="bus c1" points="260,201.0 264.0,194 460.0,194 464,201.0 460.0,208 264.0,208"/>
+<text class="val" x="362.0" y="204.5" text-anchor="middle">lbu</text>
+<line class="idle" x1="464" y1="201.0" x2="566" y2="201.0"/>
+<text class="lbl" x="184" y="227.0" text-anchor="end">W</text>
+<polygon class="bus c0" points="192,223.0 196.0,216 222.0,216 226,223.0 222.0,230 196.0,230"/>
+<text class="val" x="209.0" y="226.5" text-anchor="middle">nop</text>
+<line class="idle" x1="226" y1="223.0" x2="464" y2="223.0"/>
+<polygon class="bus c1" points="464,223.0 468.0,216 494.0,216 498,223.0 494.0,230 468.0,230"/>
+<text class="val" x="481.0" y="226.5" text-anchor="middle">lbu</text>
+<line class="idle" x1="498" y1="223.0" x2="566" y2="223.0"/>
+<text class="lbl" x="184" y="249.0" text-anchor="end">launch</text>
+<rect class="hi" x="260" y="238" width="34" height="14"/>
+<polyline class="wave" points="192,252 226,252 260,252 260,238 294,238 294,252 328,252 362,252 396,252 430,252 464,252 498,252 532,252 566,252"/>
+<text class="lbl" x="184" y="271.0" text-anchor="end">d_req_valid_o</text>
+<rect class="hi" x="294" y="260" width="34" height="14"/>
+<rect class="hi" x="328" y="260" width="34" height="14"/>
+<rect class="hi" x="362" y="260" width="34" height="14"/>
+<polyline class="wave" points="192,274 226,274 260,274 294,274 294,260 328,260 362,260 396,260 396,274 430,274 464,274 498,274 532,274 566,274"/>
+<text class="lbl" x="184" y="293.0" text-anchor="end">d_req_ready_i</text>
+<rect class="hi" x="362" y="282" width="34" height="14"/>
+<polyline class="wave" points="192,296 226,296 260,296 294,296 328,296 362,296 362,282 396,282 396,296 430,296 464,296 498,296 532,296 566,296"/>
+<text class="lbl" x="184" y="315.0" text-anchor="end">d_req_addr_o</text>
+<line class="idle" x1="192" y1="311.0" x2="294" y2="311.0"/>
+<polygon class="bus" points="294,311.0 298.0,304 392.0,304 396,311.0 392.0,318 298.0,318"/>
+<text class="val" x="345.0" y="314.5" text-anchor="middle">20000000</text>
+<line class="idle" x1="396" y1="311.0" x2="566" y2="311.0"/>
+<text class="lbl" x="184" y="337.0" text-anchor="end">d_rsp_valid_i</text>
+<rect class="hi" x="396" y="326" width="34" height="14"/>
+<polyline class="wave" points="192,340 226,340 260,340 294,340 328,340 362,340 396,340 396,326 430,326 430,340 464,340 498,340 532,340 566,340"/>
+<text class="lbl" x="184" y="359.0" text-anchor="end">trace_o</text>
+<line class="idle" x1="192" y1="355.0" x2="226" y2="355.0"/>
+<polygon class="bus c0" points="226,355.0 230.0,348 256.0,348 260,355.0 256.0,362 230.0,362"/>
+<text class="val" x="243.0" y="358.5" text-anchor="middle">ret</text>
+<line class="idle" x1="260" y1="355.0" x2="498" y2="355.0"/>
+<polygon class="bus c1" points="498,355.0 502.0,348 528.0,348 532,355.0 528.0,362 502.0,362"/>
+<text class="val" x="515.0" y="358.5" text-anchor="middle">ret</text>
+<line class="idle" x1="532" y1="355.0" x2="566" y2="355.0"/>
+<line class="mark" x1="260" y1="70" x2="260" y2="366"/>
+<text class="mtext" x="263" y="74">reserve</text>
+<line class="mark" x1="294" y1="82" x2="294" y2="366"/>
+<text class="mtext" x="297" y="86">first valid</text>
+<line class="mark" x1="362" y1="70" x2="362" y2="366"/>
+<text class="mtext" x="365" y="74">accept</text>
+<line class="mark" x1="396" y1="82" x2="396" y2="366"/>
+<text class="mtext" x="399" y="86">response</text>
+<rect class="bus c0" x="14.0" y="381" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="390">00000100  nop</text>
+<rect class="bus c1" x="9.0" y="381" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="390">00000104  lbu x3, 0(x1)</text>
+</svg>

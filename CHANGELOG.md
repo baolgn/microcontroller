@@ -2,6 +2,12 @@
 
 Dates follow the maintainer's CPU milestone chronology. They do not change Git commit dates or test-run timestamps. Historical simulation and routing observations describe the configurations tested at the time; generated evidence bundles are not included in this standalone source publication.
 
+## 2026-11-20
+
+Added sixteen waveform figures to the [CPU overview](microcontroller/README.md#pipeline), the [RTL guide](microcontroller/rtl/README.md) and the [memory guide](microcontroller/memory/README.md). Each shows one mechanism: overlapped and diagnostic execution, a load-use stall, a taken branch, a first-valid data request, a precise access fault, CSR serialization, software-interrupt entry, WFI wake-up, divide latency, FENCE.I invalidation, a 32-bit instruction split across fetch words, a debug halt and a hart reset with offered requests, local-fabric ownership and counted notifications.
+
+[run_waveforms.py](microcontroller/tests/run_waveforms.py) rebuilds eleven directed-bench configurations from their runners' sources and parameters, adding Verilator tracing and a bound [dump module](microcontroller/tests/cpu5_wave_dump.sv). It requires each bench's normal pass marker, checks the properties each caption states and renders the cropped window with [waveform_render.py](microcontroller/tests/waveform_render.py). With the pinned Verilator 5.047, all eleven traced runs passed and all sixteen figures met their stated properties. The divide window reproduced the recorded 33-clock result-valid latency. The [figure manifest](docs/waveforms/manifest.json) records each bench, seed, cycle window, command, tool identity and source hash. The comment audit covers 197 files without findings, and 422 local Markdown links and images resolve in the checkout and in the packaged archive. The figures illustrate single runs of these sources and add no architectural or hardware qualification.
+
 ## 2026-11-13
 
 Prepared the standalone CPU learning repository, standardized module names to `cpu5_*`, and organized the documentation around CPU implementation, local firmware, verification, FPGA tools and programming. Limited the published scope to the CPU and its supporting local platform. Rewrote the main README and installation guide with Linux, Windows/WSL and macOS instructions, and expanded the changelog into descriptions of the implemented behavior.

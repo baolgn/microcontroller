@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="395" viewBox="0 0 980 395" role="img" aria-label="blocking divide: 33 clocks from accepted start to result-valid">
+<title>blocking divide: 33 clocks from accepted start to result-valid</title>
+<style>
+.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
+.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
+.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
+.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
+.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
+.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
+.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
+.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
+.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
+.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
+.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
+.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
+.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
+.mark{stroke:#d29922}.mtext{fill:#d29922}
+.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
+.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
+</style>
+<rect class="bg" x="0" y="0" width="980" height="395" rx="6"/>
+<rect class="frame" x="0.5" y="0.5" width="979" height="394" rx="6"/>
+<text class="title" x="14" y="22">blocking divide: 33 clocks from accepted start to result-valid</text>
+<text class="sub" x="14" y="40">cpu5_muldiv_control_tb M_ENABLED=1 DIAGNOSTIC=0 FORWARDING=1 IRQ_ENABLED=1 · seed 1 · clock cycles 7142-7184</text>
+<text class="num" x="201.0" y="96" text-anchor="middle">7142</text>
+<text class="num" x="237.0" y="96" text-anchor="middle">7144</text>
+<text class="num" x="273.0" y="96" text-anchor="middle">7146</text>
+<text class="num" x="309.0" y="96" text-anchor="middle">7148</text>
+<text class="num" x="345.0" y="96" text-anchor="middle">7150</text>
+<text class="num" x="381.0" y="96" text-anchor="middle">7152</text>
+<text class="num" x="417.0" y="96" text-anchor="middle">7154</text>
+<text class="num" x="453.0" y="96" text-anchor="middle">7156</text>
+<text class="num" x="489.0" y="96" text-anchor="middle">7158</text>
+<text class="num" x="525.0" y="96" text-anchor="middle">7160</text>
+<text class="num" x="561.0" y="96" text-anchor="middle">7162</text>
+<text class="num" x="597.0" y="96" text-anchor="middle">7164</text>
+<text class="num" x="633.0" y="96" text-anchor="middle">7166</text>
+<text class="num" x="669.0" y="96" text-anchor="middle">7168</text>
+<text class="num" x="705.0" y="96" text-anchor="middle">7170</text>
+<text class="num" x="741.0" y="96" text-anchor="middle">7172</text>
+<text class="num" x="777.0" y="96" text-anchor="middle">7174</text>
+<text class="num" x="813.0" y="96" text-anchor="middle">7176</text>
+<text class="num" x="849.0" y="96" text-anchor="middle">7178</text>
+<text class="num" x="885.0" y="96" text-anchor="middle">7180</text>
+<text class="num" x="921.0" y="96" text-anchor="middle">7182</text>
+<text class="num" x="957.0" y="96" text-anchor="middle">7184</text>
+<line class="grid" x1="192" y1="102" x2="192" y2="344"/>
+<line class="grid" x1="210" y1="102" x2="210" y2="344"/>
+<line class="grid" x1="228" y1="102" x2="228" y2="344"/>
+<line class="grid" x1="246" y1="102" x2="246" y2="344"/>
+<line class="grid" x1="264" y1="102" x2="264" y2="344"/>
+<line class="grid" x1="282" y1="102" x2="282" y2="344"/>
+<line class="grid" x1="300" y1="102" x2="300" y2="344"/>
+<line class="grid" x1="318" y1="102" x2="318" y2="344"/>
+<line class="grid" x1="336" y1="102" x2="336" y2="344"/>
+<line class="grid" x1="354" y1="102" x2="354" y2="344"/>
+<line class="grid" x1="372" y1="102" x2="372" y2="344"/>
+<line class="grid" x1="390" y1="102" x2="390" y2="344"/>
+<line class="grid" x1="408" y1="102" x2="408" y2="344"/>
+<line class="grid" x1="426" y1="102" x2="426" y2="344"/>
+<line class="grid" x1="444" y1="102" x2="444" y2="344"/>
+<line class="grid" x1="462" y1="102" x2="462" y2="344"/>
+<line class="grid" x1="480" y1="102" x2="480" y2="344"/>
+<line class="grid" x1="498" y1="102" x2="498" y2="344"/>
+<line class="grid" x1="516" y1="102" x2="516" y2="344"/>
+<line class="grid" x1="534" y1="102" x2="534" y2="344"/>
+<line class="grid" x1="552" y1="102" x2="552" y2="344"/>
+<line class="grid" x1="570" y1="102" x2="570" y2="344"/>
+<line class="grid" x1="588" y1="102" x2="588" y2="344"/>
+<line class="grid" x1="606" y1="102" x2="606" y2="344"/>
+<line class="grid" x1="624" y1="102" x2="624" y2="344"/>
+<line class="grid" x1="642" y1="102" x2="642" y2="344"/>
+<line class="grid" x1="660" y1="102" x2="660" y2="344"/>
+<line class="grid" x1="678" y1="102" x2="678" y2="344"/>
+<line class="grid" x1="696" y1="102" x2="696" y2="344"/>
+<line class="grid" x1="714" y1="102" x2="714" y2="344"/>
+<line class="grid" x1="732" y1="102" x2="732" y2="344"/>
+<line class="grid" x1="750" y1="102" x2="750" y2="344"/>
+<line class="grid" x1="768" y1="102" x2="768" y2="344"/>
+<line class="grid" x1="786" y1="102" x2="786" y2="344"/>
+<line class="grid" x1="804" y1="102" x2="804" y2="344"/>
+<line class="grid" x1="822" y1="102" x2="822" y2="344"/>
+<line class="grid" x1="840" y1="102" x2="840" y2="344"/>
+<line class="grid" x1="858" y1="102" x2="858" y2="344"/>
+<line class="grid" x1="876" y1="102" x2="876" y2="344"/>
+<line class="grid" x1="894" y1="102" x2="894" y2="344"/>
+<line class="grid" x1="912" y1="102" x2="912" y2="344"/>
+<line class="grid" x1="930" y1="102" x2="930" y2="344"/>
+<line class="grid" x1="948" y1="102" x2="948" y2="344"/>
+<line class="grid" x1="966" y1="102" x2="966" y2="344"/>
+<text class="lbl" x="184" y="117.0" text-anchor="end">clk</text>
+<polyline class="clk" points="192,120 192,106 201.0,106 201.0,120 210,120 210,106 219.0,106 219.0,120 228,120 228,106 237.0,106 237.0,120 246,120 246,106 255.0,106 255.0,120 264,120 264,106 273.0,106 273.0,120 282,120 282,106 291.0,106 291.0,120 300,120 300,106 309.0,106 309.0,120 318,120 318,106 327.0,106 327.0,120 336,120 336,106 345.0,106 345.0,120 354,120 354,106 363.0,106 363.0,120 372,120 372,106 381.0,106 381.0,120 390,120 390,106 399.0,106 399.0,120 408,120 408,106 417.0,106 417.0,120 426,120 426,106 435.0,106 435.0,120 444,120 444,106 453.0,106 453.0,120 462,120 462,106 471.0,106 471.0,120 480,120 480,106 489.0,106 489.0,120 498,120 498,106 507.0,106 507.0,120 516,120 516,106 525.0,106 525.0,120 534,120 534,106 543.0,106 543.0,120 552,120 552,106 561.0,106 561.0,120 570,120 570,106 579.0,106 579.0,120 588,120 588,106 597.0,106 597.0,120 606,120 606,106 615.0,106 615.0,120 624,120 624,106 633.0,106 633.0,120 642,120 642,106 651.0,106 651.0,120 660,120 660,106 669.0,106 669.0,120 678,120 678,106 687.0,106 687.0,120 696,120 696,106 705.0,106 705.0,120 714,120 714,106 723.0,106 723.0,120 732,120 732,106 741.0,106 741.0,120 750,120 750,106 759.0,106 759.0,120 768,120 768,106 777.0,106 777.0,120 786,120 786,106 795.0,106 795.0,120 804,120 804,106 813.0,106 813.0,120 822,120 822,106 831.0,106 831.0,120 840,120 840,106 849.0,106 849.0,120 858,120 858,106 867.0,106 867.0,120 876,120 876,106 885.0,106 885.0,120 894,120 894,106 903.0,106 903.0,120 912,120 912,106 921.0,106 921.0,120 930,120 930,106 939.0,106 939.0,120 948,120 948,106 957.0,106 957.0,120 966,120"/>
+<text class="lbl" x="184" y="139.0" text-anchor="end">F</text>
+<line class="idle" x1="192" y1="135.0" x2="210" y2="135.0"/>
+<polygon class="bus c0" points="210,135.0 214.0,128 224.0,128 228,135.0 224.0,142 214.0,142"/>
+<polygon class="bus c1" points="228,135.0 232.0,128 242.0,128 246,135.0 242.0,142 232.0,142"/>
+<line class="idle" x1="246" y1="135.0" x2="966" y2="135.0"/>
+<text class="lbl" x="184" y="161.0" text-anchor="end">D</text>
+<line class="idle" x1="192" y1="157.0" x2="228" y2="157.0"/>
+<polygon class="bus c0" points="228,157.0 232.0,150 242.0,150 246,157.0 242.0,164 232.0,164"/>
+<polygon class="bus c1" points="246,157.0 250.0,150 890.0,150 894,157.0 890.0,164 250.0,164"/>
+<text class="val" x="570.0" y="160.5" text-anchor="middle">addi</text>
+<line class="idle" x1="894" y1="157.0" x2="966" y2="157.0"/>
+<text class="lbl" x="184" y="183.0" text-anchor="end">X</text>
+<line class="idle" x1="192" y1="179.0" x2="246" y2="179.0"/>
+<polygon class="bus c0" points="246,179.0 250.0,172 890.0,172 894,179.0 890.0,186 250.0,186"/>
+<text class="val" x="570.0" y="182.5" text-anchor="middle">div</text>
+<polygon class="bus c1" points="894,179.0 898.0,172 908.0,172 912,179.0 908.0,186 898.0,186"/>
+<line class="idle" x1="912" y1="179.0" x2="966" y2="179.0"/>
+<text class="lbl" x="184" y="205.0" text-anchor="end">M</text>
+<line class="idle" x1="192" y1="201.0" x2="894" y2="201.0"/>
+<polygon class="bus c0" points="894,201.0 898.0,194 908.0,194 912,201.0 908.0,208 898.0,208"/>
+<polygon class="bus c1" points="912,201.0 916.0,194 926.0,194 930,201.0 926.0,208 916.0,208"/>
+<line class="idle" x1="930" y1="201.0" x2="966" y2="201.0"/>
+<text class="lbl" x="184" y="227.0" text-anchor="end">W</text>
+<line class="idle" x1="192" y1="223.0" x2="912" y2="223.0"/>
+<polygon class="bus c0" points="912,223.0 916.0,216 926.0,216 930,223.0 926.0,230 916.0,230"/>
+<polygon class="bus c1" points="930,223.0 934.0,216 944.0,216 948,223.0 944.0,230 934.0,230"/>
+<line class="idle" x1="948" y1="223.0" x2="966" y2="223.0"/>
+<text class="lbl" x="184" y="249.0" text-anchor="end">md_start</text>
+<rect class="hi" x="246" y="238" width="18" height="14"/>
+<polyline class="wave" points="192,252 210,252 228,252 246,252 246,238 264,238 264,252 282,252 300,252 318,252 336,252 354,252 372,252 390,252 408,252 426,252 444,252 462,252 480,252 498,252 516,252 534,252 552,252 570,252 588,252 606,252 624,252 642,252 660,252 678,252 696,252 714,252 732,252 750,252 768,252 786,252 804,252 822,252 840,252 858,252 876,252 894,252 912,252 930,252 948,252 966,252"/>
+<text class="lbl" x="184" y="271.0" text-anchor="end">md_busy</text>
+<rect class="hi" x="264" y="260" width="18" height="14"/>
+<rect class="hi" x="282" y="260" width="18" height="14"/>
+<rect class="hi" x="300" y="260" width="18" height="14"/>
+<rect class="hi" x="318" y="260" width="18" height="14"/>
+<rect class="hi" x="336" y="260" width="18" height="14"/>
+<rect class="hi" x="354" y="260" width="18" height="14"/>
+<rect class="hi" x="372" y="260" width="18" height="14"/>
+<rect class="hi" x="390" y="260" width="18" height="14"/>
+<rect class="hi" x="408" y="260" width="18" height="14"/>
+<rect class="hi" x="426" y="260" width="18" height="14"/>
+<rect class="hi" x="444" y="260" width="18" height="14"/>
+<rect class="hi" x="462" y="260" width="18" height="14"/>
+<rect class="hi" x="480" y="260" width="18" height="14"/>
+<rect class="hi" x="498" y="260" width="18" height="14"/>
+<rect class="hi" x="516" y="260" width="18" height="14"/>
+<rect class="hi" x="534" y="260" width="18" height="14"/>
+<rect class="hi" x="552" y="260" width="18" height="14"/>
+<rect class="hi" x="570" y="260" width="18" height="14"/>
+<rect class="hi" x="588" y="260" width="18" height="14"/>
+<rect class="hi" x="606" y="260" width="18" height="14"/>
+<rect class="hi" x="624" y="260" width="18" height="14"/>
+<rect class="hi" x="642" y="260" width="18" height="14"/>
+<rect class="hi" x="660" y="260" width="18" height="14"/>
+<rect class="hi" x="678" y="260" width="18" height="14"/>
+<rect class="hi" x="696" y="260" width="18" height="14"/>
+<rect class="hi" x="714" y="260" width="18" height="14"/>
+<rect class="hi" x="732" y="260" width="18" height="14"/>
+<rect class="hi" x="750" y="260" width="18" height="14"/>
+<rect class="hi" x="768" y="260" width="18" height="14"/>
+<rect class="hi" x="786" y="260" width="18" height="14"/>
+<rect class="hi" x="804" y="260" width="18" height="14"/>
+<rect class="hi" x="822" y="260" width="18" height="14"/>
+<rect class="hi" x="840" y="260" width="18" height="14"/>
+<rect class="hi" x="858" y="260" width="18" height="14"/>
+<polyline class="wave" points="192,274 210,274 228,274 246,274 264,274 264,260 282,260 300,260 318,260 336,260 354,260 372,260 390,260 408,260 426,260 444,260 462,260 480,260 498,260 516,260 534,260 552,260 570,260 588,260 606,260 624,260 642,260 660,260 678,260 696,260 714,260 732,260 750,260 768,260 786,260 804,260 822,260 840,260 858,260 876,260 876,274 894,274 912,274 930,274 948,274 966,274"/>
+<text class="lbl" x="184" y="293.0" text-anchor="end">md_valid</text>
+<rect class="hi" x="858" y="282" width="18" height="14"/>
+<polyline class="wave" points="192,296 210,296 228,296 246,296 264,296 282,296 300,296 318,296 336,296 354,296 372,296 390,296 408,296 426,296 444,296 462,296 480,296 498,296 516,296 534,296 552,296 570,296 588,296 606,296 624,296 642,296 660,296 678,296 696,296 714,296 732,296 750,296 768,296 786,296 804,296 822,296 840,296 858,296 858,282 876,282 876,296 894,296 912,296 930,296 948,296 966,296"/>
+<text class="lbl" x="184" y="315.0" text-anchor="end">d_hazard</text>
+<rect class="hi" x="246" y="304" width="18" height="14"/>
+<rect class="hi" x="264" y="304" width="18" height="14"/>
+<rect class="hi" x="282" y="304" width="18" height="14"/>
+<rect class="hi" x="300" y="304" width="18" height="14"/>
+<rect class="hi" x="318" y="304" width="18" height="14"/>
+<rect class="hi" x="336" y="304" width="18" height="14"/>
+<rect class="hi" x="354" y="304" width="18" height="14"/>
+<rect class="hi" x="372" y="304" width="18" height="14"/>
+<rect class="hi" x="390" y="304" width="18" height="14"/>
+<rect class="hi" x="408" y="304" width="18" height="14"/>
+<rect class="hi" x="426" y="304" width="18" height="14"/>
+<rect class="hi" x="444" y="304" width="18" height="14"/>
+<rect class="hi" x="462" y="304" width="18" height="14"/>
+<rect class="hi" x="480" y="304" width="18" height="14"/>
+<rect class="hi" x="498" y="304" width="18" height="14"/>
+<rect class="hi" x="516" y="304" width="18" height="14"/>
+<rect class="hi" x="534" y="304" width="18" height="14"/>
+<rect class="hi" x="552" y="304" width="18" height="14"/>
+<rect class="hi" x="570" y="304" width="18" height="14"/>
+<rect class="hi" x="588" y="304" width="18" height="14"/>
+<rect class="hi" x="606" y="304" width="18" height="14"/>
+<rect class="hi" x="624" y="304" width="18" height="14"/>
+<rect class="hi" x="642" y="304" width="18" height="14"/>
+<rect class="hi" x="660" y="304" width="18" height="14"/>
+<rect class="hi" x="678" y="304" width="18" height="14"/>
+<rect class="hi" x="696" y="304" width="18" height="14"/>
+<rect class="hi" x="714" y="304" width="18" height="14"/>
+<rect class="hi" x="732" y="304" width="18" height="14"/>
+<rect class="hi" x="750" y="304" width="18" height="14"/>
+<rect class="hi" x="768" y="304" width="18" height="14"/>
+<rect class="hi" x="786" y="304" width="18" height="14"/>
+<rect class="hi" x="804" y="304" width="18" height="14"/>
+<rect class="hi" x="822" y="304" width="18" height="14"/>
+<rect class="hi" x="840" y="304" width="18" height="14"/>
+<rect class="hi" x="858" y="304" width="18" height="14"/>
+<polyline class="wave" points="192,318 210,318 228,318 246,318 246,304 264,304 282,304 300,304 318,304 336,304 354,304 372,304 390,304 408,304 426,304 444,304 462,304 480,304 498,304 516,304 534,304 552,304 570,304 588,304 606,304 624,304 642,304 660,304 678,304 696,304 714,304 732,304 750,304 768,304 786,304 804,304 822,304 840,304 858,304 876,304 876,318 894,318 912,318 930,318 948,318 966,318"/>
+<text class="lbl" x="184" y="337.0" text-anchor="end">trace_o</text>
+<polygon class="bus" points="192,333.0 196.0,326 206.0,326 210,333.0 206.0,340 196.0,340"/>
+<line class="idle" x1="210" y1="333.0" x2="930" y2="333.0"/>
+<polygon class="bus c0" points="930,333.0 934.0,326 944.0,326 948,333.0 944.0,340 934.0,340"/>
+<polygon class="bus c1" points="948,333.0 952.0,326 962.0,326 966,333.0 962.0,340 952.0,340"/>
+<line class="mark" x1="246" y1="70" x2="246" y2="344"/>
+<text class="mtext" x="249" y="74">start accepted</text>
+<line class="mark" x1="858" y1="70" x2="858" y2="344"/>
+<text class="mtext" x="861" y="74">result valid</text>
+<rect class="bus c0" x="14.0" y="359" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="368">00000018  div x5, x2, x3</text>
+<rect class="bus c1" x="9.0" y="359" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="368">0000001c  addi x6, x5, 1</text>
+</svg>

@@ -158,6 +158,8 @@ Pass a compiler prefix from the qualified RISC-V installation and a new output d
 
 Use [module simulations](../microcontroller/tests/README.md) before [integrated verification](../microcontroller/verification/README.md). Check pipeline stalls and flushes, operand dependencies, memory effects, exceptions and interrupts before interpreting firmware output. Apply [formal checks](../microcontroller/verification/formal/README.md) with their explicit bounds and assumptions. Configure [ACT4/Sail](../microcontroller/verification/act4/README.md) for the actual ISA and memory map.
 
+The [waveform figures](../microcontroller/tests/README.md#waveform-figures) show selected cycle windows from passing bench runs: pipeline overlap, hazards, branches, memory ownership, traps, CSR serialization, interrupts, fences, compressed fetch and debug halt. Their [manifest](waveforms/manifest.json) binds each figure to its bench, seed, window, tool and source hashes. Regenerate them after changing the sources they depict.
+
 The standalone publication omits historical generated evidence bundles. Old measurements describe their original configurations, and current source changes require new runs. Keep tool versions, source hashes, seeds, logs, traces and expected failures together in a fresh output directory. Several legacy runners have fixed output paths; inspect their options or use the [isolated acceptance runner](../microcontroller/release/README.md) before running an aggregate campaign.
 
 Physical FPGA programming, cold boot, flash readback, recovery and debug probe operation remain separate acceptance checks. Simulation, synthesis and a routed timing report do not substitute for those observations.

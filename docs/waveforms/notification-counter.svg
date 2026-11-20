@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="656" height="314" viewBox="0 0 656 314" role="img" aria-label="counted notifications: empty acknowledge rejected, saturation and sticky overflow">
+<title>counted notifications: empty acknowledge rejected, saturation and sticky overflow</title>
+<style>
+.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
+.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
+.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
+.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
+.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
+.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
+.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
+.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
+.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
+.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
+.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
+.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
+.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
+.mark{stroke:#d29922}.mtext{fill:#d29922}
+.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
+.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
+</style>
+<rect class="bg" x="0" y="0" width="656" height="314" rx="6"/>
+<rect class="frame" x="0.5" y="0.5" width="655" height="313" rx="6"/>
+<text class="title" x="14" y="22">counted notifications: empty acknowledge rejected, saturation and sticky overflow</text>
+<text class="sub" x="14" y="40">cpu5_irq_platform_tb · seed 1 · clock cycles 200-214</text>
+<text class="num" x="207.0" y="96" text-anchor="middle">200</text>
+<text class="num" x="237.0" y="96" text-anchor="middle">201</text>
+<text class="num" x="267.0" y="96" text-anchor="middle">202</text>
+<text class="num" x="297.0" y="96" text-anchor="middle">203</text>
+<text class="num" x="327.0" y="96" text-anchor="middle">204</text>
+<text class="num" x="357.0" y="96" text-anchor="middle">205</text>
+<text class="num" x="387.0" y="96" text-anchor="middle">206</text>
+<text class="num" x="417.0" y="96" text-anchor="middle">207</text>
+<text class="num" x="447.0" y="96" text-anchor="middle">208</text>
+<text class="num" x="477.0" y="96" text-anchor="middle">209</text>
+<text class="num" x="507.0" y="96" text-anchor="middle">210</text>
+<text class="num" x="537.0" y="96" text-anchor="middle">211</text>
+<text class="num" x="567.0" y="96" text-anchor="middle">212</text>
+<text class="num" x="597.0" y="96" text-anchor="middle">213</text>
+<text class="num" x="627.0" y="96" text-anchor="middle">214</text>
+<line class="grid" x1="192" y1="102" x2="192" y2="300"/>
+<line class="grid" x1="222" y1="102" x2="222" y2="300"/>
+<line class="grid" x1="252" y1="102" x2="252" y2="300"/>
+<line class="grid" x1="282" y1="102" x2="282" y2="300"/>
+<line class="grid" x1="312" y1="102" x2="312" y2="300"/>
+<line class="grid" x1="342" y1="102" x2="342" y2="300"/>
+<line class="grid" x1="372" y1="102" x2="372" y2="300"/>
+<line class="grid" x1="402" y1="102" x2="402" y2="300"/>
+<line class="grid" x1="432" y1="102" x2="432" y2="300"/>
+<line class="grid" x1="462" y1="102" x2="462" y2="300"/>
+<line class="grid" x1="492" y1="102" x2="492" y2="300"/>
+<line class="grid" x1="522" y1="102" x2="522" y2="300"/>
+<line class="grid" x1="552" y1="102" x2="552" y2="300"/>
+<line class="grid" x1="582" y1="102" x2="582" y2="300"/>
+<line class="grid" x1="612" y1="102" x2="612" y2="300"/>
+<line class="grid" x1="642" y1="102" x2="642" y2="300"/>
+<text class="lbl" x="184" y="117.0" text-anchor="end">clk</text>
+<polyline class="clk" points="192,120 192,106 207.0,106 207.0,120 222,120 222,106 237.0,106 237.0,120 252,120 252,106 267.0,106 267.0,120 282,120 282,106 297.0,106 297.0,120 312,120 312,106 327.0,106 327.0,120 342,120 342,106 357.0,106 357.0,120 372,120 372,106 387.0,106 387.0,120 402,120 402,106 417.0,106 417.0,120 432,120 432,106 447.0,106 447.0,120 462,120 462,106 477.0,106 477.0,120 492,120 492,106 507.0,106 507.0,120 522,120 522,106 537.0,106 537.0,120 552,120 552,106 567.0,106 567.0,120 582,120 582,106 597.0,106 597.0,120 612,120 612,106 627.0,106 627.0,120 642,120"/>
+<text class="lbl" x="184" y="139.0" text-anchor="end">system_reset_i</text>
+<rect class="hi" x="252" y="128" width="30" height="14"/>
+<polyline class="wave" points="192,142 222,142 252,142 252,128 282,128 282,142 312,142 342,142 372,142 402,142 432,142 462,142 492,142 522,142 552,142 582,142 612,142 642,142"/>
+<text class="lbl" x="184" y="161.0" text-anchor="end">notification_i</text>
+<rect class="hi" x="282" y="150" width="30" height="14"/>
+<rect class="hi" x="312" y="150" width="30" height="14"/>
+<rect class="hi" x="342" y="150" width="30" height="14"/>
+<rect class="hi" x="372" y="150" width="30" height="14"/>
+<rect class="hi" x="402" y="150" width="30" height="14"/>
+<rect class="hi" x="432" y="150" width="30" height="14"/>
+<rect class="hi" x="462" y="150" width="30" height="14"/>
+<rect class="hi" x="492" y="150" width="30" height="14"/>
+<rect class="hi" x="522" y="150" width="30" height="14"/>
+<rect class="hi" x="552" y="150" width="30" height="14"/>
+<rect class="hi" x="582" y="150" width="30" height="14"/>
+<rect class="hi" x="612" y="150" width="30" height="14"/>
+<polyline class="wave" points="192,164 222,164 252,164 282,164 282,150 312,150 342,150 372,150 402,150 432,150 462,150 492,150 522,150 552,150 582,150 612,150 642,150"/>
+<text class="lbl" x="184" y="183.0" text-anchor="end">command_i</text>
+<rect class="hi" x="192" y="172" width="30" height="14"/>
+<rect class="hi" x="222" y="172" width="30" height="14"/>
+<rect class="hi" x="282" y="172" width="30" height="14"/>
+<polyline class="wave" points="192,172 222,172 252,172 252,186 282,186 282,172 312,172 312,186 342,186 372,186 402,186 432,186 462,186 492,186 522,186 552,186 582,186 612,186 642,186"/>
+<text class="lbl" x="184" y="205.0" text-anchor="end">write_i</text>
+<rect class="hi" x="192" y="194" width="30" height="14"/>
+<rect class="hi" x="222" y="194" width="30" height="14"/>
+<rect class="hi" x="282" y="194" width="30" height="14"/>
+<polyline class="wave" points="192,194 222,194 252,194 252,208 282,208 282,194 312,194 312,208 342,208 372,208 402,208 432,208 462,208 492,208 522,208 552,208 582,208 612,208 642,208"/>
+<text class="lbl" x="184" y="227.0" text-anchor="end">addr_i</text>
+<polygon class="bus" points="192,223.0 196.0,216 218.0,216 222,223.0 218.0,230 196.0,230"/>
+<polygon class="bus" points="222,223.0 226.0,216 248.0,216 252,223.0 248.0,230 226.0,230"/>
+<line class="idle" x1="252" y1="223.0" x2="282" y2="223.0"/>
+<polygon class="bus" points="282,223.0 286.0,216 308.0,216 312,223.0 308.0,230 286.0,230"/>
+<rect class="bg" x="271.0" y="217.0" width="52.0" height="12" rx="2"/>
+<text class="val" x="297.0" y="226.5" text-anchor="middle">40001020</text>
+<line class="idle" x1="312" y1="223.0" x2="642" y2="223.0"/>
+<text class="lbl" x="184" y="249.0" text-anchor="end">error_o</text>
+<rect class="hi" x="282" y="238" width="30" height="14"/>
+<polyline class="wave" points="192,252 222,252 252,252 282,252 282,238 312,238 312,252 342,252 372,252 402,252 432,252 462,252 492,252 522,252 552,252 582,252 612,252 642,252"/>
+<text class="lbl" x="184" y="271.0" text-anchor="end">notification_count_o</text>
+<polygon class="bus" points="192,267.0 196.0,260 308.0,260 312,267.0 308.0,274 196.0,274"/>
+<text class="val" x="252.0" y="270.5" text-anchor="middle">0</text>
+<polygon class="bus" points="312,267.0 316.0,260 338.0,260 342,267.0 338.0,274 316.0,274"/>
+<text class="val" x="327.0" y="270.5" text-anchor="middle">1</text>
+<polygon class="bus" points="342,267.0 346.0,260 368.0,260 372,267.0 368.0,274 346.0,274"/>
+<text class="val" x="357.0" y="270.5" text-anchor="middle">2</text>
+<polygon class="bus" points="372,267.0 376.0,260 398.0,260 402,267.0 398.0,274 376.0,274"/>
+<text class="val" x="387.0" y="270.5" text-anchor="middle">3</text>
+<polygon class="bus" points="402,267.0 406.0,260 638.0,260 642,267.0 638.0,274 406.0,274"/>
+<text class="val" x="522.0" y="270.5" text-anchor="middle">4</text>
+<text class="lbl" x="184" y="293.0" text-anchor="end">overflow_o</text>
+<rect class="hi" x="432" y="282" width="30" height="14"/>
+<rect class="hi" x="462" y="282" width="30" height="14"/>
+<rect class="hi" x="492" y="282" width="30" height="14"/>
+<rect class="hi" x="522" y="282" width="30" height="14"/>
+<rect class="hi" x="552" y="282" width="30" height="14"/>
+<rect class="hi" x="582" y="282" width="30" height="14"/>
+<rect class="hi" x="612" y="282" width="30" height="14"/>
+<polyline class="wave" points="192,296 222,296 252,296 282,296 312,296 342,296 372,296 402,296 432,296 432,282 462,282 492,282 522,282 552,282 582,282 612,282 642,282"/>
+<line class="mark" x1="282" y1="70" x2="282" y2="300"/>
+<text class="mtext" x="285" y="74">empty acknowledge</text>
+<line class="mark" x1="402" y1="70" x2="402" y2="300"/>
+<text class="mtext" x="405" y="74">full</text>
+<line class="mark" x1="432" y1="82" x2="432" y2="300"/>
+<text class="mtext" x="435" y="86">overflow</text>
+</svg>

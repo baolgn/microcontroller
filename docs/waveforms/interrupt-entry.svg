@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="778" height="461" viewBox="0 0 778 461" role="img" aria-label="software interrupt entry after a CSR write enables MIE">
+<title>software interrupt entry after a CSR write enables MIE</title>
+<style>
+.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
+.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
+.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
+.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
+.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
+.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
+.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
+.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
+.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
+.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
+.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
+@media (prefers-color-scheme: dark){
+.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
+.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
+.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
+.mark{stroke:#d29922}.mtext{fill:#d29922}
+.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
+.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
+</style>
+<rect class="bg" x="0" y="0" width="778" height="461" rx="6"/>
+<rect class="frame" x="0.5" y="0.5" width="777" height="460" rx="6"/>
+<text class="title" x="14" y="22">software interrupt entry after a CSR write enables MIE</text>
+<text class="sub" x="14" y="40">cpu5_irq_control_tb C_ENABLED=0 · seed 1 · clock cycles 617-627</text>
+<text class="num" x="218.0" y="96" text-anchor="middle">617</text>
+<text class="num" x="270.0" y="96" text-anchor="middle">618</text>
+<text class="num" x="322.0" y="96" text-anchor="middle">619</text>
+<text class="num" x="374.0" y="96" text-anchor="middle">620</text>
+<text class="num" x="426.0" y="96" text-anchor="middle">621</text>
+<text class="num" x="478.0" y="96" text-anchor="middle">622</text>
+<text class="num" x="530.0" y="96" text-anchor="middle">623</text>
+<text class="num" x="582.0" y="96" text-anchor="middle">624</text>
+<text class="num" x="634.0" y="96" text-anchor="middle">625</text>
+<text class="num" x="686.0" y="96" text-anchor="middle">626</text>
+<text class="num" x="738.0" y="96" text-anchor="middle">627</text>
+<line class="grid" x1="192" y1="102" x2="192" y2="410"/>
+<line class="grid" x1="244" y1="102" x2="244" y2="410"/>
+<line class="grid" x1="296" y1="102" x2="296" y2="410"/>
+<line class="grid" x1="348" y1="102" x2="348" y2="410"/>
+<line class="grid" x1="400" y1="102" x2="400" y2="410"/>
+<line class="grid" x1="452" y1="102" x2="452" y2="410"/>
+<line class="grid" x1="504" y1="102" x2="504" y2="410"/>
+<line class="grid" x1="556" y1="102" x2="556" y2="410"/>
+<line class="grid" x1="608" y1="102" x2="608" y2="410"/>
+<line class="grid" x1="660" y1="102" x2="660" y2="410"/>
+<line class="grid" x1="712" y1="102" x2="712" y2="410"/>
+<line class="grid" x1="764" y1="102" x2="764" y2="410"/>
+<text class="lbl" x="184" y="117.0" text-anchor="end">clk</text>
+<polyline class="clk" points="192,120 192,106 218.0,106 218.0,120 244,120 244,106 270.0,106 270.0,120 296,120 296,106 322.0,106 322.0,120 348,120 348,106 374.0,106 374.0,120 400,120 400,106 426.0,106 426.0,120 452,120 452,106 478.0,106 478.0,120 504,120 504,106 530.0,106 530.0,120 556,120 556,106 582.0,106 582.0,120 608,120 608,106 634.0,106 634.0,120 660,120 660,106 686.0,106 686.0,120 712,120 712,106 738.0,106 738.0,120 764,120"/>
+<text class="lbl" x="184" y="139.0" text-anchor="end">F</text>
+<line class="idle" x1="192" y1="135.0" x2="296" y2="135.0"/>
+<polygon class="bus c1" points="296,135.0 300.0,128 344.0,128 348,135.0 344.0,142 300.0,142"/>
+<text class="val" x="322.0" y="138.5" text-anchor="middle">csrrw</text>
+<line class="idle" x1="348" y1="135.0" x2="764" y2="135.0"/>
+<text class="lbl" x="184" y="161.0" text-anchor="end">D</text>
+<line class="idle" x1="192" y1="157.0" x2="348" y2="157.0"/>
+<polygon class="bus c1" points="348,157.0 352.0,150 396.0,150 400,157.0 396.0,164 352.0,164"/>
+<text class="val" x="374.0" y="160.5" text-anchor="middle">csrrw</text>
+<line class="idle" x1="400" y1="157.0" x2="764" y2="157.0"/>
+<text class="lbl" x="184" y="183.0" text-anchor="end">X</text>
+<line class="idle" x1="192" y1="179.0" x2="400" y2="179.0"/>
+<polygon class="bus c1" points="400,179.0 404.0,172 448.0,172 452,179.0 448.0,186 404.0,186"/>
+<text class="val" x="426.0" y="182.5" text-anchor="middle">csrrw</text>
+<line class="idle" x1="452" y1="179.0" x2="764" y2="179.0"/>
+<text class="lbl" x="184" y="205.0" text-anchor="end">M</text>
+<line class="idle" x1="192" y1="201.0" x2="452" y2="201.0"/>
+<polygon class="bus c1" points="452,201.0 456.0,194 500.0,194 504,201.0 500.0,208 456.0,208"/>
+<text class="val" x="478.0" y="204.5" text-anchor="middle">csrrw</text>
+<line class="idle" x1="504" y1="201.0" x2="764" y2="201.0"/>
+<text class="lbl" x="184" y="227.0" text-anchor="end">W</text>
+<polygon class="bus c0" points="192,223.0 196.0,216 240.0,216 244,223.0 240.0,230 196.0,230"/>
+<text class="val" x="218.0" y="226.5" text-anchor="middle">addi</text>
+<line class="idle" x1="244" y1="223.0" x2="504" y2="223.0"/>
+<polygon class="bus c1" points="504,223.0 508.0,216 604.0,216 608,223.0 604.0,230 508.0,230"/>
+<text class="val" x="556.0" y="226.5" text-anchor="middle">csrrw</text>
+<line class="idle" x1="608" y1="223.0" x2="764" y2="223.0"/>
+<text class="lbl" x="184" y="249.0" text-anchor="end">trace_o</text>
+<polygon class="bus" points="192,245.0 196.0,238 240.0,238 244,245.0 240.0,252 196.0,252"/>
+<text class="val" x="218.0" y="248.5" text-anchor="middle">ret</text>
+<polygon class="bus c0" points="244,245.0 248.0,238 292.0,238 296,245.0 292.0,252 248.0,252"/>
+<text class="val" x="270.0" y="248.5" text-anchor="middle">ret</text>
+<line class="idle" x1="296" y1="245.0" x2="608" y2="245.0"/>
+<polygon class="bus c1" points="608,245.0 612.0,238 656.0,238 660,245.0 656.0,252 612.0,252"/>
+<text class="val" x="634.0" y="248.5" text-anchor="middle">ret</text>
+<line class="idle" x1="660" y1="245.0" x2="764" y2="245.0"/>
+<text class="lbl" x="184" y="271.0" text-anchor="end">mstatus_o</text>
+<polygon class="bus" points="192,267.0 196.0,260 604.0,260 608,267.0 604.0,274 196.0,274"/>
+<text class="val" x="400.0" y="270.5" text-anchor="middle">1800</text>
+<polygon class="bus" points="608,267.0 612.0,260 708.0,260 712,267.0 708.0,274 612.0,274"/>
+<text class="val" x="660.0" y="270.5" text-anchor="middle">1808</text>
+<polygon class="bus" points="712,267.0 716.0,260 760.0,260 764,267.0 760.0,274 716.0,274"/>
+<text class="val" x="738.0" y="270.5" text-anchor="middle">1880</text>
+<text class="lbl" x="184" y="293.0" text-anchor="end">mip_o</text>
+<polygon class="bus" points="192,289.0 196.0,282 604.0,282 608,289.0 604.0,296 196.0,296"/>
+<text class="val" x="400.0" y="292.5" text-anchor="middle">0</text>
+<polygon class="bus" points="608,289.0 612.0,282 708.0,282 712,289.0 708.0,296 612.0,296"/>
+<text class="val" x="660.0" y="292.5" text-anchor="middle">8</text>
+<polygon class="bus" points="712,289.0 716.0,282 760.0,282 764,289.0 760.0,296 716.0,296"/>
+<text class="val" x="738.0" y="292.5" text-anchor="middle">0</text>
+<text class="lbl" x="184" y="315.0" text-anchor="end">entry_pending_o</text>
+<rect class="hi" x="608" y="304" width="52" height="14"/>
+<rect class="hi" x="660" y="304" width="52" height="14"/>
+<polyline class="wave" points="192,318 244,318 296,318 348,318 400,318 452,318 504,318 556,318 608,318 608,304 660,304 712,304 712,318 764,318"/>
+<text class="lbl" x="184" y="337.0" text-anchor="end">irq_valid_o</text>
+<rect class="hi" x="712" y="326" width="52" height="14"/>
+<polyline class="wave" points="192,340 244,340 296,340 348,340 400,340 452,340 504,340 556,340 608,340 660,340 712,340 712,326 764,326"/>
+<text class="lbl" x="184" y="359.0" text-anchor="end">irq_cause_o</text>
+<line class="idle" x1="192" y1="355.0" x2="712" y2="355.0"/>
+<polygon class="bus" points="712,355.0 716.0,348 760.0,348 764,355.0 760.0,362 716.0,362"/>
+<text class="val" x="738.0" y="358.5" text-anchor="middle">80000003</text>
+<text class="lbl" x="184" y="381.0" text-anchor="end">mepc_o</text>
+<polygon class="bus" points="192,377.0 196.0,370 708.0,370 712,377.0 708.0,384 196.0,384"/>
+<text class="val" x="452.0" y="380.5" text-anchor="middle">0</text>
+<polygon class="bus" points="712,377.0 716.0,370 760.0,370 764,377.0 760.0,384 716.0,384"/>
+<text class="val" x="738.0" y="380.5" text-anchor="middle">30</text>
+<text class="lbl" x="184" y="403.0" text-anchor="end">redirect_pc_o</text>
+<line class="idle" x1="192" y1="399.0" x2="712" y2="399.0"/>
+<polygon class="bus" points="712,399.0 716.0,392 760.0,392 764,399.0 760.0,406 716.0,406"/>
+<text class="val" x="738.0" y="402.5" text-anchor="middle">100</text>
+<line class="mark" x1="608" y1="70" x2="608" y2="410"/>
+<text class="mtext" x="611" y="74">MIE set</text>
+<line class="mark" x1="712" y1="70" x2="712" y2="410"/>
+<text class="mtext" x="715" y="74">entry</text>
+<rect class="bus c0" x="14.0" y="425" width="10" height="10" rx="2"/>
+<text class="asm" x="30.0" y="434">00000028  addi x1, x1, 8</text>
+<rect class="bus c1" x="9.0" y="425" width="10" height="10" rx="2"/>
+<text class="asm" x="25.0" y="434">0000002c  csrrw x0, mstatus, x1</text>
+</svg>
