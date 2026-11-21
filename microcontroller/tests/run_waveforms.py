@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""run traced simulation fixtures and render cycle-aligned waveform figures for the guides."""
+"""run traced simulation fixtures and export their cycle windows from gtkwave as figures for the guides."""
 import argparse
 import datetime
 import hashlib
@@ -92,8 +92,7 @@ CLOCKS = {'base-forwarded': 'cpu5_base_tb.clk_i', 'base-diagnostic': 'cpu5_base_
           'compressed': 'cpu5_compressed_execution_tb.clk_i', 'fence': 'cpu5_fence_execution_tb.clk_i',
           'debug-core': 'cpu5_debug_core_tb.clk_i',
           'local-fabric': 'cpu5_local_fabric_tb.clk', 'irq-platform': 'cpu5_irq_platform_tb.clk_i'}
-HEX, DEC = (lambda v: f'{v:x}'), str
-BIN2 = (lambda v: f'{v:02b}')
+HEX, DEC, BIN2 = 'hex', 'dec', 'bin'
 BASE, MEM, CSR = 'cpu5_base_tb.dut', 'cpu5_memory_tb.dut', 'cpu5_csr_control_tb.dut'
 IRQ, MD, FEN = 'cpu5_irq_control_tb.dut', 'cpu5_muldiv_control_tb.dut', 'cpu5_fence_execution_tb.dut'
 CMP, DBG = 'cpu5_compressed_execution_tb.dut', 'cpu5_debug_core_tb.dut'
@@ -150,6 +149,7 @@ FIGURES = [
      'markers': [('branch in X', lambda s, c: raw_at(BASE, 2, s, c) & 0x7f == 0x63),
                  ('branch in W', lambda s, c: raw_at(BASE, 4, s, c) & 0x7f == 0x63),
                  ('redirect', lambda s, c: s(f'{BASE}.redirect_valid_o', c))],
+     'kills': True,
      'requires': [('younger tokens are killed with the redirect', lambda s, k: s(f'{BASE}.kill_valid_o', k) != 0),
                   ('the branch reaches W immediately before the redirect', lambda s, k: raw_at(BASE, 4, s, k - 1) & 0x7f == 0x63)],
      'extra': [f'{BASE}.kill_valid_o']},
@@ -174,6 +174,7 @@ FIGURES = [
               ('bus', 'mepc_o', f'{MEM}.mepc_o', HEX), ('bus', 'mtval_o', f'{MEM}.mtval_o', HEX)],
      'trigger': lambda s, c: s(f'{MEM}.d_rsp_valid_i', c) and s(f'{MEM}.d_rsp_status_i', c), 'before': 9, 'after': 5,
      'markers': [('error response', lambda s, c: s(f'{MEM}.d_rsp_valid_i', c)), ('trap', lambda s, c: s(f'{MEM}.trace_o.trap', c) and s(f'{MEM}.trace_o.valid', c))],
+     'traps': True,
      'requires': [('the trap records a load access fault', lambda s, k: s(f'{MEM}.mcause_o', k + 3) == 5),
                   ('mtval names the requested address', lambda s, k: s(f'{MEM}.mtval_o', k + 3) == s(f'{MEM}.d_req_addr_o', k - 1))]},
     {'id': 'csr-serialization', 'guide': 'microcontroller/rtl/README.md', 'bench': 'csr-control', 'seed': 1,
@@ -256,7 +257,7 @@ FIGURES = [
                   ('only the low parcel of the next word is requested', lambda s, k: any(s('cpu5_compressed_execution_tb.frontend.i_req_valid_o', c) and
                    s('cpu5_compressed_execution_tb.frontend.i_req_parcels_o', c) == 1 and s('cpu5_compressed_execution_tb.frontend.i_req_addr_o', c) == (s('cpu5_compressed_execution_tb.frontend.pc', k) + 2) for c in range(k - 14, k)))]},
     {'id': 'debug-halt', 'guide': 'microcontroller/rtl/README.md', 'bench': 'debug-core', 'seed': 1,
-     'title': 'halt request waits for an offered load, then halts before the trap handler',
+     'title': 'halt request waits for an offered load, then halts before the trap handler', 'cw': 46,
      'rows': [*stage_rows(DBG), ('retire', 'trace_o', DBG), ('bit', 'debug_haltreq_i', f'{DBG}.debug_haltreq_i'),
               ('bit', 'd_req_valid_o', f'{DBG}.d_req_valid_o'), ('bit', 'd_req_ready_i', f'{DBG}.d_req_ready_i'),
               ('bit', 'd_rsp_valid_i', f'{DBG}.d_rsp_valid_i'), ('bus', 'd_rsp_status_i', f'{DBG}.d_rsp_status_i', DEC, held(f'{DBG}.d_rsp_valid_i')),
@@ -269,6 +270,7 @@ FIGURES = [
      'markers': [('halt requested', lambda s, c: s(f'{DBG}.debug_haltreq_i', c)),
                  ('accepted', lambda s, c: s(f'{DBG}.d_req_valid_o', c) and s(f'{DBG}.d_req_ready_i', c)),
                  ('halted', lambda s, c: s(f'{DBG}.debug_halted_o', c) and not s(f'{DBG}.debug_halted_o', c - 1))],
+     'traps': True,
      'requires': [('the offered request stays valid after the halt request', lambda s, k: s(f'{DBG}.d_req_valid_o', k + 1)),
                   ('the halt reports the trap handler as dpc', lambda s, k: s(f'{DBG}.debug_dpc_o', k + 8) == s(f'{DBG}.mtvec_o', k + 8))],
      'extra': [f'{DBG}.mtvec_o']},
@@ -284,10 +286,11 @@ FIGURES = [
                  ('accepted', lambda s, c: s(f'{MEM}.d_req_valid_o', c) and s(f'{MEM}.d_req_ready_i', c)),
                  ('response', lambda s, c: s(f'{MEM}.d_rsp_valid_i', c)),
                  ('input reopens', lambda s, c: s(f'{MEM}.in_ready_o', c) and not s(f'{MEM}.mem_busy_o', c))],
+     'kills': True,
      'requires': [('the reset removes every instruction token', lambda s, k: s(f'{MEM}.stage_valid_o', k + 1) == 0),
                   ('the request is still offered after the reset', lambda s, k: s(f'{MEM}.d_req_valid_o', k + 1)),
                   ('no new instruction enters before the response', lambda s, k: not any(s(f'{MEM}.in_ready_o', c) for c in range(k, first(s, k, lambda s, c: s(f'{MEM}.d_rsp_valid_i', c), 20) + 1)))]},
-    {'id': 'fabric-ownership', 'guide': 'microcontroller/memory/README.md', 'bench': 'local-fabric', 'seed': 1, 'listing': False,
+    {'id': 'fabric-ownership', 'guide': 'microcontroller/memory/README.md', 'bench': 'local-fabric', 'seed': 1,
      'title': 'local fabric MMIO write: owned offer, one effect, held response', 'cw': 26,
      'rows': [('bit', 'd_req_valid_i', f'{FAB}.d_req_valid_i'), ('bit', 'd_req_ready_o', f'{FAB}.d_req_ready_o'),
               ('bus', 'd_req_addr_i', f'{FAB}.d_req_addr_i', HEX, held(f'{FAB}.d_req_valid_i')),
@@ -310,8 +313,8 @@ FIGURES = [
                   ('the status effect happens once', lambda s, k: sum(s(f'{FAB}.status_write_o', c) for c in range(k, k + 25)) == 1),
                   ('the response is held while not consumed', lambda s, k: any(s(f'{FAB}.d_rsp_valid_o', c) and not s(f'{FAB}.d_rsp_ready_i', c) for c in range(k, k + 25)))],
      'extra': [f'{FAB}.d_req_write_i']},
-    {'id': 'notification-counter', 'guide': 'microcontroller/memory/README.md', 'bench': 'irq-platform', 'seed': 1, 'listing': False,
-     'title': 'counted notifications: empty acknowledge rejected, saturation and sticky overflow', 'cw': 30,
+    {'id': 'notification-counter', 'guide': 'microcontroller/memory/README.md', 'bench': 'irq-platform', 'seed': 1,
+     'title': 'counted notifications: empty acknowledge rejected, saturation and sticky overflow', 'cw': 46,
      'rows': [('bit', 'system_reset_i', f'{NOTE}.system_reset_i'), ('bit', 'notification_i', f'{NOTE}.notification_i'),
               ('bit', 'command_i', f'{NOTE}.command_i'), ('bit', 'write_i', f'{NOTE}.write_i'),
               ('bus', 'addr_i', f'{NOTE}.addr_i', HEX, held(f'{NOTE}.command_i')), ('bit', 'error_o', f'{NOTE}.error_o'),
@@ -339,6 +342,19 @@ class Sampler:
         if name not in self.samples:
             raise KeyError(f'signal not loaded for this figure: {name}')
         return self.samples[name][cycle] if 0 <= cycle < self.n else 0
+
+
+class Recorder:
+    """wrap a sampler and remember which signals a condition reads."""
+
+    def __init__(self, sampler):
+        """start with an empty set of read signal names."""
+        self.sampler, self.names = sampler, set()
+
+    def __call__(self, name, cycle):
+        """record the signal name and return its sampled value."""
+        self.names.add(name)
+        return self.sampler(name, cycle)
 
 
 def digest(path):
@@ -412,7 +428,7 @@ def needed(figure):
                       f'{token}.p.raw', f'{token}.p.length', f'{token}.p.op', f'{token}.p.raw_valid'}
         # retirement rows read the terminal trace record.
         elif row[0] == 'retire':
-            names |= {f'{row[2]}.trace_o.{field}' for field in ('valid', 'trap', 'uid')}
+            names |= {f'{row[2]}.trace_o.{field}' for field in ('valid', 'trap', 'uid', 'packet.pc')}
         # value rows name their signal and any qualifying valid bit.
         else:
             names |= {row[2], *row[4:5]}
@@ -431,76 +447,58 @@ def label_for(s, prefix, index, cycle):
     return OPS[op] if op < len(OPS) else f'op{op}'
 
 
-def assemble(figure, s, start, end, edges):
-    """convert sampled columns into renderer rows, colors and a program listing."""
-    cycles = list(range(start, end))
-    colors, legend, rows, killed = {}, [], [{'label': 'clk', 'kind': 'clock'}], set()
-    # stage tokens are colored by instruction identity in order of first appearance, oldest stage first.
-    for cycle in cycles:
-        # every valid stage contributes its instruction once, from W back to F.
+def declared(info, name):
+    """return a signal name with the bit range its dump declares."""
+    return name + info[name]['range']
+
+
+def traces(figure, info):
+    """list a figure's gtkwave traces as display format, alias and declared dump name."""
+    out, seen = [('bit', 'clk', declared(info, CLOCKS[figure['bench']]))], set()
+    # each figure row maps onto one or more gtkwave traces.
+    for row in figure['rows']:
+        # the first stage row of a controller adds its validity vector and, where relevant, its kill report.
+        if row[0] == 'stage' and row[2] not in seen:
+            seen.add(row[2])
+            out.append(('bin', 'valid W M X D F', declared(info, f'{row[2]}.stage_valid_o')))
+            # figures about discarded work also show the registered kill report.
+            if figure.get('kills'):
+                out.append(('bin', 'kill W M X D F', declared(info, f'{row[2]}.kill_valid_o')))
+        # each stage row shows the address of the instruction the stage holds.
+        if row[0] == 'stage':
+            out.append(('hex', f'{row[1]} pc', declared(info, f'{row[2]}.stage_token_o[{row[3]}].p.pc')))
+        # the registered terminal trace record shows each retirement or trap and its address.
+        elif row[0] == 'retire':
+            out.append(('bit', 'trace valid', declared(info, f'{row[2]}.trace_o.valid')))
+            # trap figures also show the trap flag of the trace record.
+            if figure.get('traps'):
+                out.append(('bit', 'trace trap', declared(info, f'{row[2]}.trace_o.trap')))
+            out.append(('hex', 'trace pc', declared(info, f'{row[2]}.trace_o.packet.pc')))
+        # single bits keep their row label as the alias.
+        elif row[0] == 'bit':
+            out.append(('bit', row[1], declared(info, row[2])))
+        # values use the display format the row requests.
+        else:
+            out.append((row[3], row[1], declared(info, row[2])))
+    return out
+
+
+def program(figure, s, start, end):
+    """list the instructions held by the stage rows in a window, oldest first, for the manifest."""
+    listing, seen = [], set()
+    # instructions are recorded in order of first appearance, scanning from W back to F.
+    for cycle in range(start, end):
+        # every valid stage contributes its instruction once.
         for row in reversed(figure['rows']):
-            # only stage rows define instruction identities.
+            # only stage rows hold instruction identities.
             if row[0] == 'stage' and (s(f'{row[2]}.stage_valid_o', cycle) >> row[3]) & 1:
                 uid = s(f'{row[2]}.stage_token_o[{row[3]}].uid', cycle)
-                # the first sighting fixes the color and listing entry.
-                if uid not in colors:
-                    colors[uid] = len(colors) % 8
-                    pc = s(f'{row[2]}.stage_token_o[{row[3]}].p.pc', cycle)
-                    legend.append([colors[uid], f'{pc:08x}', label_for(s, row[2], row[3], cycle), uid])
-                # a registered kill report on the next edge names this token.
-                if (s(f'{row[2]}.kill_valid_o', cycle + 1) >> row[3]) & 1:
-                    killed.add(uid)
-    legend = [(color, address, text + ('  (killed)' if uid in killed else '')) for color, address, text, uid in legend]
-    # every requested row becomes one renderer row.
-    for row in figure['rows']:
-        # stage rows show which instruction owns each stage.
-        if row[0] == 'stage':
-            _, name, prefix, index = row
-            valid = [(s(f'{prefix}.stage_valid_o', c) >> index) & 1 for c in cycles]
-            uids = [s(f'{prefix}.stage_token_o[{index}].uid', c) if v else None for c, v in zip(cycles, valid)]
-            rows.append({'label': name, 'kind': 'bus', 'values': uids, 'idle': [not v for v in valid],
-                         'texts': [label_for(s, prefix, index, c).split(' ')[0] if v else '' for c, v in zip(cycles, valid)],
-                         'colors': [colors.get(uid) for uid in uids],
-                         # registered kill reports follow the edge that discarded the token.
-                         'kills': [bool((s(f'{prefix}.kill_valid_o', c + 1) >> index) & 1) and v for c, v in zip(cycles, valid)]})
-        # retirement rows show each terminal disposition in its instruction color.
-        elif row[0] == 'retire':
-            _, name, prefix = row
-            valid = [s(f'{prefix}.trace_o.valid', c) for c in cycles]
-            uids = [s(f'{prefix}.trace_o.uid', c) if v else None for c, v in zip(cycles, valid)]
-            texts = ['trap' if s(f'{prefix}.trace_o.trap', c) else 'ret' for c in cycles]
-            rows.append({'label': name, 'kind': 'bus', 'values': [(u, t) for u, t in zip(uids, texts)],
-                         'idle': [not v for v in valid], 'texts': texts, 'colors': [colors.get(uid) for uid in uids]})
-        # one-bit rows draw a level.
-        elif row[0] == 'bit':
-            rows.append({'label': row[1], 'kind': 'bit', 'values': [s(row[2], c) & 1 for c in cycles]})
-        # value rows draw labelled bus segments, hidden while their qualifying valid bit is low.
-        else:
-            _, name, path, fmt = row[:4]
-            values = [s(path, c) for c in cycles]
-            idle = [not s(row[4], c) if len(row) > 4 else False for c in cycles]
-            rows.append({'label': name, 'kind': 'bus', 'values': values, 'idle': idle, 'texts': [fmt(v) for v in values]})
-    markers, after = [], start
-    # markers name events in order; each search starts at the previous marker's cycle.
-    for label, condition in figure.get('markers', []):
-        hit = next((c for c in range(after, end) if condition(s, c)), None)
-        # an absent event is a figure error, not an omitted label.
-        if hit is None:
-            raise RuntimeError(f'{figure["id"]}: marker {label!r} not found')
-        markers.append({'column': hit - start, 'label': label})
-        after = hit
-    return {'title': figure['title'], 'cw': figure.get('cw', 34), 'cycles': cycles, 'rows': rows,
-            'markers': markers, 'legend': legend if figure.get('listing', True) and legend else [],
-            'subtitle': ''}
-
-
-def subtitle(figure, start, end):
-    """describe the bench, profile, seed and captured cycle range."""
-    bench = BENCHES[figure['bench']]
-    params = ' '.join(f'{name}={value}' for name, value in bench['params'].items())
-    seed = f' · seed {figure["seed"]}' if bench['seeded'] else ''
-    plus = ' ' + ' '.join(figure['plusargs']) if figure.get('plusargs') else ''
-    return f'{bench["top"]} {params}{seed}{plus} · clock cycles {start}-{end - 1}'.replace('  ', ' ')
+                # repeated sightings of one instruction are skipped.
+                if uid not in seen:
+                    seen.add(uid)
+                    listing.append({'pc': f"0x{s(f'{row[2]}.stage_token_o[{row[3]}].p.pc', cycle):x}",
+                                    'instruction': label_for(s, row[2], row[3], cycle)})
+    return listing
 
 
 def portable(command, build_root):
@@ -509,11 +507,12 @@ def portable(command, build_root):
 
 
 def produce(figure, build_root, verilator, cache, runs):
-    """simulate, sample, check and render one figure."""
+    """simulate, sample and check one figure, and describe the gtkwave view that shows it."""
     run = simulate(figure, build_root, verilator, cache, runs)
     info, timescale = wave.parse_vcd(run['dump'], needed(figure))
     edges = wave.rising_edges(info[CLOCKS[figure['bench']]]['changes'])
-    times = edges[1:] + [edges[-1] + (edges[-1] - edges[-2])]
+    period = edges[-1] - edges[-2]
+    times = edges[1:] + [edges[-1] + period]
     s = Sampler({name: wave.sample(data['changes'], times) for name, data in info.items()}, len(edges))
     first = figure.get('search_from', lambda s: 0)(s)
     trigger = next((c for c in range(first, s.n) if figure['trigger'](s, c)), None)
@@ -521,23 +520,52 @@ def produce(figure, build_root, verilator, cache, runs):
     if trigger is None:
         raise RuntimeError(f'{figure["id"]}: trigger not found')
     start, end = max(0, trigger - figure['before']), min(s.n, trigger + figure['after'] + 1)
-    # every stated property of the window must still hold before the figure is drawn.
+    # every stated property of the window must still hold before the figure is exported.
     for text, check in figure.get('requires', []):
         # a failed property stops publication of a contradicted caption.
         if not check(s, trigger):
             raise RuntimeError(f'{figure["id"]}: requirement failed: {text}')
-    drawing = assemble(figure, s, start, end, edges)
-    drawing['subtitle'] = subtitle(figure, start, end)
-    return drawing, {'trigger_cycle': trigger, 'window_cycles': [start, end - 1], 'timescale': timescale,
-                     'window_times': [edges[start], edges[end - 1]], 'signals': sorted(needed(figure)),
-                     'pass': run['pass'], 'build_command': portable(run['build'], build_root),
-                     'run_command': portable(run['run'], build_root)}
+    markers, after = [], start
+    # markers name events in order; each search starts at the previous marker's cycle.
+    for letter, (label, condition) in zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', figure.get('markers', [])):
+        hit = next((c for c in range(after, end) if condition(s, c)), None)
+        # an absent event is a figure error, not an omitted label.
+        if hit is None:
+            raise RuntimeError(f'{figure["id"]}: marker {label!r} not found')
+        reader = Recorder(s)
+        condition(reader, hit)
+        # the marker sits where the signals its condition reads last changed within that clock period.
+        moment = max((time for name in reader.names for time, _ in info[name]['changes'] if edges[hit] <= time < times[hit]),
+                     default=edges[hit])
+        markers.append({'name': letter, 'label': label, 'cycle': hit, 'time': moment})
+        after = hit
+    view = {'dump': run['dump'], 'traces': traces(figure, info), 'markers': markers,
+            # half a clock period of padding keeps the first and last cycles inside gtkwave's rounded zoom.
+            'times': [edges[start] - period // 2, (edges[end] if end < len(edges) else edges[-1] + period) + period // 2]}
+    return view, {'trigger_cycle': trigger, 'window_cycles': [start, end - 1], 'timescale': timescale,
+                  'window_times': view['times'], 'markers': markers,
+                  'traces': [{'alias': alias, 'signal': name} for _, alias, name in view['traces']],
+                  'instructions': program(figure, s, start, end),
+                  'pass': run['pass'], 'build_command': portable(run['build'], build_root),
+                  'run_command': portable(run['run'], build_root)}
+
+
+def tool(command, names):
+    """return a tool's version line and the digest of its first existing executable below the launcher."""
+    launcher = Path(shutil.which(command) or command).resolve()
+    version = next((line.strip() for line in subprocess.run([str(launcher), '--version'], text=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False).stdout.splitlines()
+                    if line.strip()), '')
+    binary = next((path for name in names for path in [launcher.parent.parent / name] if path.is_file()), launcher)
+    return {'version': version, 'executable': binary.relative_to(launcher.parent.parent).as_posix(),
+            'executable_sha256': digest(binary)}
 
 
 def main():
-    """parse arguments, render the selected figures and write their manifest."""
+    """parse arguments, export the selected figures from gtkwave and write their manifest."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verilator', default='verilator')
+    parser.add_argument('--gtkwave', default='gtkwave')
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--output', type=Path, default=ROOT / 'docs/waveforms')
     parser.add_argument('--figure', action='append', default=[])
@@ -554,31 +582,44 @@ def main():
         raise SystemExit('unknown figure: ' + ', '.join(sorted(unknown)))
     args.build.mkdir(parents=True, exist_ok=False)
     args.output.mkdir(parents=True, exist_ok=True)
-    version = subprocess.check_output([args.verilator, '--version'], text=True).strip()
-    launcher = Path(shutil.which(args.verilator) or args.verilator).resolve()
-    candidates = [launcher.parent.parent / 'libexec/verilator_bin', launcher.parent / 'verilator_bin']
-    binary = next((path for path in candidates if path.is_file()), None)
-    cache, runs, records = {}, {}, []
-    # figures are produced in declaration order so shared runs are reused.
+    rcfile = args.build.resolve() / 'gtkwaverc'
+    # a private rc file keeps a personal gtkwave configuration out of the exported images.
+    rcfile.write_text('splash_disable 1\n')
+    cache, runs, records, views = {}, {}, [], []
+    # every bench is built, simulated and checked before any display is opened.
     for figure in selected:
-        drawing, record = produce(figure, args.build.resolve(), args.verilator, cache, runs)
-        svg = wave.render(drawing)
-        target = args.output / f'{figure["id"]}.svg'
-        target.write_text(svg)
-        records.append({'id': figure['id'], 'title': figure['title'], 'guide': figure['guide'],
-                        'bench': figure['bench'], 'top': BENCHES[figure['bench']]['top'],
-                        'parameters': BENCHES[figure['bench']]['params'], 'seed': figure['seed'],
-                        'plusargs': figure.get('plusargs', []), 'svg': target.name,
-                        'svg_sha256': digest(target), **record})
-        print(f'WAVEFORM {figure["id"]} cycles={record["window_cycles"][0]}-{record["window_cycles"][1]} {target}', flush=True)
+        views.append((figure, *produce(figure, args.build.resolve(), args.verilator, cache, runs)))
+    # one private X server serves every gtkwave export in this run.
+    with wave.x_display(1920, 1080) as (display, server):
+        # figures are exported in declaration order.
+        for figure, view, record in views:
+            directory, name = view['dump'].parent, figure['id']
+            (directory / f'{name}.vcd').symlink_to(view['dump'].name)
+            px = round(figure.get('cw', 34) * 1.6)
+            signals = max(170, 8 * max(len(alias) for _, alias, _ in view['traces']) + 40)
+            width = min(1900, 120 + signals + px * (record['window_cycles'][1] - record['window_cycles'][0] + 1))
+            wave.save_file(directory / f'{name}.gtkw', f'{name}.vcd', view['traces'], width, signals)
+            wave.grab_script(directory / f'{name}.tcl', *view['times'],
+                             [(m['name'], m['time'], m['label']) for m in view['markers']], f'{name}.png')
+            image, command = wave.export(args.gtkwave, directory, f'{name}.vcd', f'{name}.gtkw', f'{name}.tcl',
+                                         f'{name}.png', display, rcfile, directory / f'{name}-gtkwave.log')
+            target = args.output / image.name
+            shutil.copyfile(image, target)
+            records.append({'id': name, 'title': figure['title'], 'guide': figure['guide'],
+                            'bench': figure['bench'], 'top': BENCHES[figure['bench']]['top'],
+                            'parameters': BENCHES[figure['bench']]['params'], 'seed': figure['seed'],
+                            'plusargs': figure.get('plusargs', []), 'image': target.name,
+                            'image_sha256': digest(target), **record,
+                            'gtkwave_command': portable(command, args.build.resolve())})
+            print(f'WAVEFORM {name} cycles={record["window_cycles"][0]}-{record["window_cycles"][1]} {target}', flush=True)
     sources = sorted({path for figure in selected for path in BENCHES[figure['bench']]['sources']} |
                      {TESTS + 'cpu5_wave_dump.sv', TESTS + 'waveform_render.py', TESTS + 'run_waveforms.py',
                       RTL + 'cpu5_datapath_defs.svh'})
-    manifest = {'schema': 'CPU5-WAVEFORM-FIGURES-1', 'date': datetime.date.today().isoformat(),
-                'scope': 'documentation figures cropped from passing directed-bench runs of the recorded sources; '
-                         'a figure illustrates one run and is not a qualification result',
-                'tool': {'verilator': version, 'executable': binary.relative_to(launcher.parent.parent).as_posix() if binary else None,
-                         'executable_sha256': digest(binary) if binary else None},
+    manifest = {'schema': 'CPU5-WAVEFORM-FIGURES-2', 'date': datetime.date.today().isoformat(),
+                'scope': 'gtkwave screen grabs of cycle windows from passing directed-bench runs of the recorded '
+                         'sources; a figure illustrates one run and is not a qualification result',
+                'tools': {'verilator': tool(args.verilator, ['libexec/verilator_bin', 'bin/verilator_bin']),
+                          'gtkwave': tool(args.gtkwave, ['libexec/gtkwave']), 'display_server': server},
                 'source_sha256': {path: digest(ROOT / path) for path in sources}, 'figures': records}
     # a partial selection records only the figures it produced.
     if not args.figure:

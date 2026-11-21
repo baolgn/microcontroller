@@ -1,5 +1,10 @@
-"""parse traced VCD dumps, sample them at clock edges and draw cycle-aligned SVG figures."""
-from html import escape
+"""parse traced VCD dumps, sample them at clock edges and export cycle windows through gtkwave."""
+import contextlib
+import os
+import shutil
+import subprocess
+import time
+from pathlib import Path
 
 # machine CSR names used when labelling system instructions.
 CSR_NAMES = {
@@ -10,29 +15,6 @@ CSR_NAMES = {
     0xc80: 'cycleh', 0xc81: 'timeh', 0xc82: 'instreth', 0xf11: 'mvendorid', 0xf12: 'marchid',
     0xf13: 'mimpid', 0xf14: 'mhartid', 0xf15: 'mconfigptr',
 }
-
-# light and dark palettes keep figures readable in both repository themes.
-STYLE = """
-.bg{fill:#ffffff}.frame{fill:none;stroke:#d1d9e0}
-.title{fill:#1f2328;font:600 13px sans-serif}.sub{fill:#59636e;font:11px sans-serif}
-.lbl{fill:#1f2328;font:11px sans-serif}.num{fill:#59636e;font:9px monospace}
-.val{fill:#1f2328;font:10px monospace}.asm{fill:#1f2328;font:10.5px monospace}
-.grid{stroke:#e6eaef;stroke-width:1}.edge{stroke:#d1d9e0;stroke-width:1}
-.wave{stroke:#0969da;stroke-width:1.5;fill:none}.hi{fill:#0969da;fill-opacity:.12}
-.bus{stroke:#57606a;stroke-width:1;fill:#f6f8fa}.idle{stroke:#8c959f;stroke-width:1.2}
-.clk{stroke:#59636e;stroke-width:1.2;fill:none}.kill{stroke:#cf222e;stroke-width:1.8}
-.mark{stroke:#bf8700;stroke-width:1.2;stroke-dasharray:4 3}.mtext{fill:#9a6700;font:600 10px sans-serif}
-.c0{fill:#ddf4ff}.c1{fill:#dafbe1}.c2{fill:#fff8c5}.c3{fill:#ffebe9}
-.c4{fill:#fbefff}.c5{fill:#ffeff7}.c6{fill:#d8f3f1}.c7{fill:#fff1e5}
-@media (prefers-color-scheme: dark){
-.bg{fill:#0d1117}.frame{stroke:#30363d}.title,.lbl,.val,.asm{fill:#e6edf3}.sub,.num{fill:#9198a1}
-.grid{stroke:#21262d}.edge{stroke:#30363d}.wave{stroke:#4493f8}.hi{fill:#4493f8;fill-opacity:.18}
-.bus{stroke:#8b949e;fill:#161b22}.idle{stroke:#6e7681}.clk{stroke:#9198a1}.kill{stroke:#f85149}
-.mark{stroke:#d29922}.mtext{fill:#d29922}
-.c0{fill:#0c2d6b}.c1{fill:#033a16}.c2{fill:#3b2300}.c3{fill:#5d0f12}
-.c4{fill:#3c1e70}.c5{fill:#5c1f3f}.c6{fill:#04312c}.c7{fill:#4b2306}}
-"""
-
 
 def sign(value, bits):
     """interpret the low bits of value as a two's-complement number."""
@@ -195,7 +177,7 @@ def disassemble(raw, pc, length):
 
 
 def parse_vcd(path, wanted):
-    """return width and value changes for the requested full names, plus the dump timescale."""
+    """return width, declared range and value changes for the requested full names, plus the dump timescale."""
     codes, info, timescale, scope = {}, {}, '', []
     # one pass reads declarations, then only the retained value changes.
     with open(path, 'r', encoding='ascii', errors='replace') as stream:
@@ -217,7 +199,7 @@ def parse_vcd(path, wanted):
                 # only requested names are retained.
                 if name in wanted:
                     codes.setdefault(words[3], []).append(name)
-                    info[name] = {'width': int(words[2]), 'changes': []}
+                    info[name] = {'width': int(words[2]), 'range': '' if words[5] == '$end' else words[5], 'changes': []}
             # the timescale applies to every recorded time.
             elif words[0] == '$timescale':
                 timescale = ' '.join(word for word in words[1:] if word != '$end')
@@ -282,133 +264,85 @@ def sample(changes, times):
     return values
 
 
-def text_width(text, size):
-    """estimate rendered text width for monospace or proportional labels."""
-    return len(text) * size * 0.6
+# gtkwave save-file flags for the display formats a figure requests.
+FLAGS = {'bit': '@28', 'bin': '@28', 'hex': '@22', 'dec': '@24'}
+# tcl metacharacters are rejected in marker labels, which are passed literally.
+TCL_UNSAFE = set('"\\[]{}$;')
 
 
-def bus_cells(values, texts, idle, x0, cw):
-    """merge equal neighboring cells into labelled bus segments."""
-    segments, start = [], 0
-    # each change of identity or idle state closes a segment.
-    for index in range(1, len(values) + 1):
-        # the last cell always closes the final segment.
-        if index == len(values) or values[index] != values[start] or idle[index] != idle[start]:
-            segments.append((start, index, values[start], texts[start], idle[start]))
-            start = index
-    return [(x0 + a * cw, x0 + b * cw, value, text, quiet) for a, b, value, text, quiet in segments]
+def save_file(path, dump, traces, width, signals_width):
+    """write a gtkwave save file that loads one dump and lists aliased traces in order."""
+    lines = [f'[dumpfile] "{dump}"', '[timestart] 0', f'[size] {width} {120 + 21 * len(traces)}', '[pos] 0 0',
+             '[sst_expanded] 0', '[sst_width] 1', f'[signals_width] {signals_width}']
+    flag = None
+    # a format line applies to every following trace until the next format line.
+    for fmt, alias, name in traces:
+        # emit a format line only when the format changes.
+        if FLAGS[fmt] != flag:
+            flag = FLAGS[fmt]
+            lines.append(flag)
+        lines.append(f'+{{{alias}}} {name}')
+    Path(path).write_text('\n'.join(lines) + '\n')
 
 
-def render(figure):
-    """return a self-contained SVG document for one cycle-aligned figure."""
-    cw, row_h, label_w, pad = figure.get('cw', 34), 22, 178, 14
-    columns = len(figure['cycles'])
-    x0 = pad + label_w
-    width = x0 + columns * cw + pad
-    legend = figure.get('legend', [])
-    legend_rows = (len(legend) + 1) // 2
-    top = 56 + (28 if figure.get('markers') else 0)
-    body_h = len(figure['rows']) * row_h
-    height = top + 18 + body_h + (legend_rows * 15 + 22 if legend else 0) + pad
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-           f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(figure["title"])}">',
-           f'<title>{escape(figure["title"])}</title>', f'<style>{STYLE}</style>',
-           f'<rect class="bg" x="0" y="0" width="{width}" height="{height}" rx="6"/>',
-           f'<rect class="frame" x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="6"/>',
-           f'<text class="title" x="{pad}" y="22">{escape(figure["title"])}</text>',
-           f'<text class="sub" x="{pad}" y="40">{escape(figure["subtitle"])}</text>']
-    header = top + 12
-    # cycle numbers label every column, or every second column when narrow.
-    for index, cycle in enumerate(figure['cycles']):
-        # narrow columns keep alternate labels legible.
-        if cw >= 26 or index % 2 == 0:
-            out.append(f'<text class="num" x="{x0 + index * cw + cw / 2:.1f}" y="{header}" text-anchor="middle">{cycle}</text>')
-    y = top + 18
-    # vertical rules mark each rising clock edge.
-    for index in range(columns + 1):
-        out.append(f'<line class="grid" x1="{x0 + index * cw}" y1="{y}" x2="{x0 + index * cw}" y2="{y + body_h}"/>')
-    # every row is drawn over the shared edge grid.
-    for row in figure['rows']:
-        mid, high, low = y + row_h / 2, y + 4, y + row_h - 4
-        out.append(f'<text class="lbl" x="{x0 - 8}" y="{mid + 4:.1f}" text-anchor="end">{escape(row["label"])}</text>')
-        # the clock rises at the left edge of every column.
-        if row['kind'] == 'clock':
-            points = []
-            # each period has a high half followed by a low half.
-            for index in range(columns):
-                left = x0 + index * cw
-                points += [f'{left},{low}', f'{left},{high}', f'{left + cw / 2:.1f},{high}', f'{left + cw / 2:.1f},{low}']
-            points.append(f'{x0 + columns * cw},{low}')
-            out.append(f'<polyline class="clk" points="{" ".join(points)}"/>')
-        # one-bit signals are drawn as levels with shaded high intervals.
-        elif row['kind'] == 'bit':
-            points, previous = [], None
-            # level changes occur only at column boundaries.
-            for index, value in enumerate(row['values']):
-                left, level = x0 + index * cw, high if value else low
-                # a transition adds a vertical step.
-                if previous is not None and level != previous:
-                    points.append(f'{left},{previous}')
-                points.append(f'{left},{level}')
-                # high cells receive a light fill.
-                if value:
-                    out.append(f'<rect class="hi" x="{left}" y="{high}" width="{cw}" height="{low - high}"/>')
-                previous = level
-            points.append(f'{x0 + columns * cw},{previous}')
-            out.append(f'<polyline class="wave" points="{" ".join(points)}"/>')
-        # multi-bit and stage rows are drawn as labelled bus segments.
-        else:
-            idle = row.get('idle', [False] * columns)
-            colors = row.get('colors', [None] * columns)
-            segments = bus_cells(row['values'], row['texts'], idle, x0, cw)
-            # each merged segment is either an idle line or a bounded value.
-            for index, (left, right, value, text, quiet) in enumerate(segments):
-                # idle intervals carry no value.
-                if quiet:
-                    out.append(f'<line class="idle" x1="{left}" y1="{mid}" x2="{right}" y2="{mid}"/>')
-                    continue
-                slant = min(4, (right - left) / 4)
-                shape = (f'{left},{mid} {left + slant:.1f},{high} {right - slant:.1f},{high} {right},{mid} '
-                         f'{right - slant:.1f},{low} {left + slant:.1f},{low}')
-                color = colors[(left - x0) // cw]
-                fill = f'bus c{color}' if color is not None else 'bus'
-                out.append(f'<polygon class="{fill}" points="{shape}"/>')
-                before = segments[index - 1] if index else None
-                after = segments[index + 1] if index + 1 < len(segments) else None
-                spare = min(before[1] - before[0] if before and before[4] else 0, after[1] - after[0] if after and after[4] else 0)
-                width = text_width(text, 10)
-                # a label that spills over idle neighbors gets a backing; one that cannot fit is omitted.
-                if text and width > right - left - 4 and width <= right - left - 4 + 2 * spare:
-                    out.append(f'<rect class="bg" x="{(left + right - width) / 2 - 2:.1f}" y="{mid - 6:.1f}" width="{width + 4:.1f}" height="12" rx="2"/>')
-                # labels are centred on their segment.
-                if text and width <= right - left - 4 + 2 * spare:
-                    out.append(f'<text class="val" x="{(left + right) / 2:.1f}" y="{mid + 3.5:.1f}" text-anchor="middle">{escape(text)}</text>')
-            # killed tokens are crossed out in the cycle of their kill.
-            for index, killed in enumerate(row.get('kills', [])):
-                # only killed cells receive a cross.
-                if killed:
-                    left = x0 + index * cw
-                    out.append(f'<line class="kill" x1="{left + 5}" y1="{high + 1}" x2="{left + cw - 5}" y2="{low - 1}"/>')
-                    out.append(f'<line class="kill" x1="{left + cw - 5}" y1="{high + 1}" x2="{left + 5}" y2="{low - 1}"/>')
-        y += row_h
-    ends = [float('-inf'), float('-inf')]
-    # markers sit on the clock edge where the named event takes effect; close labels use a second line.
-    for marker in figure.get('markers', []):
-        left = x0 + marker['column'] * cw
-        level = 0 if left + 3 > ends[0] + 6 else 1
-        ends[level] = left + 3 + text_width(marker['label'], 10)
-        out.append(f'<line class="mark" x1="{left}" y1="{top - 14 + 12 * level}" x2="{left}" y2="{top + 18 + body_h}"/>')
-        out.append(f'<text class="mtext" x="{left + 3}" y="{top - 10 + 12 * level}">{escape(marker["label"])}</text>')
-    # the program listing names each instruction shown in the stage rows.
-    if legend:
-        base = top + 18 + body_h + 24
-        column_w = (width - 2 * pad) / 2
-        # entries fill the left column before the right column.
-        for index, (color, address, text) in enumerate(legend):
-            column, line = divmod(index, legend_rows)
-            left, top_y = pad + column * column_w, base + line * 15
-            swatch = f'bus c{color}' if color is not None else 'bus'
-            out.append(f'<rect class="{swatch}" x="{left:.1f}" y="{top_y - 9}" width="10" height="10" rx="2"/>')
-            out.append(f'<text class="asm" x="{left + 16:.1f}" y="{top_y}">{escape(address)}  {escape(text)}</text>')
-    out.append('</svg>')
-    return '\n'.join(out) + '\n'
+def grab_script(path, start, end, markers, image):
+    """write a timer-driven gtkwave script that zooms, names markers, grabs the window and quits."""
+    lines = ['if {![info exists ::step]} { set ::step 0 }', 'incr ::step', 'if {$::step == 1} {',
+             f'  gtkwave::setZoomRangeTimes {start} {end}']
+    # each named marker labels the clock edge of one event.
+    for letter, edge, label in markers:
+        # a label containing tcl syntax could change the script, so it is refused.
+        if TCL_UNSAFE & set(label):
+            raise ValueError(f'unsafe marker label: {label}')
+        lines.append(f'  gtkwave::setNamedMarker {letter} {edge} "{label}"')
+    lines += ['} elseif {$::step == 4} {', f'  gtkwave::/File/Grab_To_File {image}',
+              '} elseif {$::step >= 5} {', '  gtkwave::/File/Quit', '}']
+    Path(path).write_text('\n'.join(lines) + '\n')
+
+
+@contextlib.contextmanager
+def x_display(width, height):
+    """start a private X server whose root window gtkwave can read back for screen grabs."""
+    number = next(n for n in range(90, 200)
+                  if not os.path.exists(f'/tmp/.X11-unix/X{n}') and not os.path.exists(f'/tmp/.X{n}-lock'))
+    # a virtual framebuffer needs no desktop session.
+    if shutil.which('Xvfb'):
+        command = ['Xvfb', f':{number}', '-screen', '0', f'{width}x{height}x24', '-nolisten', 'tcp']
+    # inside a wayland session, a rootful xwayland window keeps its own readable framebuffer.
+    elif shutil.which('Xwayland') and os.environ.get('WAYLAND_DISPLAY'):
+        command = ['Xwayland', f':{number}', '-geometry', f'{width}x{height}', '-shm', '-nolisten', 'tcp']
+    # without either server there is no screen to grab.
+    else:
+        raise RuntimeError('gtkwave export needs Xvfb, or Xwayland inside a wayland session')
+    server = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # the private server is stopped even when an export fails.
+    try:
+        deadline = time.monotonic() + 10
+        # clients connect only after the server has created its socket.
+        while not os.path.exists(f'/tmp/.X11-unix/X{number}'):
+            # a server that exits or never creates its socket cannot be used.
+            if time.monotonic() > deadline or server.poll() is not None:
+                raise RuntimeError('X server did not start: ' + ' '.join(command))
+            time.sleep(0.1)
+        yield f':{number}', command[0]
+    # every figure has been exported or the run has failed.
+    finally:
+        server.terminate()
+        server.wait(timeout=10)
+
+
+def export(gtkwave, directory, dump, save, script, image, display, rcfile, log):
+    """run gtkwave on one dump inside the private display and require its grabbed image."""
+    # the x11 backend keeps gtkwave inside the private display, and server-side decorations avoid an empty
+    # shadow margin around the grabbed window.
+    environment = dict(os.environ, DISPLAY=display, GDK_BACKEND='x11', GTK_CSD='0')
+    environment.pop('WAYLAND_DISPLAY', None)
+    command = [gtkwave, '-r', rcfile, dump, save, f'--repscript={script}', '--repperiod=400']
+    result = subprocess.run([str(part) for part in command], cwd=directory, env=environment, text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=300)
+    Path(log).write_text('$ ' + ' '.join(str(part) for part in command) + '\n' + result.stdout)
+    target = Path(directory) / image
+    # gtkwave must exit normally and leave the grabbed image behind.
+    if result.returncode or not target.is_file():
+        raise RuntimeError(f'gtkwave export failed: {log}')
+    return target, command
