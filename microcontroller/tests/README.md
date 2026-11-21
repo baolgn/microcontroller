@@ -34,26 +34,27 @@ The [directed coordinator](../verification/run_directed.py) stages current sourc
 
 ## Waveform figures
 
-[run_waveforms.py](run_waveforms.py) regenerates the waveform figures in the [CPU overview](../README.md#pipeline), the [RTL guide](../rtl/README.md) and the [memory guide](../memory/README.md). For each figure it repeats the owning runner's sources and parameters, adds Verilator `--trace --trace-structs` and binds [cpu5_wave_dump.sv](cpu5_wave_dump.sv) to the bench top. The bench must reach its normal pass marker. The runner then crops a window around a defined trigger event, checks the properties its caption states and draws a self-contained SVG with [waveform_render.py](waveform_render.py). If a changed source no longer reproduces a trigger, marker or stated property, the run stops instead of leaving a stale figure.
+The waveform figures in the [CPU overview](../README.md#pipeline), the [RTL guide](../rtl/README.md) and the [memory guide](../memory/README.md) are screenshots exported by GTKWave itself. [run_waveforms.py](run_waveforms.py) regenerates them. For each figure it repeats the owning runner's sources and parameters, adds Verilator `--trace --trace-structs` and binds [cpu5_wave_dump.sv](cpu5_wave_dump.sv) to the bench top. The bench must reach its normal pass marker. The runner then finds the figure's trigger event, checks the properties its caption states and writes a GTKWave save file and Tcl script that select the signals, display formats, aliases, zoom range and named event markers. GTKWave loads the dump and saves the image with its own Grab To File command; [waveform_render.py](waveform_render.py) only parses the dump, writes those inputs and runs GTKWave. If a changed source no longer reproduces a trigger, marker or stated property, the run stops instead of leaving a stale figure.
 
-Use a new build directory. The command rewrites `docs/waveforms/` and its [manifest](../../docs/waveforms/manifest.json), which records each figure's bench, parameters, seed, cycle window, commands, Verilator identity and source hashes:
+The export uses the pinned GTKWave 3.4.0, because the grab is driven through its Tcl interface, and a private X display: `Xvfb` when it is installed, otherwise a rootful `Xwayland` window inside a Wayland session. Every bench is built, simulated and checked before that display opens. Use a new build directory. The command rewrites `docs/waveforms/` and its [manifest](../../docs/waveforms/manifest.json), which records each figure's bench, parameters, seed, cycle window, markers, traces, instructions, commands, tool identities and source hashes:
 
 ```sh
 python3 -B microcontroller/tests/run_waveforms.py \
   --verilator /tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/verilator \
+  --gtkwave /tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave \
   --build /tmp/cpu5-waveforms-new
 ```
 
-`--list` prints the figure names. Repeated `--figure NAME` options render a subset without rewriting the manifest. Each complete dump stays in the build directory beside its build and run logs, for example `/tmp/cpu5-waveforms-new/base-forwarded/s1.vcd`, and opens in GTKWave or Surfer for unrestricted inspection.
+`--list` prints the figure names. Repeated `--figure NAME` options export a subset without rewriting the manifest. Each bench directory keeps the complete dump beside the figure's save file, so `gtkwave NAME.vcd NAME.gtkw` run in that directory reopens the same view for unrestricted inspection.
 
 Read the figures as follows:
 
-- Each column is one clock period, sampled just before the next rising edge. A valid/ready pair that is high in a column transfers at that column's right edge.
-- Stage rows name the instruction that owns F, D, X, M or W. One color follows one instruction instance, and the listing below the figure gives its address and disassembly.
-- A cross marks a token discarded at the following edge. `kill_valid_o` and `trace_o` are registered reports, so a kill or retirement record appears one cycle after the edge that caused it.
-- Dashed markers name the first edge in the window where an event is visible. A bus value drawn as a flat line is not qualified by its valid signal in that cycle.
+- The time axis is simulation time in picoseconds, and each bench sets its own clock period. Registered values change at rising edges of `clk`.
+- `valid W M X D F` and `kill W M X D F` hold one bit per stage, W on the left and F on the right. A `pc` row shows the address held by that stage; it reads zero while the stage is empty, so check its valid bit. The manifest lists the instructions at those addresses.
+- `trace valid`, `trace trap` and `trace pc` come from the registered terminal trace record, so a retirement or trap appears one cycle after the edge that caused it. `kill W M X D F` is registered in the same way.
+- Named markers sit on the clock edge of each event, and their labels match the captions.
 
-Each figure illustrates one passing run of the sources and tool recorded in the manifest. It does not extend a result to other seeds or profiles and does not qualify hardware timing.
+Each figure illustrates one passing run of the sources and tools recorded in the manifest. It does not extend a result to other seeds or profiles and does not qualify hardware timing.
 
 ## Interpreting results
 

@@ -28,9 +28,9 @@ flowchart LR
   W -->|committed redirect| IF
 ```
 
-![Overlapped five-stage execution with forwarding](../docs/waveforms/pipeline-overlap.svg)
+![Overlapped five-stage execution with forwarding](../docs/waveforms/pipeline-overlap.png)
 
-This capture of the forwarded overlapping profile fills all five stages in clock cycle 7 and then produces one retirement record per cycle. Each color follows one instruction from F to W. `addi x1, x1, -2` at `0x108` receives `x1` from the `lui` one stage ahead without a stall. The [waveform guide](tests/README.md#waveform-figures) explains how each figure is produced and read.
+This GTKWave view of the forwarded overlapping profile shows `valid W M X D F` reaching `11111` at the marker, so all five stages hold an instruction, while the `F pc` to `W pc` rows step forward one address per clock cycle. After the first retirement, `trace valid` stays high every cycle. `addi x1, x1, -2` at `0x108` takes `x1` from the `lui` at `0x104` one stage ahead without a stall. The [waveform guide](tests/README.md#waveform-figures) explains how the figures are exported and read.
 
 The [controller](rtl/cpu5_control.sv) owns the integrated register array and instruction tokens. The standalone [register-file module](rtl/cpu5_regfile.sv) is a separate implementation and mapping experiment, not the instantiated register bank inside that controller. Reads of x0 return zero; ordinary registers have no assumed reset value.
 
