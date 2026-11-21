@@ -18,9 +18,9 @@ The timer/interrupt register decoder in [cpu5_irq_platform.sv](../rtl/cpu5_irq_p
 
 Each clock edge with synchronous `notification_i` high supplies one notification. `NOTIFICATION_CAPACITY` bounds the counter, `notification_count_o` reports it, and `overflow_o` stays set after an overflow until platform reset. Writing bit zero at `0x40001020` acknowledges one notification. A full counter accepts a simultaneous arrival and acknowledgment without overflow. Acknowledging an empty counter faults; a coincident arrival is still counted.
 
-![Counted notifications](../../docs/waveforms/notification-counter.svg)
+![Counted notifications](../../docs/waveforms/notification-counter.png)
 
-This platform test instance uses `NOTIFICATION_CAPACITY` 4, and `notification_i` stays high after the platform reset. The acknowledge written to `0x40001020` in clock cycle 203 finds the counter empty and returns `error_o`, yet the coincident notification is counted. The count saturates at 4 in cycle 207, and `overflow_o` sets in cycle 208 and stays set.
+This platform test instance uses `NOTIFICATION_CAPACITY` 4, and `notification_i` stays high after the platform reset. The acknowledge written to `0x40001020` finds the counter empty and returns `error_o` (`empty acknowledge`), yet the coincident notification is counted. `notification_count_o` saturates at 4 (`full`), and `overflow_o` sets on the next edge (`overflow`) and stays set.
 
 ## Ownership and ordering
 
@@ -40,9 +40,9 @@ stateDiagram-v2
   Accepted --> Idle: matching response consumed
 ```
 
-![Local fabric ownership](../../docs/waveforms/fabric-ownership.svg)
+![Local fabric ownership](../../docs/waveforms/fabric-ownership.png)
 
-An MMIO write of `0x76543210` to `0x40000000` is first presented in clock cycle 337 and owned from cycle 338. Its address, data and tag stay stable until acceptance in cycle 344, after the bench's configured acceptance delay. The status effect occurs once, in cycle 345. The response becomes valid in cycle 356, is held while `d_rsp_ready_i` is low and is consumed in cycle 361, releasing the owner.
+An MMIO write of `0x76543210` to `0x40000000` is first presented (`first valid`) and owned from the next cycle. Its address, data and tag stay stable until the request is accepted (`accept`) after the bench's configured acceptance delay. The status effect happens once, on the following edge (`effect`). The response becomes valid (`response`), is held while `d_rsp_ready_i` is low and is consumed (`consumed`), releasing the owner.
 
 A guaranteed no-effect error can become a precise access fault. An uncertain timeout is a containment condition: an exposed operation cannot be automatically replayed merely because its response was lost. The controller retains the transaction context until isolated recovery.
 

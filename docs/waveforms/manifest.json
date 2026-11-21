@@ -1,11 +1,19 @@
 {
-  "schema": "CPU5-WAVEFORM-FIGURES-1",
+  "schema": "CPU5-WAVEFORM-FIGURES-2",
   "date": "2026-11-20",
-  "scope": "documentation figures cropped from passing directed-bench runs of the recorded sources; a figure illustrates one run and is not a qualification result",
-  "tool": {
-    "verilator": "Verilator 5.047 devel rev v5.046-19-ge9dd6eaaf (mod)",
-    "executable": "libexec/verilator_bin",
-    "executable_sha256": "6b6b60384cc154f29e308f0aed8a83cb49d24b8ab0ad501f8fd5d8b14d3b538d"
+  "scope": "gtkwave screen grabs of cycle windows from passing directed-bench runs of the recorded sources; a figure illustrates one run and is not a qualification result",
+  "tools": {
+    "verilator": {
+      "version": "Verilator 5.047 devel rev v5.046-19-ge9dd6eaaf (mod)",
+      "executable": "libexec/verilator_bin",
+      "executable_sha256": "6b6b60384cc154f29e308f0aed8a83cb49d24b8ab0ad501f8fd5d8b14d3b538d"
+    },
+    "gtkwave": {
+      "version": "GTKWave Analyzer v3.4.0 (w)1999-2022 BSI",
+      "executable": "libexec/gtkwave",
+      "executable_sha256": "97a9da395d614a6aa1deb1a14a3ac36ab492a42e6e9f66b76f72beed3243db1e"
+    },
+    "display_server": "Xwayland"
   },
   "source_sha256": {
     "microcontroller/rtl/cpu5_alu.sv": "0b2c84c910397934dd7011ce7aac2e9fff6ee2685d5799cbbd45e9c3ac914387",
@@ -38,8 +46,8 @@
     "microcontroller/tests/cpu5_memory_tb.sv": "27abf9418fb99f7f862ae5489d170e79c629763883c2b4acb941efeb05a1a288",
     "microcontroller/tests/cpu5_muldiv_control_tb.sv": "ec767fd82cb2b40794e0ac85b30d23a48c8007f54cc2c96cd6ef7c962a91c113",
     "microcontroller/tests/cpu5_wave_dump.sv": "1d6c3da70e561d213bfdf5b8007f7ff52c3a21eebc11351d4bfe138b11fc7807",
-    "microcontroller/tests/run_waveforms.py": "82dcf4bba63be1bc8a2bd9b992c1c64ac0df131c852031312283d33c30b6a4d8",
-    "microcontroller/tests/waveform_render.py": "7682e373a35cdc46e2fcf6b40cb5fa7afd7c52e5ce2f4cb8e4e44af45d5d4a98"
+    "microcontroller/tests/run_waveforms.py": "c976be75af59e6848888e572c562c78a4843cff85035ac1fa556644c2f16b029",
+    "microcontroller/tests/waveform_render.py": "ec7835297ddf74e224c7c129a7ac3fbbaddd407ebfafd40e34c2e24aae38f123"
   },
   "figures": [
     {
@@ -54,8 +62,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "pipeline-overlap.svg",
-      "svg_sha256": "4e984663ebc85fd75a9242c3f6b5560af1aefb25f9fb951ac6dc2eced19a5bfd",
+      "image": "pipeline-overlap.png",
+      "image_sha256": "2a0d819e8c20a11c3f4fc49e31174a04b3534eef58b2c211554d1cb2f7b14335",
       "trigger_cycle": 7,
       "window_cycles": [
         3,
@@ -63,47 +71,120 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        46,
-        586
+        28,
+        640
       ],
-      "signals": [
-        "cpu5_base_tb.clk_i",
-        "cpu5_base_tb.dut.d_hazard",
-        "cpu5_base_tb.dut.kill_valid_o",
-        "cpu5_base_tb.dut.stage_token_o[0].p.length",
-        "cpu5_base_tb.dut.stage_token_o[0].p.op",
-        "cpu5_base_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[0].uid",
-        "cpu5_base_tb.dut.stage_token_o[1].p.length",
-        "cpu5_base_tb.dut.stage_token_o[1].p.op",
-        "cpu5_base_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[1].uid",
-        "cpu5_base_tb.dut.stage_token_o[2].p.length",
-        "cpu5_base_tb.dut.stage_token_o[2].p.op",
-        "cpu5_base_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[2].uid",
-        "cpu5_base_tb.dut.stage_token_o[3].p.length",
-        "cpu5_base_tb.dut.stage_token_o[3].p.op",
-        "cpu5_base_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[3].uid",
-        "cpu5_base_tb.dut.stage_token_o[4].p.length",
-        "cpu5_base_tb.dut.stage_token_o[4].p.op",
-        "cpu5_base_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[4].uid",
-        "cpu5_base_tb.dut.stage_valid_o",
-        "cpu5_base_tb.dut.trace_o.trap",
-        "cpu5_base_tb.dut.trace_o.uid",
-        "cpu5_base_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "all five stages occupied",
+          "cycle": 7,
+          "time": 190
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_base_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_base_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_base_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_base_tb.dut.trace_o.packet.pc[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "lui x1, 0x0"
+        },
+        {
+          "pc": "0x108",
+          "instruction": "addi x1, x1, -2"
+        },
+        {
+          "pc": "0x10c",
+          "instruction": "lui x2, 0x0"
+        },
+        {
+          "pc": "0x110",
+          "instruction": "addi x2, x2, 33"
+        },
+        {
+          "pc": "0x114",
+          "instruction": "lui x3, 0x80000"
+        },
+        {
+          "pc": "0x118",
+          "instruction": "addi x3, x3, 0"
+        },
+        {
+          "pc": "0x11c",
+          "instruction": "lui x4, 0x80000"
+        },
+        {
+          "pc": "0x120",
+          "instruction": "addi x4, x4, -1"
+        },
+        {
+          "pc": "0x124",
+          "instruction": "add x8, x1, x2"
+        },
+        {
+          "pc": "0x128",
+          "instruction": "sll x9, x1, x2"
+        },
+        {
+          "pc": "0x12c",
+          "instruction": "slt x10, x1, x2"
+        },
+        {
+          "pc": "0x130",
+          "instruction": "sltu x11, x1, x2"
+        },
+        {
+          "pc": "0x134",
+          "instruction": "xor x12, x1, x2"
+        },
+        {
+          "pc": "0x138",
+          "instruction": "srl x13, x1, x2"
+        },
+        {
+          "pc": "0x13c",
+          "instruction": "or x14, x1, x2"
+        }
       ],
       "pass": "PASS base diagnostic=0 forwarding=1 seed=1 cases=53 cycles=1020 checks=114692 retired=280 traps=33 offers=28 replies=28 stalls=68 x=118 m=8 w=15 held_w=2 load_m=4 masked=16 masked_alu=4 masked_branch=4 masked_address=4 masked_store=4 nop=1 barrier_edges=40 preparation=4",
       "build_command": [
@@ -145,6 +226,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/base-forwarded/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "pipeline-overlap.vcd",
+        "pipeline-overlap.gtkw",
+        "--repscript=pipeline-overlap.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -159,8 +249,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "diagnostic-mode.svg",
-      "svg_sha256": "8cd94ff0255338954535ce77c8291e8134db7cd4fe43fa0974f9371c41531297",
+      "image": "diagnostic-mode.png",
+      "image_sha256": "97628018942e33d1bededb8ade5d236741fe68f8560907be4fc2b8fa054a5470",
       "trigger_cycle": 3,
       "window_cycles": [
         2,
@@ -168,47 +258,73 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        10,
-        910
+        -8,
+        964
       ],
-      "signals": [
-        "cpu5_base_tb.clk_i",
-        "cpu5_base_tb.dut.in_ready_o",
-        "cpu5_base_tb.dut.kill_valid_o",
-        "cpu5_base_tb.dut.stage_token_o[0].p.length",
-        "cpu5_base_tb.dut.stage_token_o[0].p.op",
-        "cpu5_base_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[0].uid",
-        "cpu5_base_tb.dut.stage_token_o[1].p.length",
-        "cpu5_base_tb.dut.stage_token_o[1].p.op",
-        "cpu5_base_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[1].uid",
-        "cpu5_base_tb.dut.stage_token_o[2].p.length",
-        "cpu5_base_tb.dut.stage_token_o[2].p.op",
-        "cpu5_base_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[2].uid",
-        "cpu5_base_tb.dut.stage_token_o[3].p.length",
-        "cpu5_base_tb.dut.stage_token_o[3].p.op",
-        "cpu5_base_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[3].uid",
-        "cpu5_base_tb.dut.stage_token_o[4].p.length",
-        "cpu5_base_tb.dut.stage_token_o[4].p.op",
-        "cpu5_base_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[4].uid",
-        "cpu5_base_tb.dut.stage_valid_o",
-        "cpu5_base_tb.dut.trace_o.trap",
-        "cpu5_base_tb.dut.trace_o.uid",
-        "cpu5_base_tb.dut.trace_o.valid"
+      "markers": [],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_base_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_base_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "in_ready_o",
+          "signal": "cpu5_base_tb.dut.in_ready_o"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_base_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_base_tb.dut.trace_o.packet.pc[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "lui x1, 0x0"
+        },
+        {
+          "pc": "0x108",
+          "instruction": "addi x1, x1, -2"
+        },
+        {
+          "pc": "0x10c",
+          "instruction": "lui x2, 0x0"
+        },
+        {
+          "pc": "0x110",
+          "instruction": "addi x2, x2, 33"
+        }
       ],
       "pass": "PASS base diagnostic=1 forwarding=0 seed=1 cases=53 cycles=2131 checks=170481 retired=280 traps=33 offers=28 replies=28 stalls=0 x=0 m=0 w=0 held_w=0 load_m=0 masked=0 masked_alu=0 masked_branch=0 masked_address=0 masked_store=0 nop=1 barrier_edges=24 preparation=4",
       "build_command": [
@@ -250,6 +366,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/base-diagnostic/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "diagnostic-mode.vcd",
+        "diagnostic-mode.gtkw",
+        "--repscript=diagnostic-mode.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -264,8 +389,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "load-use-stall.svg",
-      "svg_sha256": "743ab76283487bc7fa225fbdb8b2d1d92fa04f68a53ca63e2cdcf7600b0c6462",
+      "image": "load-use-stall.png",
+      "image_sha256": "3fc8d03bceab5dd8cd1860f34cd7c1f384ccdf0c6d38d558057468724f5e1cdc",
       "trigger_cycle": 611,
       "window_cycles": [
         608,
@@ -273,51 +398,136 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        21314,
-        21890
+        21296,
+        21944
       ],
-      "signals": [
-        "cpu5_base_tb.clk_i",
-        "cpu5_base_tb.dut.d_hazard",
-        "cpu5_base_tb.dut.d_req_addr_o",
-        "cpu5_base_tb.dut.d_req_ready_i",
-        "cpu5_base_tb.dut.d_req_valid_o",
-        "cpu5_base_tb.dut.d_rsp_valid_i",
-        "cpu5_base_tb.dut.kill_valid_o",
-        "cpu5_base_tb.dut.stage_token_o[0].p.length",
-        "cpu5_base_tb.dut.stage_token_o[0].p.op",
-        "cpu5_base_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[0].uid",
-        "cpu5_base_tb.dut.stage_token_o[1].p.length",
-        "cpu5_base_tb.dut.stage_token_o[1].p.op",
-        "cpu5_base_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[1].uid",
-        "cpu5_base_tb.dut.stage_token_o[2].p.length",
-        "cpu5_base_tb.dut.stage_token_o[2].p.op",
-        "cpu5_base_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[2].uid",
-        "cpu5_base_tb.dut.stage_token_o[3].p.length",
-        "cpu5_base_tb.dut.stage_token_o[3].p.op",
-        "cpu5_base_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[3].uid",
-        "cpu5_base_tb.dut.stage_token_o[4].p.length",
-        "cpu5_base_tb.dut.stage_token_o[4].p.op",
-        "cpu5_base_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[4].uid",
-        "cpu5_base_tb.dut.stage_valid_o",
-        "cpu5_base_tb.dut.trace_o.trap",
-        "cpu5_base_tb.dut.trace_o.uid",
-        "cpu5_base_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "offer",
+          "cycle": 613,
+          "time": 21494
+        },
+        {
+          "name": "B",
+          "label": "accept",
+          "cycle": 614,
+          "time": 21564
+        },
+        {
+          "name": "C",
+          "label": "response",
+          "cycle": 619,
+          "time": 21744
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_base_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_base_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "d_hazard",
+          "signal": "cpu5_base_tb.dut.d_hazard"
+        },
+        {
+          "alias": "d_req_valid_o",
+          "signal": "cpu5_base_tb.dut.d_req_valid_o"
+        },
+        {
+          "alias": "d_req_ready_i",
+          "signal": "cpu5_base_tb.dut.d_req_ready_i"
+        },
+        {
+          "alias": "d_req_addr_o",
+          "signal": "cpu5_base_tb.dut.d_req_addr_o[31:0]"
+        },
+        {
+          "alias": "d_rsp_valid_i",
+          "signal": "cpu5_base_tb.dut.d_rsp_valid_i"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_base_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_base_tb.dut.trace_o.packet.pc[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "lui x1, 0x20000"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "addi x1, x1, 0"
+        },
+        {
+          "pc": "0x108",
+          "instruction": "lui x2, 0x20000"
+        },
+        {
+          "pc": "0x10c",
+          "instruction": "addi x2, x2, 0"
+        },
+        {
+          "pc": "0x110",
+          "instruction": "addi x5, x0, 7"
+        },
+        {
+          "pc": "0x114",
+          "instruction": "lw x5, 0(x1)"
+        },
+        {
+          "pc": "0x118",
+          "instruction": "addi x6, x5, 1"
+        },
+        {
+          "pc": "0x11c",
+          "instruction": "addi x7, x0, 1"
+        },
+        {
+          "pc": "0x120",
+          "instruction": "jal x0, 0x1f00"
+        },
+        {
+          "pc": "0x124",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x128",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x12c",
+          "instruction": "nop"
+        }
       ],
       "pass": "PASS base diagnostic=0 forwarding=1 seed=1 cases=53 cycles=1020 checks=114692 retired=280 traps=33 offers=28 replies=28 stalls=68 x=118 m=8 w=15 held_w=2 load_m=4 masked=16 masked_alu=4 masked_branch=4 masked_address=4 masked_store=4 nop=1 barrier_edges=40 preparation=4",
       "build_command": [
@@ -359,6 +569,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/base-forwarded/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "load-use-stall.vcd",
+        "load-use-stall.gtkw",
+        "--repscript=load-use-stall.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -373,8 +592,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "branch-redirect.svg",
-      "svg_sha256": "df3d0750f7c7f17beec5f0e6c36805d65b113b158fd499eef01747f16c6702ff",
+      "image": "branch-redirect.png",
+      "image_sha256": "48a38e25c6c92b726ad2679a449d03bd0f7057552bad41b2fd30a74e6d80ffc9",
       "trigger_cycle": 200,
       "window_cycles": [
         192,
@@ -382,48 +601,132 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        6786,
-        7218
+        6768,
+        7272
       ],
-      "signals": [
-        "cpu5_base_tb.clk_i",
-        "cpu5_base_tb.dut.kill_valid_o",
-        "cpu5_base_tb.dut.redirect_pc_o",
-        "cpu5_base_tb.dut.redirect_valid_o",
-        "cpu5_base_tb.dut.stage_token_o[0].p.length",
-        "cpu5_base_tb.dut.stage_token_o[0].p.op",
-        "cpu5_base_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[0].uid",
-        "cpu5_base_tb.dut.stage_token_o[1].p.length",
-        "cpu5_base_tb.dut.stage_token_o[1].p.op",
-        "cpu5_base_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[1].uid",
-        "cpu5_base_tb.dut.stage_token_o[2].p.length",
-        "cpu5_base_tb.dut.stage_token_o[2].p.op",
-        "cpu5_base_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[2].uid",
-        "cpu5_base_tb.dut.stage_token_o[3].p.length",
-        "cpu5_base_tb.dut.stage_token_o[3].p.op",
-        "cpu5_base_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[3].uid",
-        "cpu5_base_tb.dut.stage_token_o[4].p.length",
-        "cpu5_base_tb.dut.stage_token_o[4].p.op",
-        "cpu5_base_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_base_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_base_tb.dut.stage_token_o[4].uid",
-        "cpu5_base_tb.dut.stage_valid_o",
-        "cpu5_base_tb.dut.trace_o.trap",
-        "cpu5_base_tb.dut.trace_o.uid",
-        "cpu5_base_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "branch in X",
+          "cycle": 197,
+          "time": 6966
+        },
+        {
+          "name": "B",
+          "label": "branch in W",
+          "cycle": 199,
+          "time": 7038
+        },
+        {
+          "name": "C",
+          "label": "redirect",
+          "cycle": 200,
+          "time": 7074
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_base_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_base_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "kill W M X D F",
+          "signal": "cpu5_base_tb.dut.kill_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_base_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_base_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_base_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "redirect_valid_o",
+          "signal": "cpu5_base_tb.dut.redirect_valid_o"
+        },
+        {
+          "alias": "redirect_pc_o",
+          "signal": "cpu5_base_tb.dut.redirect_pc_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "lui x1, 0x0"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "addi x1, x1, 7"
+        },
+        {
+          "pc": "0x108",
+          "instruction": "lui x2, 0x0"
+        },
+        {
+          "pc": "0x10c",
+          "instruction": "addi x2, x2, 7"
+        },
+        {
+          "pc": "0x110",
+          "instruction": "beq x1, x2, 0x118"
+        },
+        {
+          "pc": "0x114",
+          "instruction": "addi x3, x0, 1"
+        },
+        {
+          "pc": "0x118",
+          "instruction": "jal x4, 0x120"
+        },
+        {
+          "pc": "0x11c",
+          "instruction": "sw x0, 0(x0)"
+        },
+        {
+          "pc": "0x120",
+          "instruction": "lui x5, 0x0"
+        },
+        {
+          "pc": "0x118",
+          "instruction": "jal x4, 0x120"
+        },
+        {
+          "pc": "0x11c",
+          "instruction": "sw x0, 0(x0)"
+        },
+        {
+          "pc": "0x120",
+          "instruction": "lui x5, 0x0"
+        },
+        {
+          "pc": "0x124",
+          "instruction": "addi x5, x5, 305"
+        }
       ],
       "pass": "PASS base diagnostic=0 forwarding=1 seed=1 cases=53 cycles=1020 checks=114692 retired=280 traps=33 offers=28 replies=28 stalls=68 x=118 m=8 w=15 held_w=2 load_m=4 masked=16 masked_alu=4 masked_branch=4 masked_address=4 masked_store=4 nop=1 barrier_edges=40 preparation=4",
       "build_command": [
@@ -465,6 +768,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/base-forwarded/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "branch-redirect.vcd",
+        "branch-redirect.gtkw",
+        "--repscript=branch-redirect.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -480,8 +792,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "data-request.svg",
-      "svg_sha256": "8a8c67b98f4a967ac334c32cbe5c60fde0a43ead704769f6798c291a7c83ae54",
+      "image": "data-request.png",
+      "image_sha256": "7f590c882a8f241604c455a44f5b1fdd0e5f700e23dd6c10cf4cf0806b86d464",
       "trigger_cycle": 87,
       "window_cycles": [
         85,
@@ -489,51 +801,102 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        3030,
-        3390
+        3012,
+        3444
       ],
-      "signals": [
-        "cpu5_memory_tb.clk_i",
-        "cpu5_memory_tb.dut.d_req_addr_o",
-        "cpu5_memory_tb.dut.d_req_ready_i",
-        "cpu5_memory_tb.dut.d_req_valid_o",
-        "cpu5_memory_tb.dut.d_rsp_valid_i",
-        "cpu5_memory_tb.dut.kill_valid_o",
-        "cpu5_memory_tb.dut.launch",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[0].uid",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[1].uid",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[2].uid",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[3].uid",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[4].uid",
-        "cpu5_memory_tb.dut.stage_valid_o",
-        "cpu5_memory_tb.dut.trace_o.trap",
-        "cpu5_memory_tb.dut.trace_o.uid",
-        "cpu5_memory_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "reserve",
+          "cycle": 87,
+          "time": 3102
+        },
+        {
+          "name": "B",
+          "label": "first valid",
+          "cycle": 88,
+          "time": 3138
+        },
+        {
+          "name": "C",
+          "label": "accept",
+          "cycle": 90,
+          "time": 3244
+        },
+        {
+          "name": "D",
+          "label": "response",
+          "cycle": 91,
+          "time": 3280
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_memory_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_memory_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "launch",
+          "signal": "cpu5_memory_tb.dut.launch"
+        },
+        {
+          "alias": "d_req_valid_o",
+          "signal": "cpu5_memory_tb.dut.d_req_valid_o"
+        },
+        {
+          "alias": "d_req_ready_i",
+          "signal": "cpu5_memory_tb.dut.d_req_ready_i"
+        },
+        {
+          "alias": "d_req_addr_o",
+          "signal": "cpu5_memory_tb.dut.d_req_addr_o[31:0]"
+        },
+        {
+          "alias": "d_rsp_valid_i",
+          "signal": "cpu5_memory_tb.dut.d_rsp_valid_i"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_memory_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_memory_tb.dut.trace_o.packet.pc[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "lbu x3, 0(x1)"
+        }
       ],
       "pass": "PASS memory profile=0 scenario=0 deadline=128 seed=1 cases=142 cycles=3285 checks=15038228 terminals=321 traps=29 kills=24 offers=126 replies=126 decoded=105 rejects=22 fatal_cases=17 resets=180 effects=18 max_accept_delay=2 max_response_delay=5 flushes=4 flush_redirects=4 aborts=0 bypasses=134 reset_cases=3 dependency_stalls=342 nearest_stalls=108 memory_flush=4 invalid=6",
       "build_command": [
@@ -576,6 +939,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/memory-base/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "data-request.vcd",
+        "data-request.gtkw",
+        "--repscript=data-request.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -591,8 +963,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "access-fault.svg",
-      "svg_sha256": "67917a924e0293a56c43f6f456fd138e76bf78a9f87a60b780fc67b9e992c021",
+      "image": "access-fault.png",
+      "image_sha256": "742c6904ce445c5b4319aee12aedccdc4497ac2ad20071ca3711b54eb50db389",
       "trigger_cycle": 940,
       "window_cycles": [
         931,
@@ -600,55 +972,110 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        33486,
-        33990
+        33468,
+        34044
       ],
-      "signals": [
-        "cpu5_memory_tb.clk_i",
-        "cpu5_memory_tb.dut.d_req_addr_o",
-        "cpu5_memory_tb.dut.d_req_ready_i",
-        "cpu5_memory_tb.dut.d_req_valid_o",
-        "cpu5_memory_tb.dut.d_rsp_status_i",
-        "cpu5_memory_tb.dut.d_rsp_valid_i",
-        "cpu5_memory_tb.dut.kill_valid_o",
-        "cpu5_memory_tb.dut.mcause_o",
-        "cpu5_memory_tb.dut.mepc_o",
-        "cpu5_memory_tb.dut.mtval_o",
-        "cpu5_memory_tb.dut.redirect_valid_o",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[0].uid",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[1].uid",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[2].uid",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[3].uid",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[4].uid",
-        "cpu5_memory_tb.dut.stage_valid_o",
-        "cpu5_memory_tb.dut.trace_o.trap",
-        "cpu5_memory_tb.dut.trace_o.uid",
-        "cpu5_memory_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "error response",
+          "cycle": 940,
+          "time": 33844
+        },
+        {
+          "name": "B",
+          "label": "trap",
+          "cycle": 943,
+          "time": 33918
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_memory_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_memory_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "d_req_valid_o",
+          "signal": "cpu5_memory_tb.dut.d_req_valid_o"
+        },
+        {
+          "alias": "d_req_ready_i",
+          "signal": "cpu5_memory_tb.dut.d_req_ready_i"
+        },
+        {
+          "alias": "d_req_addr_o",
+          "signal": "cpu5_memory_tb.dut.d_req_addr_o[31:0]"
+        },
+        {
+          "alias": "d_rsp_valid_i",
+          "signal": "cpu5_memory_tb.dut.d_rsp_valid_i"
+        },
+        {
+          "alias": "d_rsp_status_i",
+          "signal": "cpu5_memory_tb.dut.d_rsp_status_i[1:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_memory_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace trap",
+          "signal": "cpu5_memory_tb.dut.trace_o.trap"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_memory_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "redirect_valid_o",
+          "signal": "cpu5_memory_tb.dut.redirect_valid_o"
+        },
+        {
+          "alias": "mcause_o",
+          "signal": "cpu5_memory_tb.dut.mcause_o[31:0]"
+        },
+        {
+          "alias": "mepc_o",
+          "signal": "cpu5_memory_tb.dut.mepc_o[31:0]"
+        },
+        {
+          "alias": "mtval_o",
+          "signal": "cpu5_memory_tb.dut.mtval_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "lw x0, 0(x1)"
+        }
       ],
       "pass": "PASS memory profile=0 scenario=0 deadline=128 seed=1 cases=142 cycles=3285 checks=15038228 terminals=321 traps=29 kills=24 offers=126 replies=126 decoded=105 rejects=22 fatal_cases=17 resets=180 effects=18 max_accept_delay=2 max_response_delay=5 flushes=4 flush_redirects=4 aborts=0 bypasses=134 reset_cases=3 dependency_stalls=342 nearest_stalls=108 memory_flush=4 invalid=6",
       "build_command": [
@@ -691,6 +1118,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/memory-base/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "access-fault.vcd",
+        "access-fault.gtkw",
+        "--repscript=access-fault.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -704,8 +1140,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "csr-serialization.svg",
-      "svg_sha256": "35125a72a8ffbb00124cf3501275403a8c6c905082c94b36f3bb0aafa629656f",
+      "image": "csr-serialization.png",
+      "image_sha256": "aa94cb68aa3b295219ca85ec64ab1d2f91689cdaa28ac2d72a1316ded657ee7d",
       "trigger_cycle": 16,
       "window_cycles": [
         10,
@@ -713,49 +1149,82 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        330,
-        726
+        312,
+        780
       ],
-      "signals": [
-        "cpu5_csr_control_tb.clk_i",
-        "cpu5_csr_control_tb.dut.in_ready_o",
-        "cpu5_csr_control_tb.dut.in_valid_i",
-        "cpu5_csr_control_tb.dut.kill_valid_o",
-        "cpu5_csr_control_tb.dut.mscratch_o",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].p.length",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].p.op",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_csr_control_tb.dut.stage_token_o[0].uid",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].p.length",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].p.op",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_csr_control_tb.dut.stage_token_o[1].uid",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].p.length",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].p.op",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_csr_control_tb.dut.stage_token_o[2].uid",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].p.length",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].p.op",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_csr_control_tb.dut.stage_token_o[3].uid",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].p.length",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].p.op",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_csr_control_tb.dut.stage_token_o[4].uid",
-        "cpu5_csr_control_tb.dut.stage_valid_o",
-        "cpu5_csr_control_tb.dut.trace_o.trap",
-        "cpu5_csr_control_tb.dut.trace_o.uid",
-        "cpu5_csr_control_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "CSR reaches W",
+          "cycle": 16,
+          "time": 546
+        },
+        {
+          "name": "B",
+          "label": "mscratch written",
+          "cycle": 18,
+          "time": 618
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_csr_control_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_csr_control_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_csr_control_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_csr_control_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_csr_control_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_csr_control_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_csr_control_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "in_valid_i",
+          "signal": "cpu5_csr_control_tb.dut.in_valid_i"
+        },
+        {
+          "alias": "in_ready_o",
+          "signal": "cpu5_csr_control_tb.dut.in_ready_o"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_csr_control_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_csr_control_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "mscratch_o",
+          "signal": "cpu5_csr_control_tb.dut.mscratch_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x108",
+          "instruction": "csrrw x0, mscratch, x31"
+        },
+        {
+          "pc": "0x10c",
+          "instruction": "lui x1, 0x0"
+        }
       ],
       "pass": "PASS csr-control C=0 seed=1 cases=177 cycles=6053 checks=1100923 retired=795 traps=62 reads=164 writes=181 read_suppressed=127 write_suppressed=110 prepared=344 returns=2 offers=10 replies=10 flushes=10 aborts=5 resets=183 fatal=2 cycle_rollovers=1 instret_rollovers=1 dynamic_reads=6 random_addresses=0xbfff random_forms=0x3f random_holds=0x3f random_sources=0x3 random_destinations=0xd76c79c3",
       "build_command": [
@@ -796,6 +1265,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/csr-control/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "csr-serialization.vcd",
+        "csr-serialization.gtkw",
+        "--repscript=csr-serialization.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -809,8 +1287,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "interrupt-entry.svg",
-      "svg_sha256": "6397d5c644afd245a910dc887d4da5f19706f12078e4589dc449fa23685b0d05",
+      "image": "interrupt-entry.png",
+      "image_sha256": "31245890e05a404a02fe6114ce5161cdbd6de9460c790001e507c89e893e8058",
       "trigger_cycle": 627,
       "window_cycles": [
         617,
@@ -818,55 +1296,98 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        2470,
-        2510
+        2468,
+        2516
       ],
-      "signals": [
-        "cpu5_irq_control_tb.clk_i",
-        "cpu5_irq_control_tb.dut.entry_pending_o",
-        "cpu5_irq_control_tb.dut.irq_cause_o",
-        "cpu5_irq_control_tb.dut.irq_pc_o",
-        "cpu5_irq_control_tb.dut.irq_valid_o",
-        "cpu5_irq_control_tb.dut.kill_valid_o",
-        "cpu5_irq_control_tb.dut.mepc_o",
-        "cpu5_irq_control_tb.dut.mip_o",
-        "cpu5_irq_control_tb.dut.mstatus_o",
-        "cpu5_irq_control_tb.dut.redirect_pc_o",
-        "cpu5_irq_control_tb.dut.redirect_valid_o",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].uid",
-        "cpu5_irq_control_tb.dut.stage_valid_o",
-        "cpu5_irq_control_tb.dut.trace_o.trap",
-        "cpu5_irq_control_tb.dut.trace_o.uid",
-        "cpu5_irq_control_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "MIE set",
+          "cycle": 625,
+          "time": 2502
+        },
+        {
+          "name": "B",
+          "label": "entry",
+          "cycle": 627,
+          "time": 2510
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_irq_control_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_irq_control_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_irq_control_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_irq_control_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "mstatus_o",
+          "signal": "cpu5_irq_control_tb.dut.mstatus_o[31:0]"
+        },
+        {
+          "alias": "mip_o",
+          "signal": "cpu5_irq_control_tb.dut.mip_o[31:0]"
+        },
+        {
+          "alias": "entry_pending_o",
+          "signal": "cpu5_irq_control_tb.dut.entry_pending_o"
+        },
+        {
+          "alias": "irq_valid_o",
+          "signal": "cpu5_irq_control_tb.dut.irq_valid_o"
+        },
+        {
+          "alias": "irq_cause_o",
+          "signal": "cpu5_irq_control_tb.dut.irq_cause_o[31:0]"
+        },
+        {
+          "alias": "mepc_o",
+          "signal": "cpu5_irq_control_tb.dut.mepc_o[31:0]"
+        },
+        {
+          "alias": "redirect_pc_o",
+          "signal": "cpu5_irq_control_tb.dut.redirect_pc_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x28",
+          "instruction": "addi x1, x1, 8"
+        },
+        {
+          "pc": "0x2c",
+          "instruction": "csrrw x0, mstatus, x1"
+        }
       ],
       "pass": "PASS irq-control C=0 seed=1 cases=120 edges=17694 checks=9482049 retired=3186 traps=2 interrupts=78 admissions=3192 kills=9 offers=718 replies=718 effects=716 sleeps=7 wakes=7 saves=320 entry_max=163 handler_max=181 saved_max=248 service_max=128 ack_max=88 return_max=166",
       "build_command": [
@@ -908,6 +1429,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/irq-control/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "interrupt-entry.vcd",
+        "interrupt-entry.gtkw",
+        "--repscript=interrupt-entry.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -921,8 +1451,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "wfi-wake.svg",
-      "svg_sha256": "631cb3512fc6ebedf717167fc582c001693200edccf0375e6dfb0f62c3d30cb7",
+      "image": "wfi-wake.png",
+      "image_sha256": "cee57304c915f4365408d87685afc3c3933e569ea64bca68fab01b6facceb6c2",
       "trigger_cycle": 5855,
       "window_cycles": [
         5848,
@@ -930,51 +1460,92 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        23394,
-        23430
+        23392,
+        23436
       ],
-      "signals": [
-        "cpu5_irq_control_tb.clk_i",
-        "cpu5_irq_control_tb.dut.idle_o",
-        "cpu5_irq_control_tb.dut.irq_cause_o",
-        "cpu5_irq_control_tb.dut.irq_valid_o",
-        "cpu5_irq_control_tb.dut.kill_valid_o",
-        "cpu5_irq_control_tb.dut.mepc_o",
-        "cpu5_irq_control_tb.dut.mip_o",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[0].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[1].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[2].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[3].uid",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.length",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.op",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_irq_control_tb.dut.stage_token_o[4].uid",
-        "cpu5_irq_control_tb.dut.stage_valid_o",
-        "cpu5_irq_control_tb.dut.trace_o.trap",
-        "cpu5_irq_control_tb.dut.trace_o.uid",
-        "cpu5_irq_control_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "idle",
+          "cycle": 5855,
+          "time": 23422
+        },
+        {
+          "name": "B",
+          "label": "wake",
+          "cycle": 5856,
+          "time": 23426
+        },
+        {
+          "name": "C",
+          "label": "entry",
+          "cycle": 5857,
+          "time": 23430
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_irq_control_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_irq_control_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_irq_control_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_irq_control_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_irq_control_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "idle_o",
+          "signal": "cpu5_irq_control_tb.dut.idle_o"
+        },
+        {
+          "alias": "mip_o",
+          "signal": "cpu5_irq_control_tb.dut.mip_o[31:0]"
+        },
+        {
+          "alias": "irq_valid_o",
+          "signal": "cpu5_irq_control_tb.dut.irq_valid_o"
+        },
+        {
+          "alias": "irq_cause_o",
+          "signal": "cpu5_irq_control_tb.dut.irq_cause_o[31:0]"
+        },
+        {
+          "alias": "mepc_o",
+          "signal": "cpu5_irq_control_tb.dut.mepc_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x30",
+          "instruction": "wfi"
+        }
       ],
       "pass": "PASS irq-control C=0 seed=1 cases=120 edges=17694 checks=9482049 retired=3186 traps=2 interrupts=78 admissions=3192 kills=9 offers=718 replies=718 effects=716 sleeps=7 wakes=7 saves=320 entry_max=163 handler_max=181 saved_max=248 service_max=128 ack_max=88 return_max=166",
       "build_command": [
@@ -1016,6 +1587,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/irq-control/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "wfi-wake.vcd",
+        "wfi-wake.gtkw",
+        "--repscript=wfi-wake.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1032,8 +1612,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "divide-latency.svg",
-      "svg_sha256": "f798024508b8fdc7c70cf757bf3979d493de3f1d0e359af26ddc84256667f6cc",
+      "image": "divide-latency.png",
+      "image_sha256": "31485a2958e65d5e0a3b517de9211707272173de64ba9327c810971c69303760",
       "trigger_cycle": 7145,
       "window_cycles": [
         7142,
@@ -1041,50 +1621,86 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        28570,
-        28738
+        28568,
+        28744
       ],
-      "signals": [
-        "cpu5_muldiv_control_tb.clk_i",
-        "cpu5_muldiv_control_tb.dut.d_hazard",
-        "cpu5_muldiv_control_tb.dut.kill_valid_o",
-        "cpu5_muldiv_control_tb.dut.md_busy",
-        "cpu5_muldiv_control_tb.dut.md_start",
-        "cpu5_muldiv_control_tb.dut.md_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.length",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.op",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[0].uid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.length",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.op",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[1].uid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.length",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.op",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[2].uid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.length",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.op",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[3].uid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.length",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.op",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_muldiv_control_tb.dut.stage_token_o[4].uid",
-        "cpu5_muldiv_control_tb.dut.stage_valid_o",
-        "cpu5_muldiv_control_tb.dut.trace_o.trap",
-        "cpu5_muldiv_control_tb.dut.trace_o.uid",
-        "cpu5_muldiv_control_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "start accepted",
+          "cycle": 7145,
+          "time": 28582
+        },
+        {
+          "name": "B",
+          "label": "result valid",
+          "cycle": 7179,
+          "time": 28718
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_muldiv_control_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_muldiv_control_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "md_start",
+          "signal": "cpu5_muldiv_control_tb.dut.md_start"
+        },
+        {
+          "alias": "md_busy",
+          "signal": "cpu5_muldiv_control_tb.dut.md_busy"
+        },
+        {
+          "alias": "md_valid",
+          "signal": "cpu5_muldiv_control_tb.dut.md_valid"
+        },
+        {
+          "alias": "d_hazard",
+          "signal": "cpu5_muldiv_control_tb.dut.d_hazard"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_muldiv_control_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_muldiv_control_tb.dut.trace_o.packet.pc[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x18",
+          "instruction": "div x5, x2, x3"
+        },
+        {
+          "pc": "0x1c",
+          "instruction": "addi x6, x5, 1"
+        }
       ],
       "pass": "PASS muldiv-control M=1 diagnostic=0 forwarding=1 IRQ=1 seed=1 cases=310 edges=30915 checks=16453394 retired=4036 traps=4 interrupts=56 kills=76 starts=386 finishes=385 discarded=72 cancelled=1 arithmetic=313 ops=ff held=2016 dependent=281 alu=67 branch=70 address=4 store=35 mul_latency=2 div_latency=33 mul_capture=3 div_capture=34 mul_transfer=4 div_transfer=35 mul_retire=6 div_retire=37 older_ready_alias=6 offers=704 replies=704 effects=702 sleeps=0 wakes=0 saves=321 entry_max=135 handler_max=153 saved_max=220 service_max=128 ack_max=88 return_max=166 admissions=4115",
       "build_command": [
@@ -1130,6 +1746,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/muldiv-forwarded/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "divide-latency.vcd",
+        "divide-latency.gtkw",
+        "--repscript=divide-latency.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1146,8 +1771,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "fence-i.svg",
-      "svg_sha256": "4958e4347683eb55f54e1542810ed4f128bf67cb111e3bceb4438f3431977647",
+      "image": "fence-i.png",
+      "image_sha256": "bfc97cda82699d3bcb83162d190740bbaa1ad2037a25cd29acc26cc14fb05e89",
       "trigger_cycle": 4229,
       "window_cycles": [
         4220,
@@ -1155,54 +1780,104 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        16882,
-        16950
+        16880,
+        16956
       ],
-      "signals": [
-        "cpu5_fence_execution_tb.clk_i",
-        "cpu5_fence_execution_tb.dut.kill_valid_o",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].p.length",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].p.op",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[0].uid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].p.length",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].p.op",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[1].uid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].p.length",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].p.op",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[2].uid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].p.length",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].p.op",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[3].uid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].p.length",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].p.op",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_fence_execution_tb.dut.stage_token_o[4].uid",
-        "cpu5_fence_execution_tb.dut.stage_valid_o",
-        "cpu5_fence_execution_tb.dut.trace_o.trap",
-        "cpu5_fence_execution_tb.dut.trace_o.uid",
-        "cpu5_fence_execution_tb.dut.trace_o.valid",
-        "cpu5_fence_execution_tb.frontend.discard_o",
-        "cpu5_fence_execution_tb.frontend.drop_o",
-        "cpu5_fence_execution_tb.frontend.generation_o",
-        "cpu5_fence_execution_tb.frontend.i_req_addr_o",
-        "cpu5_fence_execution_tb.frontend.i_req_ready_i",
-        "cpu5_fence_execution_tb.frontend.i_req_valid_o",
-        "cpu5_fence_execution_tb.frontend.i_rsp_valid_i",
-        "cpu5_fence_execution_tb.frontend.redirect_valid_i"
+      "markers": [
+        {
+          "name": "A",
+          "label": "fence.i retires",
+          "cycle": 4229,
+          "time": 16918
+        },
+        {
+          "name": "B",
+          "label": "stale response dropped",
+          "cycle": 4233,
+          "time": 16935
+        },
+        {
+          "name": "C",
+          "label": "fresh fetch",
+          "cycle": 4235,
+          "time": 16942
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_fence_execution_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_fence_execution_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_fence_execution_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_fence_execution_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_fence_execution_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_fence_execution_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_fence_execution_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_fence_execution_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_fence_execution_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "redirect_valid_i",
+          "signal": "cpu5_fence_execution_tb.frontend.redirect_valid_i"
+        },
+        {
+          "alias": "discard_o",
+          "signal": "cpu5_fence_execution_tb.frontend.discard_o"
+        },
+        {
+          "alias": "generation_o",
+          "signal": "cpu5_fence_execution_tb.frontend.generation_o[1:0]"
+        },
+        {
+          "alias": "i_req_valid_o",
+          "signal": "cpu5_fence_execution_tb.frontend.i_req_valid_o"
+        },
+        {
+          "alias": "i_req_ready_i",
+          "signal": "cpu5_fence_execution_tb.frontend.i_req_ready_i"
+        },
+        {
+          "alias": "i_req_addr_o",
+          "signal": "cpu5_fence_execution_tb.frontend.i_req_addr_o[31:0]"
+        },
+        {
+          "alias": "i_rsp_valid_i",
+          "signal": "cpu5_fence_execution_tb.frontend.i_rsp_valid_i"
+        },
+        {
+          "alias": "drop_o",
+          "signal": "cpu5_fence_execution_tb.frontend.drop_o"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x10008",
+          "instruction": "fence.i"
+        }
       ],
       "pass": "FENCE_EXEC_PASS C=1 FI=1 diagnostic=0 forwarding=1 seed=1 cases=329 checks=1408594 retired=2633 fences=551 fencei=43 code_writes=10 old_snapshots=10 buffered_old=111 old_offers=1 old_accepted=5 stale=287 old_errors=2 same_edge_drops=1 held_fences=492 dma_completed=1 dma_reads=3 early_examples=1 reads=553 writes=285 killed=1 max_i_wait=70 max_d_wait=7 program_digest=55e25acecfb29fbf retirement_digest=506a18f9d9192b37 effect_digest=57e6bee0c4482ffd",
       "build_command": [
@@ -1251,6 +1926,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/fence/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "fence-i.vcd",
+        "fence-i.gtkw",
+        "--repscript=fence-i.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1267,8 +1951,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "straddled-fetch.svg",
-      "svg_sha256": "c3fc0080adabb82cb65b3a8a3d47a95461ffeb0dcdb111bbc7a09068590747ba",
+      "image": "straddled-fetch.png",
+      "image_sha256": "0d8b59cfb7d062f1315ef235c7169abcf6fe911f8eae6314b974f18f6f0f5d28",
       "trigger_cycle": 1615,
       "window_cycles": [
         1588,
@@ -1276,40 +1960,96 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        6354,
-        6470
+        6352,
+        6476
       ],
-      "signals": [
-        "cpu5_compressed_execution_tb.clk_i",
-        "cpu5_compressed_execution_tb.dut.kill_valid_o",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.length",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.op",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[0].uid",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.length",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.op",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[1].uid",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.length",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.op",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_compressed_execution_tb.dut.stage_token_o[2].uid",
-        "cpu5_compressed_execution_tb.dut.stage_valid_o",
-        "cpu5_compressed_execution_tb.frontend.i_req_addr_o",
-        "cpu5_compressed_execution_tb.frontend.i_req_parcels_o",
-        "cpu5_compressed_execution_tb.frontend.i_req_ready_i",
-        "cpu5_compressed_execution_tb.frontend.i_req_valid_o",
-        "cpu5_compressed_execution_tb.frontend.i_rsp_parcels_i",
-        "cpu5_compressed_execution_tb.frontend.i_rsp_valid_i",
-        "cpu5_compressed_execution_tb.frontend.insn_valid_o",
-        "cpu5_compressed_execution_tb.frontend.length",
-        "cpu5_compressed_execution_tb.frontend.pc"
+      "markers": [
+        {
+          "name": "A",
+          "label": "high parcel",
+          "cycle": 1602,
+          "time": 6411
+        },
+        {
+          "name": "B",
+          "label": "next word",
+          "cycle": 1613,
+          "time": 6455
+        },
+        {
+          "name": "C",
+          "label": "delivered",
+          "cycle": 1615,
+          "time": 6462
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_compressed_execution_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_compressed_execution_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_compressed_execution_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_compressed_execution_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_compressed_execution_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "frontend pc",
+          "signal": "cpu5_compressed_execution_tb.frontend.pc[31:0]"
+        },
+        {
+          "alias": "frontend length",
+          "signal": "cpu5_compressed_execution_tb.frontend.length[2:0]"
+        },
+        {
+          "alias": "i_req_valid_o",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_req_valid_o"
+        },
+        {
+          "alias": "i_req_ready_i",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_req_ready_i"
+        },
+        {
+          "alias": "i_req_addr_o",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_req_addr_o[31:0]"
+        },
+        {
+          "alias": "i_req_parcels_o",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_req_parcels_o[1:0]"
+        },
+        {
+          "alias": "i_rsp_valid_i",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_rsp_valid_i"
+        },
+        {
+          "alias": "i_rsp_parcels_i",
+          "signal": "cpu5_compressed_execution_tb.frontend.i_rsp_parcels_i[1:0]"
+        },
+        {
+          "alias": "insn_valid_o",
+          "signal": "cpu5_compressed_execution_tb.frontend.insn_valid_o"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x88",
+          "instruction": "c.nop"
+        },
+        {
+          "pc": "0x8a",
+          "instruction": "mul x12, x10, x11"
+        }
       ],
       "pass": "C_EXEC_PASS C=1 M=1 diagnostic=0 forwarding=1 seed=1 cases=84 edges=35875 checks=1023620 retired=1724 traps=85 killed=5 compressed=321 straddled=34 hints=63 links=15 branches=37 first_faults=4 second_faults=4 stale=95 I_offers=3393 I_accepts=3393 I_replies=3393 D_offers=98 D_accepts=98 D_replies=98 reads=43 writes=50 holds=25965 max_I_accept=18 max_D_accept=9 IRQ=1 idle=1 pending=6 simultaneous_discard=1 late_C_wait=22 program_digest=0066ec3a7019bbc8 retirement_digest=ea6c204c3ccafa35 effect_digest=88feac11d3b0026f",
       "build_command": [
@@ -1358,6 +2098,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/compressed/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "straddled-fetch.vcd",
+        "straddled-fetch.gtkw",
+        "--repscript=straddled-fetch.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1372,8 +2121,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "debug-halt.svg",
-      "svg_sha256": "678b925786e11c46c7aeda289305cbaa06b9f31a5beee1e2f709c35baf569483",
+      "image": "debug-halt.png",
+      "image_sha256": "c8d573fcf8d3eec1be1f84bc89ada587dbec2cb7bcf9827b18d852a9e9b842ad",
       "trigger_cycle": 1003,
       "window_cycles": [
         997,
@@ -1381,55 +2130,108 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        3600,
-        3642
+        3599,
+        3646
       ],
-      "signals": [
-        "cpu5_debug_core_tb.clk_i",
-        "cpu5_debug_core_tb.dut.d_req_ready_i",
-        "cpu5_debug_core_tb.dut.d_req_valid_o",
-        "cpu5_debug_core_tb.dut.d_rsp_status_i",
-        "cpu5_debug_core_tb.dut.d_rsp_valid_i",
-        "cpu5_debug_core_tb.dut.debug_dpc_o",
-        "cpu5_debug_core_tb.dut.debug_halted_o",
-        "cpu5_debug_core_tb.dut.debug_haltreq_i",
-        "cpu5_debug_core_tb.dut.kill_valid_o",
-        "cpu5_debug_core_tb.dut.mcause_o",
-        "cpu5_debug_core_tb.dut.mtvec_o",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].p.length",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].p.op",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_debug_core_tb.dut.stage_token_o[0].uid",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].p.length",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].p.op",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_debug_core_tb.dut.stage_token_o[1].uid",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].p.length",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].p.op",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_debug_core_tb.dut.stage_token_o[2].uid",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].p.length",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].p.op",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_debug_core_tb.dut.stage_token_o[3].uid",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].p.length",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].p.op",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_debug_core_tb.dut.stage_token_o[4].uid",
-        "cpu5_debug_core_tb.dut.stage_valid_o",
-        "cpu5_debug_core_tb.dut.trace_o.trap",
-        "cpu5_debug_core_tb.dut.trace_o.uid",
-        "cpu5_debug_core_tb.dut.trace_o.valid"
+      "markers": [
+        {
+          "name": "A",
+          "label": "halt requested",
+          "cycle": 1003,
+          "time": 3620
+        },
+        {
+          "name": "B",
+          "label": "accepted",
+          "cycle": 1006,
+          "time": 3629
+        },
+        {
+          "name": "C",
+          "label": "halted",
+          "cycle": 1011,
+          "time": 3642
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_debug_core_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_debug_core_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_debug_core_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_debug_core_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_debug_core_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_debug_core_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_debug_core_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "trace valid",
+          "signal": "cpu5_debug_core_tb.dut.trace_o.valid"
+        },
+        {
+          "alias": "trace trap",
+          "signal": "cpu5_debug_core_tb.dut.trace_o.trap"
+        },
+        {
+          "alias": "trace pc",
+          "signal": "cpu5_debug_core_tb.dut.trace_o.packet.pc[31:0]"
+        },
+        {
+          "alias": "debug_haltreq_i",
+          "signal": "cpu5_debug_core_tb.dut.debug_haltreq_i"
+        },
+        {
+          "alias": "d_req_valid_o",
+          "signal": "cpu5_debug_core_tb.dut.d_req_valid_o"
+        },
+        {
+          "alias": "d_req_ready_i",
+          "signal": "cpu5_debug_core_tb.dut.d_req_ready_i"
+        },
+        {
+          "alias": "d_rsp_valid_i",
+          "signal": "cpu5_debug_core_tb.dut.d_rsp_valid_i"
+        },
+        {
+          "alias": "d_rsp_status_i",
+          "signal": "cpu5_debug_core_tb.dut.d_rsp_status_i[1:0]"
+        },
+        {
+          "alias": "mcause_o",
+          "signal": "cpu5_debug_core_tb.dut.mcause_o[31:0]"
+        },
+        {
+          "alias": "debug_halted_o",
+          "signal": "cpu5_debug_core_tb.dut.debug_halted_o"
+        },
+        {
+          "alias": "debug_dpc_o",
+          "signal": "cpu5_debug_core_tb.dut.debug_dpc_o[31:0]"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x0",
+          "instruction": "lw x0, 0(x1)"
+        }
       ],
       "pass": "PASS debug-core C=0 diagnostic=0 seed=1 cases=20 edges=1272 checks=4457 retires=17 traps=7 irqs=1 halt_entries=51 resumes=30 reads=1 writes=2 responses=5 max_halt=42",
       "build_command": [
@@ -1472,6 +2274,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/debug-core/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "debug-halt.vcd",
+        "debug-halt.gtkw",
+        "--repscript=debug-halt.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1487,8 +2298,8 @@
       },
       "seed": 1,
       "plusargs": [],
-      "svg": "hart-reset-request.svg",
-      "svg_sha256": "baf2275daea3245c0550b8cea260c3c0692829dcee5b1d2b151af13c2ff8ff5f",
+      "image": "hart-reset-request.png",
+      "image_sha256": "5bc5e5d0c51e53f25cf0d0460496f7dfd9a27aedf67dae760dd738fdd16b3502",
       "trigger_cycle": 1345,
       "window_cycles": [
         1339,
@@ -1496,50 +2307,106 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        48174,
-        48678
+        48156,
+        48732
       ],
-      "signals": [
-        "cpu5_memory_tb.clk_i",
-        "cpu5_memory_tb.dut.d_req_addr_o",
-        "cpu5_memory_tb.dut.d_req_ready_i",
-        "cpu5_memory_tb.dut.d_req_valid_o",
-        "cpu5_memory_tb.dut.d_rsp_valid_i",
-        "cpu5_memory_tb.dut.hart_reset_i",
-        "cpu5_memory_tb.dut.in_ready_o",
-        "cpu5_memory_tb.dut.kill_valid_o",
-        "cpu5_memory_tb.dut.mem_busy_o",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[0].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[0].uid",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[1].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[1].uid",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[2].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[2].uid",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[3].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[3].uid",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.length",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.op",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.pc",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw",
-        "cpu5_memory_tb.dut.stage_token_o[4].p.raw_valid",
-        "cpu5_memory_tb.dut.stage_token_o[4].uid",
-        "cpu5_memory_tb.dut.stage_valid_o"
+      "markers": [
+        {
+          "name": "A",
+          "label": "hart reset",
+          "cycle": 1345,
+          "time": 48424
+        },
+        {
+          "name": "B",
+          "label": "accepted",
+          "cycle": 1346,
+          "time": 48460
+        },
+        {
+          "name": "C",
+          "label": "response",
+          "cycle": 1350,
+          "time": 48604
+        },
+        {
+          "name": "D",
+          "label": "input reopens",
+          "cycle": 1352,
+          "time": 48642
+        }
+      ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_memory_tb.clk_i"
+        },
+        {
+          "alias": "valid W M X D F",
+          "signal": "cpu5_memory_tb.dut.stage_valid_o[4:0]"
+        },
+        {
+          "alias": "kill W M X D F",
+          "signal": "cpu5_memory_tb.dut.kill_valid_o[4:0]"
+        },
+        {
+          "alias": "F pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[0].p.pc[31:0]"
+        },
+        {
+          "alias": "D pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[1].p.pc[31:0]"
+        },
+        {
+          "alias": "X pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[2].p.pc[31:0]"
+        },
+        {
+          "alias": "M pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[3].p.pc[31:0]"
+        },
+        {
+          "alias": "W pc",
+          "signal": "cpu5_memory_tb.dut.stage_token_o[4].p.pc[31:0]"
+        },
+        {
+          "alias": "hart_reset_i",
+          "signal": "cpu5_memory_tb.dut.hart_reset_i"
+        },
+        {
+          "alias": "d_req_valid_o",
+          "signal": "cpu5_memory_tb.dut.d_req_valid_o"
+        },
+        {
+          "alias": "d_req_ready_i",
+          "signal": "cpu5_memory_tb.dut.d_req_ready_i"
+        },
+        {
+          "alias": "d_req_addr_o",
+          "signal": "cpu5_memory_tb.dut.d_req_addr_o[31:0]"
+        },
+        {
+          "alias": "d_rsp_valid_i",
+          "signal": "cpu5_memory_tb.dut.d_rsp_valid_i"
+        },
+        {
+          "alias": "mem_busy_o",
+          "signal": "cpu5_memory_tb.dut.mem_busy_o"
+        },
+        {
+          "alias": "in_ready_o",
+          "signal": "cpu5_memory_tb.dut.in_ready_o"
+        }
+      ],
+      "instructions": [
+        {
+          "pc": "0x100",
+          "instruction": "nop"
+        },
+        {
+          "pc": "0x104",
+          "instruction": "lw x0, 0(x1)"
+        }
       ],
       "pass": "PASS memory profile=0 scenario=0 deadline=128 seed=1 cases=142 cycles=3285 checks=15038228 terminals=321 traps=29 kills=24 offers=126 replies=126 decoded=105 rejects=22 fatal_cases=17 resets=180 effects=18 max_accept_delay=2 max_response_delay=5 flushes=4 flush_redirects=4 aborts=0 bypasses=134 reset_cases=3 dependency_stalls=342 nearest_stalls=108 memory_flush=4 invalid=6",
       "build_command": [
@@ -1582,6 +2449,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/memory-base/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "hart-reset-request.vcd",
+        "hart-reset-request.gtkw",
+        "--repscript=hart-reset-request.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1593,8 +2469,8 @@
       "parameters": {},
       "seed": 1,
       "plusargs": [],
-      "svg": "fabric-ownership.svg",
-      "svg_sha256": "9b9731d692950cb1036f7abc45b4908ea12badb71519cfdda105fee6598f0ec7",
+      "image": "fabric-ownership.png",
+      "image_sha256": "dbf16c6db52de07bcebca05d60461899a07de4d5a381366a1be427398224b85e",
       "trigger_cycle": 337,
       "window_cycles": [
         336,
@@ -1602,25 +2478,96 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        3832,
-        4126
+        3827,
+        4143
       ],
-      "signals": [
-        "cpu5_local_fabric_tb.clk",
-        "cpu5_local_fabric_tb.dut.d_accepted_q",
-        "cpu5_local_fabric_tb.dut.d_owned_q",
-        "cpu5_local_fabric_tb.dut.d_req_addr_i",
-        "cpu5_local_fabric_tb.dut.d_req_ready_o",
-        "cpu5_local_fabric_tb.dut.d_req_tag_i",
-        "cpu5_local_fabric_tb.dut.d_req_valid_i",
-        "cpu5_local_fabric_tb.dut.d_req_wdata_i",
-        "cpu5_local_fabric_tb.dut.d_req_write_i",
-        "cpu5_local_fabric_tb.dut.d_rsp_ready_i",
-        "cpu5_local_fabric_tb.dut.d_rsp_tag_o",
-        "cpu5_local_fabric_tb.dut.d_rsp_valid_o",
-        "cpu5_local_fabric_tb.dut.status_o",
-        "cpu5_local_fabric_tb.dut.status_write_o"
+      "markers": [
+        {
+          "name": "A",
+          "label": "first valid",
+          "cycle": 337,
+          "time": 3849
+        },
+        {
+          "name": "B",
+          "label": "accept",
+          "cycle": 344,
+          "time": 3927
+        },
+        {
+          "name": "C",
+          "label": "effect",
+          "cycle": 345,
+          "time": 3939
+        },
+        {
+          "name": "D",
+          "label": "response",
+          "cycle": 356,
+          "time": 4060
+        },
+        {
+          "name": "E",
+          "label": "consumed",
+          "cycle": 361,
+          "time": 4121
+        }
       ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_local_fabric_tb.clk"
+        },
+        {
+          "alias": "d_req_valid_i",
+          "signal": "cpu5_local_fabric_tb.dut.d_req_valid_i"
+        },
+        {
+          "alias": "d_req_ready_o",
+          "signal": "cpu5_local_fabric_tb.dut.d_req_ready_o"
+        },
+        {
+          "alias": "d_req_addr_i",
+          "signal": "cpu5_local_fabric_tb.dut.d_req_addr_i[31:0]"
+        },
+        {
+          "alias": "d_req_wdata_i",
+          "signal": "cpu5_local_fabric_tb.dut.d_req_wdata_i[31:0]"
+        },
+        {
+          "alias": "d_req_tag_i",
+          "signal": "cpu5_local_fabric_tb.dut.d_req_tag_i[31:0]"
+        },
+        {
+          "alias": "owned",
+          "signal": "cpu5_local_fabric_tb.dut.d_owned_q"
+        },
+        {
+          "alias": "accepted",
+          "signal": "cpu5_local_fabric_tb.dut.d_accepted_q"
+        },
+        {
+          "alias": "status_write_o",
+          "signal": "cpu5_local_fabric_tb.dut.status_write_o"
+        },
+        {
+          "alias": "status_o",
+          "signal": "cpu5_local_fabric_tb.dut.status_o[31:0]"
+        },
+        {
+          "alias": "d_rsp_valid_o",
+          "signal": "cpu5_local_fabric_tb.dut.d_rsp_valid_o"
+        },
+        {
+          "alias": "d_rsp_ready_i",
+          "signal": "cpu5_local_fabric_tb.dut.d_rsp_ready_i"
+        },
+        {
+          "alias": "d_rsp_tag_o",
+          "signal": "cpu5_local_fabric_tb.dut.d_rsp_tag_o[31:0]"
+        }
+      ],
+      "instructions": [],
       "pass": "LOCAL_FABRIC_PASS checks=633 transfers=44 status_effects=1 output_effects=1",
       "build_command": [
         "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/verilator",
@@ -1649,6 +2596,15 @@
         "<build>/local-fabric/obj/Vcpu5_local_fabric_tb",
         "+verilator+seed+1",
         "+wave=<build>/local-fabric/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "fabric-ownership.vcd",
+        "fabric-ownership.gtkw",
+        "--repscript=fabric-ownership.tcl",
+        "--repperiod=400"
       ]
     },
     {
@@ -1660,8 +2616,8 @@
       "parameters": {},
       "seed": 1,
       "plusargs": [],
-      "svg": "notification-counter.svg",
-      "svg_sha256": "d85ad0acfe709c793fc40907185fc4f01966ce1356d975df2a88271c3947fccc",
+      "image": "notification-counter.png",
+      "image_sha256": "62dfd7451ca65941794c4c4a6d3cf59819981af0aedba1e618b47e79cf11ce43",
       "trigger_cycle": 208,
       "window_cycles": [
         200,
@@ -1669,20 +2625,68 @@
       ],
       "timescale": "1ps",
       "window_times": [
-        401,
-        429
+        400,
+        432
       ],
-      "signals": [
-        "cpu5_irq_platform_tb.clk_i",
-        "cpu5_irq_platform_tb.platforms[1].dut.addr_i",
-        "cpu5_irq_platform_tb.platforms[1].dut.command_i",
-        "cpu5_irq_platform_tb.platforms[1].dut.error_o",
-        "cpu5_irq_platform_tb.platforms[1].dut.notification_count_o",
-        "cpu5_irq_platform_tb.platforms[1].dut.notification_i",
-        "cpu5_irq_platform_tb.platforms[1].dut.overflow_o",
-        "cpu5_irq_platform_tb.platforms[1].dut.system_reset_i",
-        "cpu5_irq_platform_tb.platforms[1].dut.write_i"
+      "markers": [
+        {
+          "name": "A",
+          "label": "empty acknowledge",
+          "cycle": 203,
+          "time": 408
+        },
+        {
+          "name": "B",
+          "label": "full",
+          "cycle": 207,
+          "time": 415
+        },
+        {
+          "name": "C",
+          "label": "overflow",
+          "cycle": 208,
+          "time": 417
+        }
       ],
+      "traces": [
+        {
+          "alias": "clk",
+          "signal": "cpu5_irq_platform_tb.clk_i"
+        },
+        {
+          "alias": "system_reset_i",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.system_reset_i"
+        },
+        {
+          "alias": "notification_i",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.notification_i"
+        },
+        {
+          "alias": "command_i",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.command_i"
+        },
+        {
+          "alias": "write_i",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.write_i"
+        },
+        {
+          "alias": "addr_i",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.addr_i[31:0]"
+        },
+        {
+          "alias": "error_o",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.error_o"
+        },
+        {
+          "alias": "notification_count_o",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.notification_count_o[31:0]"
+        },
+        {
+          "alias": "overflow_o",
+          "signal": "cpu5_irq_platform_tb.platforms[1].dut.overflow_o"
+        }
+      ],
+      "instructions": [],
       "pass": "PASS irq-platform seed=1 profiles=3 capacities=1,4,64 edges=12848 checks=385449 reads=2757 writes=2634 errors=13938 timer_overrides=567 set_clear=369 empty_ack_arrival=12 full_ack_arrival=52 overflow_edges=11722 masked_pending=23835 timer_wraps=3 address_bins=ffff direction_bins=00000003 width_bins=0000000f",
       "build_command": [
         "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/verilator",
@@ -1711,6 +2715,15 @@
         "+verilator+seed+1",
         "+seed=1",
         "+wave=<build>/irq-platform/s1.vcd"
+      ],
+      "gtkwave_command": [
+        "/tmp/cpu5-control-tools-20260301/oss-cad-suite/bin/gtkwave",
+        "-r",
+        "<build>/gtkwaverc",
+        "notification-counter.vcd",
+        "notification-counter.gtkw",
+        "--repscript=notification-counter.tcl",
+        "--repperiod=400"
       ]
     }
   ]
