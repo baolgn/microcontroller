@@ -119,7 +119,8 @@ def main():
                    "synthetic held arithmetic models a future occupancy budget and does not execute division",
                    "debug is disconnected in this profile; no architectural debug behavior is tested",
                    "finite schedules validate assumptions and measured cases, not every possible WCET schedule",
-                   "UID exhaustion is reached with a testbench-only internal counter seed; production parameters are unchanged",
+                   "UID exhaustion is reached with a testbench-only force on the internal counter; between the two limit "
+                   "cases that force supplies the scoreboard's allocation count; production parameters are unchanged",
                    "no FPGA route, clock-frequency or physical programming qualification"],
     }
     (build / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
