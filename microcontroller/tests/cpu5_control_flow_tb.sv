@@ -1,17 +1,17 @@
-/* verify real control-flow execution through the packet pipeline. */
+// verify real control-flow execution through the packet pipeline.
 module cpu5_control_flow_tb #(
   parameter bit C_ENABLED = 0,
   parameter bit DIAGNOSTIC = 0
 );
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
-  /* preserve the explicitly IRQ-disabled compatibility profile. */
+  // preserve the explicitly IRQ-disabled compatibility profile.
   logic unused_entry_pending, unused_idle, unused_irq_valid;
   logic [31:0] unused_irq_pc, unused_irq_cause;
-  /* bound independent input identities and program storage for every directed run. */
+  // bound independent input identities and program storage for every directed run.
   localparam integer CAPACITY = 512;
   localparam integer PROGRAM_PARCELS = 8192;
   logic clk_i = 0, cold_reset_i = 0, isolated_i = 1, hart_reset_i = 0;
@@ -40,11 +40,11 @@ module cpu5_control_flow_tb #(
   logic [31:0] inspect_value_o;
   logic inspect_defined_o;
   logic [31:0] mstatus_o, mtvec_o, mscratch_o, mepc_o, mcause_o, mtval_o;
-  /* this compatibility fixture leaves new interrupt levels disconnected. */
+  // this compatibility fixture leaves new interrupt levels disconnected.
   logic [31:0] unused_mie, unused_mip, unused_mcountinhibit;
   logic [63:0] unused_mcycle, unused_minstret;
 
-  /* the program map and architectural state are independent of retirement outputs. */
+  // the program map and architectural state are independent of retirement outputs.
   packet_t program_packet [0:PROGRAM_PARCELS-1];
   bit program_valid [0:PROGRAM_PARCELS-1];
   packet_t original [0:CAPACITY-1];
@@ -75,7 +75,7 @@ module cpu5_control_flow_tb #(
   bit load_failed [0:CAPACITY-1];
   bit mutation_applied = 0;
 
-  /* control predictions include operand use and instruction-relative next state. */
+  // control predictions include operand use and instruction-relative next state.
   typedef struct packed {
     logic legal, use1, use2, writes, taken, fault;
     logic [4:0] rs1, rs2, rd;
@@ -84,7 +84,7 @@ module cpu5_control_flow_tb #(
     logic [31:0] a, b, immediate, result, next_pc, cause, mtval;
   } prediction_t;
 
-  /* instantiate the actual five-stage pipeline under both alignment configurations. */
+  // instantiate the actual five-stage pipeline under both alignment configurations.
   cpu5_control #(.IRQ_ENABLED(0), .FORWARDING(0), .C_ENABLED(C_ENABLED), .DIAGNOSTIC(DIAGNOSTIC), .TEST_REGIONS(1), .D_MAX_WAIT_CYCLES(256)) dut (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
     .debug_halted_o(unused_debug_halted), .debug_resumeack_o(unused_debug_resumeack), .debug_dpc_o(unused_debug_dpc), .debug_dcsr_o(unused_debug_dcsr), .debug_reg_valid_i(1'b0), .debug_reg_write_i(1'b0),
@@ -97,7 +97,7 @@ module cpu5_control_flow_tb #(
     .minstret_o(unused_minstret), .*
   );
 
-  /* use the actual fetch manager only in the target-access-fault integration case. */
+  // use the actual fetch manager only in the target-access-fault integration case.
   logic f_req_valid, f_req_ready, f_rsp_valid, f_rsp_ready;
   logic [31:0] f_req_addr, f_req_tag, f_rsp_tag, f_rsp_data;
   logic [1:0] f_req_mask, f_rsp_mask;
@@ -111,7 +111,7 @@ module cpu5_control_flow_tb #(
   logic [31:0] integration_jump;
   int unsigned instruction_reads = 0, target_faults = 0;
 
-  /* connect the real instruction manager to a distinct registered ROM target. */
+  // connect the real instruction manager to a distinct registered ROM target.
   cpu5_fetch #(.C_FETCH(C_ENABLED), .GEN_BITS(2), .MAX_WAIT_CYCLES(64),
       .RESET_PC(32'h1000)) fetch (
     .clk_i, .cold_reset_i, .isolated_i, .hart_reset_i,
@@ -132,22 +132,22 @@ module cpu5_control_flow_tb #(
     .complete_o(f_complete), .drop_o(f_drop)
   );
 
-  /* report the exact independent PC and case at the first failure. */
+  // report the exact independent PC and case at the first failure.
   function automatic void check(input bit condition, input string message);
-    /* later comparisons are invalid after the first ledger mismatch. */
+    // later comparisons are invalid after the first ledger mismatch.
     if (!condition) begin
       $fatal(1, "case=%0d cycle=%0d C=%0d diagnostic=%0d pc=%08x: %s",
              cases, cycles, C_ENABLED, DIAGNOSTIC, arch_pc, message);
     end
   endfunction
 
-  /* instructions in this bounded fixture occupy explicitly named halfword addresses. */
+  // instructions in this bounded fixture occupy explicitly named halfword addresses.
   function automatic integer program_index(input logic [31:0] pc);
     check(pc < 2 * PROGRAM_PARCELS && !pc[0], "program address outside fixture");
     return int'(pc / 2);
   endfunction
 
-  /* construct ordinary packets independently of every implementation output. */
+  // construct ordinary packets independently of every implementation output.
   function automatic packet_t packet(input logic [31:0] pc, input op_t op = OP_RESULT,
                                      input logic [4:0] rd = 0, input logic [31:0] result = 0);
     packet_t p;
@@ -165,7 +165,7 @@ module cpu5_control_flow_tb #(
     return p;
   endfunction
 
-  /* encode branch stimulus directly from the architectural displacement bits. */
+  // encode branch stimulus directly from the architectural displacement bits.
   function automatic logic [31:0] encode_branch(input logic [2:0] condition,
       input logic [4:0] source1, source2, input logic [31:0] displacement);
     return ((displacement & 'h1000) << 19) | ((displacement & 'h7e0) << 20) |
@@ -173,7 +173,7 @@ module cpu5_control_flow_tb #(
            ((displacement & 'h1e) << 7) | ((displacement & 'h800) >> 4) | 'h63;
   endfunction
 
-  /* J-format generation is separate from the per-bit decoding reference below. */
+  // J-format generation is separate from the per-bit decoding reference below.
   function automatic logic [31:0] encode_jal(input logic [4:0] destination,
                                             input logic [31:0] displacement);
     return ((displacement & 'h100000) << 11) | ((displacement & 'h7fe) << 20) |
@@ -181,13 +181,13 @@ module cpu5_control_flow_tb #(
            (32'(destination) << 7) | 'h6f;
   endfunction
 
-  /* JALR retains a signed byte displacement and clears its target bit later. */
+  // JALR retains a signed byte displacement and clears its target bit later.
   function automatic logic [31:0] encode_jalr(input logic [4:0] destination,
       input logic [4:0] source, input logic [11:0] displacement);
     return (32'(displacement) << 20) | (32'(source) << 15) | (32'(destination) << 7) | 'h67;
   endfunction
 
-  /* supplied control annotations are poisoned to prove real decode and RF use. */
+  // supplied control annotations are poisoned to prove real decode and RF use.
   function automatic packet_t control(input logic [31:0] pc, input logic [31:0] word);
     packet_t p;
     p = packet(pc, OP_CONTROL, 31, 'hbad0bad0);
@@ -202,16 +202,16 @@ module cpu5_control_flow_tb #(
     return p;
   endfunction
 
-  /* decode offsets bit by bit rather than importing DUT immediate or branch logic. */
+  // decode offsets bit by bit rather than importing DUT immediate or branch logic.
   function automatic logic [31:0] immediate_ref(input logic [31:0] word,
                                               input logic [3:0] kind);
     logic [31:0] value;
     integer source;
     value = 0;
-    /* bit zero is fixed for B/J offsets and all upper bits repeat the sign. */
+    // bit zero is fixed for B/J offsets and all upper bits repeat the sign.
     for (int bit_number = 0; bit_number < 32; bit_number++) begin
       source = -1;
-      /* select the architectural format independently of opcode-case RTL. */
+      // select the architectural format independently of opcode-case RTL.
       case (kind)
         5: source = bit_number == 0 ? -1 : bit_number < 11 ? bit_number + 20 :
                     bit_number == 11 ? 20 : bit_number < 20 ? bit_number : 31;
@@ -220,29 +220,29 @@ module cpu5_control_flow_tb #(
                     bit_number < 11 ? bit_number + 20 : bit_number == 11 ? 7 : 31;
         default: source = -1;
       endcase
-      /* fixed-zero positions never read an instruction bit. */
+      // fixed-zero positions never read an instruction bit.
       if (source >= 0) value[bit_number] = word[source];
     end
     return value;
   endfunction
 
-  /* a widened signed difference avoids sharing the DUT sign-selection predicate. */
+  // a widened signed difference avoids sharing the DUT sign-selection predicate.
   function automatic bit less_signed_ref(input logic [31:0] a, b);
     logic signed [32:0] difference;
     logic [31:0] unused_difference_magnitude;
     difference = $signed({a[31], a}) - $signed({b[31], b});
-    /* the exact subtraction sign alone determines this comparison. */
+    // the exact subtraction sign alone determines this comparison.
     unused_difference_magnitude = difference[31:0];
     return difference[32];
   endfunction
 
-  /* predict only from original accepted stimulus and the independent committed bank. */
+  // predict only from original accepted stimulus and the independent committed bank.
   function automatic prediction_t predict(input packet_t p, input logic [8:0] id);
     prediction_t q;
     logic [31:0] word, target;
     bit width_ok;
     logic [157:0] unused_supplied_annotations;
-    /* original operand annotations and non-read CSR controls are not prediction authority. */
+    // original operand annotations and non-read CSR controls are not prediction authority.
     unused_supplied_annotations = {p.rs1_used, p.rs2_used, p.rs1, p.rs2, p.rs1_value,
         p.rs2_value, p.mem_wdata, p.mem_size, p.mem_signed, p.csr_addr, p.csr_op,
         p.csr_write, p.csr_source};
@@ -255,24 +255,24 @@ module cpu5_control_flow_tb #(
     q.fault = p.fault;
     q.cause = p.cause;
     q.mtval = p.mtval;
-    /* a completed load's value belongs to the responder plan, not retirement trace. */
+    // a completed load's value belongs to the responder plan, not retirement trace.
     if (p.op == OP_LOAD && !p.fault) begin
       q.result = load_values[id];
       q.fault = load_failed[id];
       q.cause = q.fault ? 5 : 0;
       q.mtval = q.fault ? p.mem_addr : 0;
     end
-    /* CSR predictions use an independent mtvec bank for reads and write-only results. */
+    // CSR predictions use an independent mtvec bank for reads and write-only results.
     if (p.op == OP_CSR) begin
       q.result = p.csr_read ? vector_ref : 0;
     end
-    /* an older explicit trap is useful for proving younger branch suppression. */
+    // an older explicit trap is useful for proving younger branch suppression.
     if (p.op == OP_ECALL && !p.fault) begin
       q.fault = 1;
       q.cause = 11;
       q.mtval = 0;
     end
-    /* raw or trusted expanded control instructions replace every poisoned annotation. */
+    // raw or trusted expanded control instructions replace every poisoned annotation.
     if (p.op == OP_CONTROL) begin
       q.result = 0;
       q.next_pc = 0;
@@ -286,7 +286,7 @@ module cpu5_control_flow_tb #(
                (word & 'h707f) == 'h67 ? 6 :
                ((word & 'h7f) == 'h63 && word[14:12] inside {0, 1, 4, 5, 6, 7}) ? 7 : 0;
       q.legal = width_ok && q.kind != 0;
-      /* fetch faults suppress decode and operand use even with a valid-looking word. */
+      // fetch faults suppress decode and operand use even with a valid-looking word.
       if (!p.fault && q.legal) begin
         q.use1 = q.kind != 5;
         q.use2 = q.kind == 7;
@@ -299,9 +299,9 @@ module cpu5_control_flow_tb #(
         q.cond = q.kind == 7 ? word[14:12] : 0;
         q.immediate = immediate_ref(word, q.kind);
         q.taken = q.kind != 7;
-        /* branch conditions are independent of the supplied packet's resolved PC. */
+        // branch conditions are independent of the supplied packet's resolved PC.
         if (q.kind == 7) begin
-          /* signed and unsigned decisions have separate explicit meanings. */
+          // signed and unsigned decisions have separate explicit meanings.
           case (q.cond)
             0: q.taken = q.a == q.b;
             1: q.taken = q.a != q.b;
@@ -315,14 +315,14 @@ module cpu5_control_flow_tb #(
         target = q.kind == 6 ? (q.a + q.immediate) & 32'hfffffffe : p.pc + q.immediate;
         q.next_pc = q.taken ? target : p.pc + {29'b0, p.length};
         q.result = q.kind == 7 ? 0 : p.pc + {29'b0, p.length};
-        /* an untaken branch never faults on its unused target. */
+        // an untaken branch never faults on its unused target.
         if (q.taken && (target[0] || (!C_ENABLED && target[1]))) begin
           q.fault = 1;
           q.cause = 0;
           q.mtval = target;
         end
       end
-      /* unsupported control encodings produce a precise illegal instruction. */
+      // unsupported control encodings produce a precise illegal instruction.
       else if (!p.fault) begin
         q.fault = 1;
         q.cause = 2;
@@ -332,17 +332,17 @@ module cpu5_control_flow_tb #(
     return q;
   endfunction
 
-  /* source dependencies are semantic, including x0 exclusion and decoded destinations. */
+  // source dependencies are semantic, including x0 exclusion and decoded destinations.
   function automatic logic [4:0] destination(input packet_t p);
     logic [31:0] word;
     logic [350:0] unused_non_destination_fields;
-    /* dependency intent does not depend on operand values or later execution results. */
+    // dependency intent does not depend on operand values or later execution results.
     unused_non_destination_fields = {p.pc, p.rs1_used, p.rs2_used, p.rs1, p.rs2,
         p.rs1_value, p.rs2_value, p.result, p.next_pc, p.mem_addr, p.mem_wdata,
         p.mem_size, p.mem_signed, p.csr_addr, p.csr_op, p.csr_read, p.csr_write,
         p.csr_source, p.cause, p.mtval};
     word = p.length == 2 ? p.expanded : p.raw;
-    /* branches have no destination even if their input annotations say otherwise. */
+    // branches have no destination even if their input annotations say otherwise.
     if (p.op == OP_CONTROL) return
         !p.fault && ((p.length == 4 && p.raw_valid == 15 && !p.expanded_valid) ||
         (C_ENABLED && p.length == 2 && p.raw_valid == 3 && p.expanded_valid &&
@@ -351,12 +351,12 @@ module cpu5_control_flow_tb #(
     return p.rd_write && p.op inside {OP_RESULT, OP_LOAD, OP_CSR, OP_REDIRECT} ? p.rd : 0;
   endfunction
 
-  /* build the producer stream from a program map or the actual fetch adapter. */
+  // build the producer stream from a program map or the actual fetch adapter.
   always_comb begin
     in_valid_i = 0;
     in_packet_i = '0;
     f_ready = integration && feeding && in_ready_o;
-    /* the adapter preserves fetch faults and original bytes as their own later token. */
+    // the adapter preserves fetch faults and original bytes as their own later token.
     if (integration) begin
       in_valid_i = feeding && f_valid;
       in_packet_i.pc = f_pc;
@@ -369,55 +369,55 @@ module cpu5_control_flow_tb #(
       in_packet_i.cause = f_cause;
       in_packet_i.mtval = f_mtval;
     end
-    /* direct packets remain a prototype fixture, not a general instruction decoder. */
+    // direct packets remain a prototype fixture, not a general instruction decoder.
     else if (feeding && feed_pc < 2 * PROGRAM_PARCELS && !feed_pc[0]) begin
       in_valid_i = program_valid[int'(feed_pc / 2)];
       in_packet_i = program_packet[int'(feed_pc / 2)];
     end
   end
 
-  /* a registered instruction target returns safe ROM bytes one edge after acceptance. */
+  // a registered instruction target returns safe ROM bytes one edge after acceptance.
   assign f_req_ready = !f_pending;
   assign f_rsp_valid = f_pending;
-  /* capture read data on the target clock and retain its response until consumed. */
+  // capture read data on the target clock and retain its response until consumed.
   always_ff @(posedge clk_i) begin
-    /* positive isolation fences both the manager and this target. */
+    // positive isolation fences both the manager and this target.
     if (cold_reset_i) begin
       f_pending <= 0;
       f_rsp_tag <= 0;
       f_rsp_mask <= 0;
       f_rsp_data <= 0;
     end
-    /* registered read capture is independent of pipeline backpressure. */
+    // registered read capture is independent of pipeline backpressure.
     else begin
-      /* no wide or speculative instruction read may reach the denied target. */
+      // no wide or speculative instruction read may reach the denied target.
       if (f_req_valid && f_req_ready) begin
         check(f_req_addr >= 'h1000 && f_req_addr < 'h2000, "fetch integration read a forbidden target");
         f_pending <= 1;
         f_rsp_tag <= f_req_tag;
         f_rsp_mask <= f_req_mask;
         f_rsp_data <= 0;
-        /* each requested parcel gets its byte-positioned original encoding. */
+        // each requested parcel gets its byte-positioned original encoding.
         for (int parcel = 0; parcel < 2; parcel++) begin
-          /* no unrequested parcel contributes response data. */
+          // no unrequested parcel contributes response data.
           if (f_req_mask[parcel]) begin
             f_rsp_data[16*parcel +: 16] <= f_req_addr == 'h1000 ?
                 integration_jump[16*parcel +: 16] : (parcel == 0 ? 16'h0013 : 16'b0);
           end
         end
       end
-      /* one response ends its own accepted transaction exactly once. */
+      // one response ends its own accepted transaction exactly once.
       if (f_rsp_valid && f_rsp_ready) f_pending <= 0;
     end
   end
 
-  /* compare terminal identity, operands, result, trap state and independent next PC. */
+  // compare terminal identity, operands, result, trap state and independent next PC.
   task automatic terminal(input trace_t actual, input prediction_t q);
     packet_t p, expected_packet;
     int unsigned id;
     logic [31:0] next_arch;
     logic [40:0] unused_terminal_decode;
-    /* decode-stage checks consume these fields before terminal architectural comparison. */
+    // decode-stage checks consume these fields before terminal architectural comparison.
     unused_terminal_decode = {q.legal, q.taken, q.kind, q.cond, q.immediate};
     check(actual.valid, "terminal comparator received an invalid trace");
     id = int'(actual.uid);
@@ -425,7 +425,7 @@ module cpu5_control_flow_tb #(
     p = original[id];
     check(p.pc == arch_pc && actual.packet.pc == arch_pc, "architectural control-flow sequence diverged");
     check(actual.order == 64'(next_order), "terminal order skipped or duplicated");
-    /* surviving older inputs must retire or be explicitly killed first. */
+    // surviving older inputs must retire or be explicitly killed first.
     for (int older = 0; older < int'(id); older++) begin
       check(!live[older], "terminal bypassed an older input");
     end
@@ -437,15 +437,15 @@ module cpu5_control_flow_tb #(
     check(actual.rd_write == (q.writes && !q.fault) &&
           actual.rd == (q.writes && !q.fault ? q.rd : 0) &&
           actual.value == (q.writes && !q.fault ? q.result : 0), "wrong architectural control result");
-    /* successful loads require their independently recorded external completion. */
+    // successful loads require their independently recorded external completion.
     if (p.op == OP_LOAD && !p.fault) check(load_completed[id], "load retired before external completion");
     check(actual.csr_read == (!q.fault && p.op == OP_CSR && p.csr_read) &&
           actual.csr_write == (!q.fault && p.op == OP_CSR && p.csr_write), "wrong CSR write disposition");
-    /* reads expose old state independently of writes, including read-only accesses. */
+    // reads expose old state independently of writes, including read-only accesses.
     check(actual.csr_old == (!q.fault && p.op == OP_CSR && p.csr_read ? vector_ref : 0) &&
           actual.csr_new == (!q.fault && p.op == OP_CSR && p.csr_write ?
             (p.csr_source & 32'hfffffffc) : 0), "wrong CSR retirement values");
-    /* source values must be the real captured bank values, including W bypass. */
+    // source values must be the real captured bank values, including W bypass.
     if (p.op == OP_CONTROL) begin
       check(actual.packet.rs1_used == q.use1 && actual.packet.rs2_used == q.use2 &&
             actual.packet.rs1 == q.rs1 && actual.packet.rs2 == q.rs2 &&
@@ -457,7 +457,7 @@ module cpu5_control_flow_tb #(
             "control packet has wrong X result or continuation");
     end
     expected_packet = p;
-    /* original annotations are immutable except explicitly specified control decode fields. */
+    // original annotations are immutable except explicitly specified control decode fields.
     if (p.op == OP_CONTROL) begin
       expected_packet.rs1_used = q.use1;
       expected_packet.rs2_used = q.use2;
@@ -470,7 +470,7 @@ module cpu5_control_flow_tb #(
       expected_packet.result = q.result;
       expected_packet.next_pc = q.next_pc;
     end
-    /* only successful load capture replaces the supplied result field. */
+    // only successful load capture replaces the supplied result field.
     if (p.op == OP_LOAD && !q.fault) expected_packet.result = q.result;
     expected_packet.fault = q.fault;
     expected_packet.cause = q.fault ? q.cause : 0;
@@ -478,7 +478,7 @@ module cpu5_control_flow_tb #(
     check(actual.packet == expected_packet, "terminal packet changed immutable or predicted metadata");
     next_arch = q.fault ? vector_ref : q.next_pc;
     check(actual.next_pc == next_arch, "wrong committed next PC");
-    /* precise traps commit only trap state, never a jump link. */
+    // precise traps commit only trap state, never a jump link.
     if (q.fault) begin
       check(actual.packet.cause == q.cause && actual.packet.mtval == q.mtval,
             "wrong control-flow trap metadata");
@@ -486,7 +486,7 @@ module cpu5_control_flow_tb #(
       cause_ref = q.cause;
       tval_ref = q.mtval;
       traps++;
-      /* this end-to-end fault belongs to the target token after the jump retired. */
+      // this end-to-end fault belongs to the target token after the jump retired.
       if (integration && p.pc == 'h3000) begin
         check(q.cause == 1 && q.mtval == 'h3000 && regs_ref[1] == 'h1004,
               "target fetch fault erased or misattributed the successful jump");
@@ -495,15 +495,15 @@ module cpu5_control_flow_tb #(
         target_faults++;
       end
     end
-    /* normal W retirement is the only permitted architectural GPR write. */
+    // normal W retirement is the only permitted architectural GPR write.
     else begin
       retirements++;
-      /* write suppression is checked against independently decoded intent. */
+      // write suppression is checked against independently decoded intent.
       if (q.writes) begin
         regs_ref[q.rd] = q.result;
         defined_ref[q.rd] = 1;
       end
-      /* the fixture's only CSR update configures its real trap target. */
+      // the fixture's only CSR update configures its real trap target.
       if (p.op == OP_CSR && p.csr_write) vector_ref = p.csr_source & 32'hfffffffc;
     end
     arch_pc = next_arch;
@@ -511,7 +511,7 @@ module cpu5_control_flow_tb #(
     next_order++;
   endtask
 
-  /* sample inputs once, then apply the independent architectural model at W. */
+  // sample inputs once, then apply the independent architectural model at W.
   task automatic tick();
     logic [4:0] before_valid, expected_kill, barriers;
     token_t before_token [0:4];
@@ -528,13 +528,13 @@ module cpu5_control_flow_tb #(
     trace_t observed_trace;
     clk_i = 0;
     hold_i = 0;
-    /* independent bounded stalls test that X computes and W redirects once. */
+    // independent bounded stalls test that X computes and W redirects once.
     if (stage_valid_o[2] && stage_token_o[2].p.pc == hold_x_pc && hold_x_remaining > 0) begin
       hold_i[2] = 1;
       hold_x_remaining--;
       held_x++;
     end
-    /* a held W jump may neither write its link nor publish its redirect. */
+    // a held W jump may neither write its link nor publish its redirect.
     if (stage_valid_o[4] && stage_token_o[4].p.pc == hold_w_pc && hold_w_remaining > 0) begin
       hold_i[4] = 1;
       hold_w_remaining--;
@@ -546,7 +546,7 @@ module cpu5_control_flow_tb #(
     d_rsp_rdata_i = memory_status == 0 ? memory_value : 0;
     d_rsp_status_i = memory_status;
     #2;
-    /* sample combinational readiness before its handshake changes ownership. */
+    // sample combinational readiness before its handshake changes ownership.
     check(flush_ready_o == (!cold_reset_i && !hart_reset_i && !reset_recovery),
           "idle external flush interface became unavailable");
     before_valid = stage_valid_o;
@@ -554,18 +554,18 @@ module cpu5_control_flow_tb #(
     before_transfer = transfer_o;
     owner_before = owner;
     barriers = 0;
-    /* serialization derives from accepted stimulus rather than the DUT preparation bit. */
+    // serialization derives from accepted stimulus rather than the DUT preparation bit.
     for (int stage = 0; stage < 5; stage++) begin
       barriers[stage] = before_valid[stage] && original[int'(before_token[stage].uid)].op inside {OP_CSR, OP_MRET};
-      /* a serial operation excludes younger transfers and all new packet admission. */
+      // a serial operation excludes younger transfers and all new packet admission.
       if (barriers[stage]) begin
         check(!in_ready_o, "serial operation admitted younger control input");
-        /* the barrier remains active through its disposition edge. */
+        // the barrier remains active through its disposition edge.
         for (int younger = 0; younger < stage && younger < 4; younger++)
           check(!before_transfer[younger], "control transfer crossed serial barrier");
       end
     end
-    /* this overlap bin proves the younger independent jump really occupied X during a load wait. */
+    // this overlap bin proves the younger independent jump really occupied X during a load wait.
     if (before_valid[2] && before_valid[3] && before_token[2].p.op == OP_CONTROL &&
         before_token[3].p.op == OP_LOAD && owner) x_behind_load++;
     input_accept = in_valid_i && in_ready_o;
@@ -574,7 +574,7 @@ module cpu5_control_flow_tb #(
     response_accept = d_rsp_valid_i && d_rsp_ready_o;
     launch_before = mem_launch_o;
     w = '0;
-    /* independent current architectural state predicts the oldest possible terminal. */
+    // independent current architectural state predicts the oldest possible terminal.
     if (before_valid[4]) w = predict(original[int'(before_token[4].uid)], 9'(before_token[4].uid));
     w_done = before_valid[4] && !hold_i[4] && !cold_reset_i && !hart_reset_i &&
         (!barriers[4] || (prepared[int'(before_token[4].uid)] && !owner_before));
@@ -582,55 +582,55 @@ module cpu5_control_flow_tb #(
         (original[int'(before_token[4].uid)].op == OP_CONTROL && w.taken));
     expected_kill = (cold_reset_i || hart_reset_i) ? before_valid :
                     (expected_redirect ? before_valid & 5'b01111 : 0);
-    /* decode dependency intent from original input, never from normalized DUT fields. */
+    // decode dependency intent from original input, never from normalized DUT fields.
     hazard = 0;
     matching_writers = 0;
     d = '0;
-    /* only real control packets consume the decoded register dependency path. */
+    // only real control packets consume the decoded register dependency path.
     if (before_valid[1] && original[int'(before_token[1].uid)].op == OP_CONTROL) begin
       d = predict(original[int'(before_token[1].uid)], 9'(before_token[1].uid));
-      /* malformed and already-faulting controls do not consume ordinary operands. */
+      // malformed and already-faulting controls do not consume ordinary operands.
       if (d.legal && !original[int'(before_token[1].uid)].fault) begin
-        /* X/M producers interlock, while a matching successful W write can bypass. */
+        // X/M producers interlock, while a matching successful W write can bypass.
         for (int stage = 2; stage < 5; stage++) begin
           rd = destination(original[int'(before_token[stage].uid)]);
-          /* zero destinations never create dependencies. */
+          // zero destinations never create dependencies.
           if (before_valid[stage] && rd != 0 &&
               ((d.use1 && d.rs1 == rd) || (d.use2 && d.rs2 == rd))) begin
             matching_writers++;
-            /* a nearer producer dominates an older retiring value. */
+            // a nearer producer dominates an older retiring value.
             if (stage != 4 || !(w_done && !w.fault && w.writes)) hazard = 1;
           end
         end
       end
     end
-    /* dependency checks deliberately ignore results and operands until the capture edge. */
+    // dependency checks deliberately ignore results and operands until the capture edge.
     unused_dependency_prediction = {d.writes, d.taken, d.fault, d.rd, d.kind, d.cond,
         d.a, d.b, d.immediate, d.result, d.next_pc, d.cause, d.mtval};
-    /* a hazard must inhibit the actual D-to-X transfer even if an old value exists. */
+    // a hazard must inhibit the actual D-to-X transfer even if an old value exists.
     if (hazard && !expected_kill[1] && !cold_reset_i && !hart_reset_i) begin
       check(!before_transfer[1], "control bypassed an unresolved older writer");
       hazard_stalls++;
-      /* this bin covers a nearer producer hiding a farther matching producer. */
+      // this bin covers a nearer producer hiding a farther matching producer.
       if (matching_writers > 1) nearest_stalls++;
     end
-    /* count actual same-edge retirement bypass opportunities that were exercised. */
+    // count actual same-edge retirement bypass opportunities that were exercised.
     if (before_transfer[1] && before_valid[1] && w_done && !w.fault && w.writes &&
         ((d.use1 && d.rs1 == w.rd) || (d.use2 && d.rs2 == w.rd))) bypasses++;
-    /* every offered data request must preserve its independent owner and descriptor. */
+    // every offered data request must preserve its independent owner and descriptor.
     if (owner && !accepted && !cold_reset_i) begin
       check(d_req_valid_o && d_req_addr_o == owner_addr && d_req_tag_o == owner_tag &&
             !d_req_write_o && d_req_size_o == 2 && d_req_wstrb_o == 0,
             "owned load request changed or disappeared");
     end
     check(!d_req_valid_o || d_req_addr_o != 'h40000000, "wrong-path MMIO offer escaped control flow");
-    /* acceptance and response belong to the original load, not to any branch result. */
+    // acceptance and response belong to the original load, not to any branch result.
     if (request_accept) begin
       check(owner && !accepted, "duplicate data acceptance");
       accepted = 1;
       accepted_cycle = cycles;
     end
-    /* an independent response plan supplies a load value or precise access fault. */
+    // an independent response plan supplies a load value or precise access fault.
     if (response_accept) begin
       check(owner && accepted && d_rsp_tag_i == owner_tag, "ownerless data completion");
       load_completed[owner_uid] = 1;
@@ -640,7 +640,7 @@ module cpu5_control_flow_tb #(
       accepted = 0;
       completions++;
     end
-    /* one earlier unheld W edge prepares each serialized instruction. */
+    // one earlier unheld W edge prepares each serialized instruction.
     if (before_valid[4] && barriers[4] && !prepared[int'(before_token[4].uid)] &&
         !hold_i[4] && !expected_kill[4] && !cold_reset_i && !hart_reset_i && !owner_before)
       prepared[int'(before_token[4].uid)] = 1;
@@ -651,9 +651,9 @@ module cpu5_control_flow_tb #(
     check(kill_valid_o == expected_kill, "unjustified or missing control-flow squash");
     check(trace_o.valid == w_done, "W eligibility and terminal count disagreed");
     check(redirect_valid_o == expected_redirect, "missing or repeated control-flow redirect");
-    /* consume only independently justified kill identities. */
+    // consume only independently justified kill identities.
     for (int stage = 0; stage < 5; stage++) begin
-      /* a killed token must be exactly the pre-edge owner of that stage. */
+      // a killed token must be exactly the pre-edge owner of that stage.
       if (kill_valid_o[stage]) begin
         id = int'(kill_uid_o[stage]);
         check(before_valid[stage] && before_token[stage].uid == kill_uid_o[stage] && live[id],
@@ -662,7 +662,7 @@ module cpu5_control_flow_tb #(
         kills++;
       end
     end
-    /* architectural reset clears definedness, never promises values for nonzero GPRs. */
+    // architectural reset clears definedness, never promises values for nonzero GPRs.
     if (cold_reset_i || hart_reset_i) begin
       next_uid = 0;
       next_order = 0;
@@ -671,24 +671,24 @@ module cpu5_control_flow_tb #(
       cause_ref = 0;
       tval_ref = 0;
       last_tag = 0;
-      /* x0 alone has an architecturally defined reset value. */
+      // x0 alone has an architecturally defined reset value.
       for (int reg_index = 0; reg_index < 32; reg_index++) begin
         defined_ref[reg_index] = reg_index == 0;
         regs_ref[reg_index] = 0;
       end
     end
-    /* terminal prediction updates the independent bank before checking any new X token. */
+    // terminal prediction updates the independent bank before checking any new X token.
     else begin
-      /* only a current W record can consume the next expected architectural instruction. */
+      // only a current W record can consume the next expected architectural instruction.
       if (trace_o.valid) begin
         observed_trace = trace_o;
-        /* a corrupted jump link must be caught independently of final register inspection. */
+        // a corrupted jump link must be caught independently of final register inspection.
         if ($test$plusargs("mutate_link") && !mutation_applied &&
             original[int'(trace_o.uid)].op == OP_CONTROL && trace_o.rd_write) begin
           observed_trace.value ^= 1;
           mutation_applied = 1;
         end
-        /* an operand observation corruption must fail the independently sourced bank check. */
+        // an operand observation corruption must fail the independently sourced bank check.
         if ($test$plusargs("mutate_source") && !mutation_applied &&
             original[int'(trace_o.uid)].op == OP_CONTROL && trace_o.packet.rs1_used &&
             !trace_o.trap) begin
@@ -697,10 +697,10 @@ module cpu5_control_flow_tb #(
         end
         terminal(observed_trace, w);
       end
-      /* redirect addresses are checked before the producer follows the actual hardware signal. */
+      // redirect addresses are checked before the producer follows the actual hardware signal.
       if (redirect_valid_o) begin
         observed_redirect = redirect_pc_o;
-        /* detector qualification corrupts only the observed redirect, never reference state. */
+        // detector qualification corrupts only the observed redirect, never reference state.
         if ($test$plusargs("mutate_target") && !mutation_applied) begin
           observed_redirect ^= 4;
           mutation_applied = 1;
@@ -709,7 +709,7 @@ module cpu5_control_flow_tb #(
         feed_pc = redirect_pc_o;
         redirects++;
       end
-      /* accepted inputs receive monotonic independent identities before internal mutation. */
+      // accepted inputs receive monotonic independent identities before internal mutation.
       if (input_accept) begin
         check(next_uid < CAPACITY, "accepted-input ledger exhausted");
         original[next_uid] = accepted_packet;
@@ -719,16 +719,16 @@ module cpu5_control_flow_tb #(
         load_values[next_uid] = 0;
         load_failed[next_uid] = 0;
         next_uid++;
-        /* input acceptance advances only the speculative producer, not architectural PC. */
+        // input acceptance advances only the speculative producer, not architectural PC.
         if (!integration) feed_pc = accepted_packet.pc + {29'b0, accepted_packet.length};
       end
     end
-    /* first valid is an irrevocable request and must name the oldest surviving load. */
+    // first valid is an irrevocable request and must name the oldest surviving load.
     if (!owner && d_req_valid_o) begin
       id = int'(before_token[3].uid);
       check(launch_before && before_valid[3] && live[id] && original[id].op == OP_LOAD &&
             !expected_redirect, "unpermitted data-side-effect grant");
-      /* no older unresolved control instruction may be bypassed by a memory launch. */
+      // no older unresolved control instruction may be bypassed by a memory launch.
       for (int older = 0; older < int'(id); older++) begin
         check(!live[older], "memory launched before an older control instruction retired");
       end
@@ -745,29 +745,29 @@ module cpu5_control_flow_tb #(
     end
     check(mem_busy_o == owner && d_req_valid_o == (owner && !accepted),
           "load owner vanished or replayed its request");
-    /* every accepted identity has exactly one live physical slot or a disposition. */
+    // every accepted identity has exactly one live physical slot or a disposition.
     for (int ledger = 0; ledger < CAPACITY; ledger++) begin
       count = 0;
-      /* exact multiplicity prevents a duplicate from hiding another lost instruction. */
+      // exact multiplicity prevents a duplicate from hiding another lost instruction.
       for (int stage = 0; stage < 5; stage++) begin
         count += int'(stage_valid_o[stage] && stage_token_o[stage].uid == 64'(ledger));
       end
       check(count == int'(live[ledger]), "control instruction identity lost or duplicated");
     end
-    /* every live preparation bit must have its independently recorded earlier edge. */
+    // every live preparation bit must have its independently recorded earlier edge.
     for (int stage = 0; stage < 5; stage++) begin
       if (stage_valid_o[stage]) check(stage_token_o[stage].serial_ready == prepared[int'(stage_token_o[stage].uid)],
           "control serial preparation disagreed with independent ledger");
     end
-    /* every advertised transfer must install precisely its previous stage owner. */
+    // every advertised transfer must install precisely its previous stage owner.
     for (int stage = 0; stage < 4; stage++) begin
-      /* reset and redirect suppress all younger transfers rather than relabeling them. */
+      // reset and redirect suppress all younger transfers rather than relabeling them.
       if (before_transfer[stage]) check(before_valid[stage] && stage_valid_o[stage+1] &&
           stage_token_o[stage+1].uid == before_token[stage].uid,
           "pipeline transfer witness did not preserve its owner");
     end
     x = '0;
-    /* inspect newly captured X operands after independent W retirement and bypass. */
+    // inspect newly captured X operands after independent W retirement and bypass.
     if (before_transfer[1] && stage_valid_o[2] && stage_token_o[2].p.op == OP_CONTROL) begin
       id = int'(stage_token_o[2].uid);
       x = predict(original[id], 9'(id));
@@ -781,31 +781,31 @@ module cpu5_control_flow_tb #(
             stage_token_o[2].cf_cond == x.cond && stage_token_o[2].cf_imm == x.immediate &&
             !stage_token_o[2].cf_taken, "D-to-X control metadata mismatch");
     end
-    /* X entry has not executed, so its final result and target are checked at W. */
+    // X entry has not executed, so its final result and target are checked at W.
     unused_capture_prediction = {x.writes, x.taken, x.fault, x.rd,
         x.result, x.next_pc, x.cause, x.mtval};
-    /* a held X token must not recompute from a later register-bank value. */
+    // a held X token must not recompute from a later register-bank value.
     if (hold_i[2] && before_valid[2] && !expected_kill[2]) begin
       check(stage_valid_o[2] && stage_token_o[2] == before_token[2], "held X control token changed");
     end
-    /* a held W token cannot publish a second link, redirect or modified packet. */
+    // a held W token cannot publish a second link, redirect or modified packet.
     if (hold_i[4] && before_valid[4] && !expected_kill[4]) begin
       check(stage_valid_o[4] && stage_token_o[4] == before_token[4], "held W control token changed");
     end
-    /* each X-to-M control movement corresponds to one actual execution opportunity. */
+    // each X-to-M control movement corresponds to one actual execution opportunity.
     if (before_transfer[2] && before_token[2].p.op == OP_CONTROL) branch_transfers++;
     check(mstatus_o == 'h1800 && mtvec_o == vector_ref && mscratch_o == 0 &&
           mepc_o == epc_ref && mcause_o == cause_ref && mtval_o == tval_ref,
           "architectural trap state diverged");
-    /* every register is observed so hidden early link writes cannot escape the trace check. */
+    // every register is observed so hidden early link writes cannot escape the trace check.
     for (int reg_index = 0; reg_index < 32; reg_index++) begin
       inspect_reg_i = 5'(reg_index);
       #1;
       check(inspect_defined_o == defined_ref[reg_index], "GPR definedness changed before expected W commit");
-      /* unspecified reset contents are never treated as architectural zero. */
+      // unspecified reset contents are never treated as architectural zero.
       if (defined_ref[reg_index]) check(inspect_value_o == regs_ref[reg_index], "architectural GPR value mismatch");
     end
-    /* fetch protocol observations are checked without making them the retirement oracle. */
+    // fetch protocol observations are checked without making them the retirement oracle.
     if (integration) begin
       check(!f_fatal && f_fatal_reason == 0, "fetch integration contained unexpectedly");
       check(f_accept == (f_req_valid && f_req_ready) && (!f_complete || f_rsp_valid),
@@ -813,7 +813,7 @@ module cpu5_control_flow_tb #(
       check(!f_drop || f_complete, "fetch discard lacked a matching reply");
       check(!f_discard || f_busy || !f_req_valid, "fetch discarded a newly offered live stream");
       check(!f_launch || feeding, "fetch launched after integration stopped");
-      /* any delivered generation must be the currently selected fetch stream. */
+      // any delivered generation must be the currently selected fetch stream.
       if (f_valid) begin
         check(f_generation == f_generation_current, "stale fetch generation reached adapter");
         check(f_fault || (f_kind == 2 && f_supported && f_bytes == 4),
@@ -822,12 +822,12 @@ module cpu5_control_flow_tb #(
       instruction_reads += int'(f_accept);
     end
     check(!owner || cycles - owner_since < 100, "load response liveness bound expired");
-    /* this fixture resets only with an empty manager, then spends one edge in recovery. */
+    // this fixture resets only with an empty manager, then spends one edge in recovery.
     reset_recovery = cold_reset_i || hart_reset_i;
     clk_i = 0;
   endtask
 
-  /* replace only the test program while retaining cumulative evidence counters. */
+  // replace only the test program while retaining cumulative evidence counters.
   task automatic begin_case(input logic [31:0] pc = 'h100);
     feeding = 0;
     integration = 0;
@@ -840,7 +840,7 @@ module cpu5_control_flow_tb #(
     memory_status = 0;
     memory_value = 0;
     check(!owner, "new case attempted to abandon a data request");
-    /* each case starts with no stale program or accepted token identities. */
+    // each case starts with no stale program or accepted token identities.
     for (int index = 0; index < PROGRAM_PARCELS; index++) program_valid[index] = 0;
     cold_reset_i = 1;
     tick();
@@ -851,18 +851,18 @@ module cpu5_control_flow_tb #(
     cases++;
   endtask
 
-  /* publish immutable program packets before any simulated execution. */
+  // publish immutable program packets before any simulated execution.
   task automatic put(input packet_t p);
     program_packet[program_index(p.pc)] = p;
     program_valid[program_index(p.pc)] = 1;
   endtask
 
-  /* bounded termination checks detect missing instructions even if they write no state. */
+  // bounded termination checks detect missing instructions even if they write no state.
   task automatic run_program();
     integer clocks;
     feeding = 1;
     clocks = 0;
-    /* run until the producer and every surviving pipeline or data owner are empty. */
+    // run until the producer and every surviving pipeline or data owner are empty.
     while ((program_valid[program_index(feed_pc)] || stage_valid_o != 0 || owner) && clocks < 500) begin
       tick();
       clocks++;
@@ -872,7 +872,7 @@ module cpu5_control_flow_tb #(
           !program_valid[program_index(arch_pc)], "bounded architectural program did not complete");
   endtask
 
-  /* every branch condition gets both outcomes and independent signed/unsigned edges. */
+  // every branch condition gets both outcomes and independent signed/unsigned edges.
   initial begin : regression
     packet_t p;
     logic [2:0] condition;
@@ -880,7 +880,7 @@ module cpu5_control_flow_tb #(
     integer clocks;
     int unsigned load_overlap_start;
     integration_jump = encode_jal(1, 'h2000);
-    /* initialization does not define architectural x1 through x31. */
+    // initialization does not define architectural x1 through x31.
     for (int id = 0; id < CAPACITY; id++) begin
       live[id] = 0;
       original[id] = '0;
@@ -888,28 +888,28 @@ module cpu5_control_flow_tb #(
       load_values[id] = 0;
       load_failed[id] = 0;
     end
-    /* establish reset state before the checker reads any pre-edge DUT storage. */
+    // establish reset state before the checker reads any pre-edge DUT storage.
     cold_reset_i = 1;
     #2;
     clk_i = 1;
     #2;
     clk_i = 0;
-    /* map the six legal funct3 values independently of any decoder output. */
+    // map the six legal funct3 values independently of any decoder output.
     for (int choice = 0; choice < 6; choice++) begin
       condition = choice < 2 ? 3'(choice) : 3'(choice + 2);
-      /* each case uses its own independent architectural sequence. */
+      // each case uses its own independent architectural sequence.
       for (int take = 0; take < 2; take++) begin
         begin_case();
         a = 'h80000000;
         b = 'h7fffffff;
-        /* equality conditions receive exact equal and unequal edge values. */
+        // equality conditions receive exact equal and unequal edge values.
         if (condition < 2) b = ((condition == 0) == (take != 0)) ? a : a + 1;
-        /* reverse signed edges to obtain both outcomes without overflow arithmetic. */
+        // reverse signed edges to obtain both outcomes without overflow arithmetic.
         else if ((condition == 4 && take == 0) || (condition == 5 && take != 0)) begin
           a = 'h7fffffff;
           b = 'h80000000;
         end
-        /* unsigned high-bit order deliberately differs from signed interpretation. */
+        // unsigned high-bit order deliberately differs from signed interpretation.
         else if (condition >= 6) begin
           a = ((condition == 6) == (take != 0)) ? 1 : 'hffffffff;
           b = ((condition == 6) == (take != 0)) ? 'hffffffff : 1;
@@ -929,7 +929,7 @@ module cpu5_control_flow_tb #(
         check(regs_ref[3] == (take != 0 ? 'h2222 : 'h1111), "branch fixture did not exercise requested outcome");
       end
     end
-    /* a nearer older writer must hide the farther writer, then bypass at W. */
+    // a nearer older writer must hide the farther writer, then bypass at W.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 0));
     put(packet('h104, OP_RESULT, 1, 1));
@@ -940,7 +940,7 @@ module cpu5_control_flow_tb #(
     put(p);
     put(packet('h110, OP_RESULT, 5, 'h55));
     run_program();
-    /* write-only CSR packets still produce a real zero GPR result for dependent branches. */
+    // write-only CSR packets still produce a real zero GPR result for dependent branches.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 'hffffffff));
     p = packet('h104, OP_CSR, 1);
@@ -956,7 +956,7 @@ module cpu5_control_flow_tb #(
     put(p);
     put(packet('h110, OP_RESULT, 12, 'hcc));
     run_program();
-    /* ordinary CSR reads publish their independently maintained old value before the consumer. */
+    // ordinary CSR reads publish their independently maintained old value before the consumer.
     begin_case();
     p = packet('h100, OP_CSR);
     p.csr_addr = 'h305;
@@ -975,7 +975,7 @@ module cpu5_control_flow_tb #(
     put(p);
     put(packet('h110, OP_RESULT, 13, 'hdd));
     run_program();
-    /* JALR must capture an old source before writing a link to the same register. */
+    // JALR must capture an old source before writing a link to the same register.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 'h111));
     put(control('h104, encode_jalr(1, 1, 0)));
@@ -985,12 +985,12 @@ module cpu5_control_flow_tb #(
     hold_w_remaining = 5;
     run_program();
     check(regs_ref[1] == 'h108, "JALR rd=rs1 used its new link as the target source");
-    /* x0 is a real JALR source and never a writing link destination. */
+    // x0 is a real JALR source and never a writing link destination.
     begin_case();
     put(control('h100, encode_jalr(0, 0, 'h110)));
     put(packet('h110, OP_RESULT, 14, 'hee));
     run_program();
-    /* bit zero is cleared before testing the remaining target alignment bit. */
+    // bit zero is cleared before testing the remaining target alignment bit.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 'h113));
     put(control('h104, encode_jalr(2, 1, 0)));
@@ -998,18 +998,18 @@ module cpu5_control_flow_tb #(
     run_program();
     check(C_ENABLED ? regs_ref[2] == 'h108 : !defined_ref[2],
           "JALR alignment did not follow low-bit clearing");
-    /* alignment checks use the taken target after JALR bit-zero clearing. */
+    // alignment checks use the taken target after JALR bit-zero clearing.
     begin_case();
     put(control('h100, encode_jal(1, 2)));
     put(packet('h102, OP_RESULT, 7, 'h77));
     run_program();
     check(C_ENABLED ? regs_ref[1] == 'h104 : !defined_ref[1], "misaligned jump wrote or lost a link");
-    /* an untaken target with bit one set must not raise an alignment fault. */
+    // an untaken target with bit one set must not raise an alignment fault.
     begin_case();
     put(control('h100, encode_branch(1, 0, 0, 2)));
     put(packet('h104, OP_RESULT, 8, 'h88));
     run_program();
-    /* trusted C.JAL expansion preserves its original two-byte link and raw bits. */
+    // trusted C.JAL expansion preserves its original two-byte link and raw bits.
     begin_case();
     p = control('h100, encode_jal(1, 6));
     p.raw = 'h2019;
@@ -1021,7 +1021,7 @@ module cpu5_control_flow_tb #(
     put(packet('h106, OP_RESULT, 9, 'h99));
     run_program();
     check(C_ENABLED ? regs_ref[1] == 'h102 : !defined_ref[1], "trusted C link did not use original length");
-    /* trusted C.JALR keeps its captured old source while retiring a two-byte link. */
+    // trusted C.JALR keeps its captured old source while retiring a two-byte link.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 'h111));
     p = control('h104, encode_jalr(1, 1, 0));
@@ -1034,7 +1034,7 @@ module cpu5_control_flow_tb #(
     put(packet('h110, OP_RESULT, 9, 'h91));
     run_program();
     check(regs_ref[1] == (C_ENABLED ? 'h106 : 'h111), "trusted C.JALR used wrong source or link length");
-    /* the same branch PC executes twice with a backward displacement and different outcomes. */
+    // the same branch PC executes twice with a backward displacement and different outcomes.
     begin_case();
     put(packet('h100, OP_RESULT, 1, 0));
     put(control('h104, encode_jal(0, 12)));
@@ -1044,27 +1044,27 @@ module cpu5_control_flow_tb #(
     put(packet('h114, OP_RESULT, 15, 'hf1));
     run_program();
     check(regs_ref[1] == 1 && regs_ref[15] == 'hf1, "backward branch loop did not exit independently");
-    /* illegal OP_CONTROL instructions cannot become pre-resolved diagnostic redirects. */
+    // illegal OP_CONTROL instructions cannot become pre-resolved diagnostic redirects.
     begin_case();
     put(control('h100, 'h00000013));
     run_program();
-    /* malformed control metadata is rejected independently of valid-looking instruction bits. */
+    // malformed control metadata is rejected independently of valid-looking instruction bits.
     for (int variant = 0; variant < 8; variant++) begin
       begin_case('h102);
       p = control('h102, encode_jal(1, 8));
-      /* each variant violates one width or control encoding requirement. */
+      // each variant violates one width or control encoding requirement.
       case (variant)
         0: p.length = 0;
         1: p.raw_valid = 7;
         2: p.expanded_valid = 1;
         3: p.raw = encode_branch(2, 0, 0, 8);
-        /* a short original requires an explicit expanded instruction. */
+        // a short original requires an explicit expanded instruction.
         4: begin
           p.length = 2;
           p.raw_valid = 3;
           p.raw = 'h9082;
         end
-        /* short original instructions cannot carry upper raw bytes. */
+        // short original instructions cannot carry upper raw bytes.
         5: begin
           p.length = 2;
           p.raw_valid = 3;
@@ -1072,7 +1072,7 @@ module cpu5_control_flow_tb #(
           p.expanded = encode_jal(1, 8);
           p.raw = 'h10009082;
         end
-        /* a trusted short original must have a compressed-length prefix. */
+        // a trusted short original must have a compressed-length prefix.
         6: begin
           p.length = 2;
           p.raw_valid = 3;
@@ -1080,7 +1080,7 @@ module cpu5_control_flow_tb #(
           p.expanded = encode_jal(1, 8);
           p.raw = 'h9083;
         end
-        /* a supplied fetch fault wins over a valid control encoding. */
+        // a supplied fetch fault wins over a valid control encoding.
         default: begin
           p.fault = 1;
           p.cause = 1;
@@ -1092,7 +1092,7 @@ module cpu5_control_flow_tb #(
       check(!defined_ref[1] && cause_ref == (variant == 7 ? 1 : 2) &&
             epc_ref == (C_ENABLED ? 'h102 : 'h100), "malformed control or incoming fault priority failed");
     end
-    /* a delayed load either supplies the real branch operand or traps first. */
+    // a delayed load either supplies the real branch operand or traps first.
     for (int fail = 0; fail < 2; fail++) begin
       begin_case();
       p = packet('h100, OP_CSR);
@@ -1117,7 +1117,7 @@ module cpu5_control_flow_tb #(
       check(fail != 0 ? (!defined_ref[1] && regs_ref[11] == 'hbb) : regs_ref[10] == 'haa,
             "older delayed load did not control branch disposition");
     end
-    /* an independent jump can occupy X while an older load owns the data interface. */
+    // an independent jump can occupy X while an older load owns the data interface.
     for (int fail = 0; fail < 2; fail++) begin
       begin_case();
       load_overlap_start = x_behind_load;
@@ -1146,12 +1146,12 @@ module cpu5_control_flow_tb #(
             (regs_ref[2] == 'h10c && regs_ref[10] == 'haa),
             "older load fault lost priority over an independent younger jump");
     end
-    /* real fetch must report the denied target after a successful JAL and link commit. */
+    // real fetch must report the denied target after a successful JAL and link commit.
     begin_case('h1000);
     integration = 1;
     feeding = 1;
     clocks = 0;
-    /* the adapter stops only after the independently checked target trap. */
+    // the adapter stops only after the independently checked target trap.
     while ((!integration_fault_seen || stage_valid_o != 0 || f_busy) && clocks < 200) begin
       tick();
       clocks++;

@@ -1,4 +1,4 @@
-/* use Trellis ecppll parameters for 25 MHz input and 80 MHz output. */
+// use Trellis ecppll parameters for 25 MHz input and 80 MHz output.
 module cpu5_rf_pll
 (
     input clk25_i, // 25 MHz, 0 deg
@@ -8,7 +8,7 @@ module cpu5_rf_pll
 (* FREQUENCY_PIN_CLKI="25" *)
 (* FREQUENCY_PIN_CLKOP="80" *)
 (* ICP_CURRENT="12" *) (* LPF_RESISTOR="8" *) (* MFG_ENABLE_FILTEROPAMP="1" *) (* MFG_GMCREF_SEL="2" *)
-/* retain the generated 560 MHz VCO and feedback parameters. */
+// retain the generated 560 MHz VCO and feedback parameters.
 EHXPLLL #(
         .PLLRST_ENA("DISABLED"),
         .INTFB_WAKE("DISABLED"),

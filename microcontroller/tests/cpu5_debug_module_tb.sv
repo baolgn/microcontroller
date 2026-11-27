@@ -1,7 +1,7 @@
-/* check DM effects independently of the CPU and transport. */
+// check DM effects independently of the CPU and transport.
 module cpu5_debug_module_tb;
   logic clk, reset = 1;
-  /* run the independent system clock throughout every stall. */
+  // run the independent system clock throughout every stall.
   initial begin
     clk = 0;
     forever #5 clk = !clk;
@@ -25,7 +25,7 @@ module cpu5_debug_module_tb;
   integer checks = 0, reg_effects, sb_effects, seed = 1;
   logic [31:0] random_q;
 
-  /* bind every handshake to a separately controlled endpoint. */
+  // bind every handshake to a separately controlled endpoint.
   cpu5_debug_module dut (
     .clk_i(clk), .power_reset_i(reset), .hart_reset_i(hart_reset), .system_reset_pending_i(system_pending),
     .hart_unavailable_i(unavailable), .hart_halted_i(halted), .hart_resumeack_i(resumeack),
@@ -41,20 +41,20 @@ module cpu5_debug_module_tb;
     .sb_rsp_ready_o(sb_rsp_ready), .sb_rsp_rdata_i(sb_rdata), .sb_rsp_error_i(sb_error)
   );
 
-  /* count endpoint effects only on the real accepting edge. */
+  // count endpoint effects only on the real accepting edge.
   always @(posedge clk) begin
-    /* start both endpoint effect ledgers from reset. */
+    // start both endpoint effect ledgers from reset.
     if (reset) begin
       reg_effects <= 0;
       sb_effects <= 0;
-    /* count actual handshakes rather than requests or replies. */
+    // count actual handshakes rather than requests or replies.
     end else begin
       if (reg_valid && reg_ready && reg_error == 0) reg_effects <= reg_effects + 1;
       if (sb_valid && sb_ready) sb_effects <= sb_effects + 1;
     end
   end
 
-  /* deterministic xorshift varies independent service delays. */
+  // deterministic xorshift varies independent service delays.
   function automatic integer delay_count();
     random_q ^= random_q << 13;
     random_q ^= random_q >> 17;
@@ -62,13 +62,13 @@ module cpu5_debug_module_tb;
     return 1 + int'(random_q % 7);
   endfunction
 
-  /* ordinary detectors remain enabled in deliberate mutation runs. */
+  // ordinary detectors remain enabled in deliberate mutation runs.
   task automatic check(input logic condition, input string message);
     checks++;
     assert (condition) else $fatal(1, "DM_CHECK %s", message);
   endtask
 
-  /* hold a DMI response to prove it cannot execute the request again. */
+  // hold a DMI response to prove it cannot execute the request again.
   task automatic access(input logic [1:0] op, input logic [6:0] addr,
       input logic [31:0] data, output logic [31:0] result);
     @(negedge clk);
@@ -77,7 +77,7 @@ module cpu5_debug_module_tb;
     check(rsp_valid && rsp_op == (op == 3 ? 2'd2 : 2'd0), "DMI response");
     result = rsp_data;
     @(negedge clk); req_valid = 0;
-    /* vary response backpressure without accepting a second request. */
+    // vary response backpressure without accepting a second request.
     repeat (delay_count()) begin
       @(posedge clk); #1;
       check(rsp_valid && !req_ready && rsp_data == result, "held DMI response");
@@ -87,11 +87,11 @@ module cpu5_debug_module_tb;
     @(negedge clk); rsp_ready = 0;
   endtask
 
-  /* complete exactly one exposed SBA descriptor after separate acceptance/response stalls. */
+  // complete exactly one exposed SBA descriptor after separate acceptance/response stalls.
   task automatic complete_bus(input logic write_expected, input logic [31:0] address_expected,
       input logic [1:0] size_expected, input logic [31:0] data_expected,
       input logic [3:0] strobes_expected, input logic [31:0] read_data, input logic [2:0] error);
-    /* vary acceptance delay while checking every descriptor field. */
+    // vary acceptance delay while checking every descriptor field.
     repeat (delay_count()) begin
       @(posedge clk); #1;
       check(sb_valid && sb_write == write_expected && sb_addr == address_expected &&
@@ -102,7 +102,7 @@ module cpu5_debug_module_tb;
     @(posedge clk); #1;
     check(!sb_valid && sb_rsp_ready, "SBA ownership transfer");
     @(negedge clk); sb_ready = 0;
-    /* vary response delay independently from acceptance. */
+    // vary response delay independently from acceptance.
     repeat (delay_count()) begin
       @(posedge clk); #1;
       check(sb_rsp_ready && !sb_valid, "held SBA response owner");
@@ -113,7 +113,7 @@ module cpu5_debug_module_tb;
     @(negedge clk); sb_rsp_valid = 0; sb_error = 0;
   endtask
 
-  /* directed collisions cover sticky errors, unsupported options and reset revocation. */
+  // directed collisions cover sticky errors, unsupported options and reset revocation.
   initial begin
     if ($value$plusargs("seed=%d", seed)) begin end
     random_q = seed == 0 ? 32'h6d2b79f5 : 32'(seed);
@@ -125,9 +125,9 @@ module cpu5_debug_module_tb;
     access(2, 7'h10, 32'h03ffffc1, value);
     access(1, 7'h10, 0, value); check(value == 1, "HARTSELLEN zero");
     access(1, 7'h38, 0, value); check(value == 32'h20040407, "SBA reset capabilities");
-    /* absent addresses stay inert even when written with all ones. */
+    // absent addresses stay inert even when written with all ones.
     for (int address = 0; address < 128; address++) begin
-      /* probe every unimplemented seven-bit DMI address. */
+      // probe every unimplemented seven-bit DMI address.
       if (!(address inside {4, 16, 17, 22, 23, 56, 57, 60})) begin
         access(2, 7'(address), 32'hffffffff, value);
         access(1, 7'(address), 0, value);
@@ -138,7 +138,7 @@ module cpu5_debug_module_tb;
     access(1, 7'h10, 0, value); check(value == 1, "reserved DMI op has no effect");
     access(2, 7'h10, 32'h80000001, value); check(haltreq, "halt request");
     access(2, 7'h10, 32'h40000001, value); check(resumereq && !haltreq, "resume request");
-    /* a new halt defeats an already-selected but uncommitted resume. */
+    // a new halt defeats an already-selected but uncommitted resume.
     @(negedge clk); req_valid = 1; req_addr = 7'h10; req_op = 2; req_data = 32'h80000001;
     #1; check(haltreq && !resumereq, "same-edge halt priority");
     @(posedge clk); #1;
@@ -159,12 +159,12 @@ module cpu5_debug_module_tb;
     @(negedge clk); hart_reset = 0;
     access(2, 7'h10, 32'h10000001, value);
     access(1, 7'h11, 0, value); check(value[19:18] == 0, "acknowledge reset");
-    /* a requested reset is unavailable before the hart has actually reset. */
+    // a requested reset is unavailable before the hart has actually reset.
     system_pending = 1;
     access(1, 7'h11, 0, value);
     check(value[24] && value[13:12] == 3 && value[19:18] == 0, "pending reset does not invent havereset");
     system_pending = 0;
-    /* all six unsupported command controls are rejected before register side effects. */
+    // all six unsupported command controls are rejected before register side effects.
     for (int variant = 0; variant < 6; variant++) begin
       access(2, 7'h17, variant == 0 ? 32'h01221001 : variant == 1 ? 32'h00821001 :
           variant == 2 ? 32'h002a1001 : variant == 3 ? 32'h00261001 :
@@ -201,9 +201,9 @@ module cpu5_debug_module_tb;
     @(negedge clk); reg_ready = 0; reg_error = 0;
     access(1, 7'h16, 0, value); check(value[10:8] == 3, "absent register error");
     access(2, 7'h16, 32'h00000700, value);
-    /* every lane and width has separate request and response stalls. */
+    // every lane and width has separate request and response stalls.
     for (int width = 0; width < 3; width++) begin
-      /* enumerate each naturally aligned byte lane. */
+      // enumerate each naturally aligned byte lane.
       for (int lane = 0; lane < 4; lane += 1 << width) begin
         access(2, 7'h38, 32'(width << 17), value);
         access(2, 7'h39, 32'h1000 + 32'(lane), value);
@@ -221,7 +221,7 @@ module cpu5_debug_module_tb;
         check(value == 32'h1000 + 32'(lane) + (32'd1 << width), "successful autoincrement");
       end
     end
-    /* read-on-data returns the completed value before issuing the next read. */
+    // read-on-data returns the completed value before issuing the next read.
     access(2, 7'h38, 32'h00158000, value);
     access(2, 7'h39, 32'h3000, value);
     complete_bus(0, 32'h3000, 2, 32'h3000, 0, 32'h11223344, 0);
@@ -230,7 +230,7 @@ module cpu5_debug_module_tb;
     complete_bus(0, 32'h3004, 2, 0, 0, 32'h55667788, 0);
     access(2, 7'h38, 32'h00040000, value);
     access(1, 7'h3c, 0, value); check(value == 32'h55667788 && !sb_valid, "read-on-data final result");
-    /* size errors precede alignment and unavailable state without bus exposure. */
+    // size errors precede alignment and unavailable state without bus exposure.
     access(2, 7'h38, 32'h00160000, value);
     access(2, 7'h39, 3, value);
     access(1, 7'h38, 0, value); check(value[14:12] == 4 && !sb_valid, "unsupported SBA size");
@@ -251,14 +251,14 @@ module cpu5_debug_module_tb;
     access(1, 7'h39, 0, value); check(value == 32'h1000, "failed access does not increment");
     access(2, 7'h38, 32'h00547000, value);
     access(2, 7'h39, 32'h1000, value);
-    /* DM reset drains the offered access and discards its late result. */
+    // DM reset drains the offered access and discards its late result.
     access(2, 7'h10, 0, value);
     access(1, 7'h10, 0, value); check(value[0], "deactivation waits for exposed SBA");
     complete_bus(0, 32'h1000, 2, 32'h1000, 0, 32'hffffffff, 0);
     access(1, 7'h10, 0, value); check(value == 0, "drained deactivation");
     access(2, 7'h10, 1, value);
     access(1, 7'h3c, 0, value); check(value == 0, "old SBA response cannot refill reset DM");
-    /* a same-edge deactivation revokes an abstract transfer before it commits. */
+    // a same-edge deactivation revokes an abstract transfer before it commits.
     access(2, 7'h17, 32'h00231003, value);
     @(negedge clk); req_valid = 1; req_addr = 7'h10; req_op = 2; req_data = 0; reg_ready = 1;
     #1; check(!reg_valid, "same-edge abstract revocation");

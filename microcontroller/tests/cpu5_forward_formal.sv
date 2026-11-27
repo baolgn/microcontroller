@@ -1,4 +1,4 @@
-/* prove every source and producer identity, eligibility, readiness and value combination. */
+// prove every source and producer identity, eligibility, readiness and value combination.
 module cpu5_forward_formal #(
   parameter FORWARDING = 1,
   parameter MUTATE_HAZARD = 0
@@ -18,10 +18,10 @@ module cpu5_forward_formal #(
   wire [1:0] select1, select2;
   wire expected_hazard;
 
-  /* keep the implementation separate from the reference's one-hot priority equations. */
+  // keep the implementation separate from the reference's one-hot priority equations.
   cpu5_forward #(.FORWARDING(FORWARDING)) dut (.*);
 
-  /* each raw match is independent of readiness and therefore blocks older matches. */
+  // each raw match is independent of readiness and therefore blocks older matches.
   assign eligible = producer_valid_i & producer_write_i;
   assign available = producer_ready_i & (FORWARDING ? 3'b111 : 3'b100);
   assign matches1 = {3{rs1_used_i && rs1_i != 0}} & eligible &
@@ -35,7 +35,7 @@ module cpu5_forward_formal #(
   assign select1 = {1'b0, winner1[0]} + {winner1[1], 1'b0} + {2{winner1[2]}};
   assign select2 = {1'b0, winner2[0]} + {winner2[1], 1'b0} + {2{winner2[2]}};
 
-  /* mutually exclusive masked values replace the implementation's procedural search. */
+  // mutually exclusive masked values replace the implementation's procedural search.
   assign value1 = ({32{rs1_used_i && rs1_i != 0 && matches1 == 0}} & rs1_rf_value_i) |
                   ({32{winner1[0] && available[0]}} & producer_value_i[31:0]) |
                   ({32{winner1[1] && available[1]}} & producer_value_i[63:32]) |
@@ -46,7 +46,7 @@ module cpu5_forward_formal #(
                   ({32{winner2[2] && available[2]}} & producer_value_i[95:64]);
   assign expected_hazard = |((winner1 | winner2) & ~available);
 
-  /* constrain every output without assumptions on external metadata or data values. */
+  // constrain every output without assumptions on external metadata or data values.
   always @* begin
     assert(rs1_value_o == value1);
     assert(rs2_value_o == value2);

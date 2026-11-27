@@ -1,4 +1,4 @@
-/* compare accepted commands and retained interrupt sources with an independent model. */
+// compare accepted commands and retained interrupt sources with an independent model.
 module cpu5_irq_platform_tb;
   logic clk_i = 0, system_reset_i = 0, command_i = 0, write_i = 0;
   logic [31:0] addr_i = 0, wdata_i = 0;
@@ -11,7 +11,7 @@ module cpu5_irq_platform_tb;
   logic [63:0] mtime_o [0:2], mtimecmp_o [0:2];
   logic [31:0] ext_pending_o [0:2], ext_enable_o [0:2], notification_count_o [0:2];
 
-  /* minimum, small and intended capacities share the same independent command stream. */
+  // minimum, small and intended capacities share the same independent command stream.
   for (genvar profile = 0; profile < 3; profile++) begin : platforms
     cpu5_irq_platform #(.NOTIFICATION_CAPACITY(profile == 0 ? 1 : profile == 1 ? 4 : 64)) dut (
       .clk_i, .system_reset_i, .command_i, .write_i, .addr_i, .wdata_i, .size_i, .wstrb_i,
@@ -23,7 +23,7 @@ module cpu5_irq_platform_tb;
     );
   end
 
-  /* reference state never consumes a DUT value as its expected next state. */
+  // reference state never consumes a DUT value as its expected next state.
   typedef struct packed {
     logic [63:0] time_value, comparison;
     logic [31:1] events;
@@ -38,56 +38,56 @@ module cpu5_irq_platform_tb;
   int unsigned address_bins = 0, direction_bins = 0, width_bins = 0;
   bit mutation_applied = 0;
 
-  /* retain the full command and source vector on every failure. */
+  // retain the full command and source vector on every failure.
   function automatic void check(input bit condition, input string reason, input int profile);
     checks++;
-    /* an intended corruption must fail the ordinary comparator. */
+    // an intended corruption must fail the ordinary comparator.
     if (!condition) $fatal(1, "edge=%0d profile=%0d seed=%0d reset=%b command=%b write=%b addr=%08x data=%08x size=%0d strobe=%x events=%08x notification=%b: %s",
         edges, profile, seed, system_reset_i, command_i, write_i, addr_i, wdata_i,
         size_i, wstrb_i, event_set_i, notification_i, reason);
   endfunction
 
-  /* capacities are separately declared test expectations. */
+  // capacities are separately declared test expectations.
   function automatic int unsigned capacity(input int profile);
     return profile == 0 ? 1 : profile == 1 ? 4 : 64;
   endfunction
 
-  /* arithmetic range decoding is independent of the RTL address case statement. */
+  // arithmetic range decoding is independent of the RTL address case statement.
   function automatic int register_index();
-    /* all ten aligned words are present, and no aliases outside this interval exist. */
+    // all ten aligned words are present, and no aliases outside this interval exist.
     if (addr_i < 32'h40001000 || addr_i > 32'h40001024 || addr_i[1:0] != 0) return -1;
     return int'((addr_i - 32'h40001000) / 4);
   endfunction
 
-  /* empty acknowledgements reject against pre-edge queue state. */
+  // empty acknowledgements reject against pre-edge queue state.
   function automatic bit rejected(input int profile, input int index);
-    /* reject an invalid reference index before accessing the model. */
+    // reject an invalid reference index before accessing the model.
     if (profile < 0 || profile >= 3) $fatal(1, "invalid reference profile");
-    /* an inactive port neither performs an access nor publishes an error. */
+    // an inactive port neither performs an access nor publishes an error.
     if (!command_i) return 0;
-    /* target reset cannot acknowledge a discarded write as successful. */
+    // target reset cannot acknowledge a discarded write as successful.
     if (system_reset_i) return 1;
-    /* width, byte enables, complete address and direction are independent requirements. */
+    // width, byte enables, complete address and direction are independent requirements.
     if (index < 0 || size_i != 2 || wstrb_i != (write_i ? 15 : 0)) return 1;
-    /* count and overflow are read-only, while acknowledgement is write-only. */
+    // count and overflow are read-only, while acknowledgement is write-only.
     if ((index == 7 || index == 9) && write_i) return 1;
-    /* an arriving event cannot retroactively authorize a decrement of an empty queue. */
+    // an arriving event cannot retroactively authorize a decrement of an empty queue.
     if (index == 8 && (!write_i || (wdata_i[0] && model[profile].count == 0))) return 1;
     return 0;
   endfunction
 
-  /* reconstruct external pending independently from the retained state. */
+  // reconstruct external pending independently from the retained state.
   function automatic logic [31:0] pending(input int profile);
-    /* every stored reference profile has an explicit valid index. */
+    // every stored reference profile has an explicit valid index.
     if (profile < 0 || profile >= 3) $fatal(1, "invalid reference profile");
     return {model[profile].events, model[profile].count != 0};
   endfunction
 
-  /* reads expose pre-edge state without a snapshot or acknowledgement. */
+  // reads expose pre-edge state without a snapshot or acknowledgement.
   function automatic logic [31:0] read_value(input int profile, input int index);
-    /* unsupported or suppressed reads have canonical zero data. */
+    // unsupported or suppressed reads have canonical zero data.
     if (!command_i || write_i || rejected(profile, index)) return 0;
-    /* the model uses numbered register slots rather than copied RTL addresses. */
+    // the model uses numbered register slots rather than copied RTL addresses.
     case (index)
       0: return 32'(model[profile].time_value);
       1: return 32'(model[profile].time_value >> 32);
@@ -102,7 +102,7 @@ module cpu5_irq_platform_tb;
     endcase
   endfunction
 
-  /* advance only from command intent, pre-edge reference state and scheduled events. */
+  // advance only from command intent, pre-edge reference state and scheduled events.
   task automatic update_model(input int profile, input int index);
     logic [63:0] old_time;
     logic [31:0] old_count;
@@ -115,30 +115,30 @@ module cpu5_irq_platform_tb;
     effect = command_i && write_i && !rejected(profile, index);
     pop = effect && index == 8 && wdata_i[0];
     clear_mask = effect && index == 5 ? wdata_i[31:1] : 0;
-    /* only the platform system-reset edge starts a new timer and event epoch. */
+    // only the platform system-reset edge starts a new timer and event epoch.
     if (system_reset_i) begin
       model[profile] = '0;
       model[profile].comparison = '1;
     end
-    /* normal ticking and event retention continue independently of CPU activity. */
+    // normal ticking and event retention continue independently of CPU activity.
     else begin
       model[profile].time_value = old_time + 1;
       model[profile].events = (old_events & ~clear_mask) | event_set_i;
-      /* consume one pre-edge notification before admitting a simultaneous arrival. */
+      // consume one pre-edge notification before admitting a simultaneous arrival.
       if (pop) model[profile].count = old_count - 1;
-      /* new notifications are added after any accepted acknowledgement. */
+      // new notifications are added after any accepted acknowledgement.
       if (notification_i) begin
-        /* a full ledger reports its inability to retain an additional notification. */
+        // a full ledger reports its inability to retain an additional notification.
         if (model[profile].count == capacity(profile)) begin
           model[profile].overflow = 1;
           overflow_edges++;
         end
-        /* no overflow path is allowed to wrap the visible count. */
+        // no overflow path is allowed to wrap the visible count.
         else model[profile].count++;
       end
-      /* accepted register writes override only the specified state. */
+      // accepted register writes override only the specified state.
       if (effect) begin
-        /* timer-half writes preserve the other old half and suppress the entire tick. */
+        // timer-half writes preserve the other old half and suppress the entire tick.
         case (index)
           0: model[profile].time_value = (old_time & 64'hffffffff00000000) | {32'b0, wdata_i};
           1: model[profile].time_value = {wdata_i, old_time[31:0]};
@@ -146,27 +146,27 @@ module cpu5_irq_platform_tb;
           3: model[profile].comparison[63:32] = wdata_i;
           4: model[profile].software_pending = wdata_i[0];
           6: model[profile].enables = wdata_i;
-          /* pending and queue effects were already modeled above. */
+          // pending and queue effects were already modeled above.
           default: begin end
         endcase
       end
-      /* coverage observes chosen input obligations, not DUT internal control signals. */
+      // coverage observes chosen input obligations, not DUT internal control signals.
       if (effect && index <= 1) timer_overrides++;
-      /* simultaneous assertions must remain pending after a clear. */
+      // simultaneous assertions must remain pending after a clear.
       if (|(clear_mask & event_set_i)) set_clear_collisions++;
-      /* a rejected empty acknowledgement must retain the new arrival. */
+      // a rejected empty acknowledgement must retain the new arrival.
       if (command_i && write_i && index == 8 && wdata_i[0] && old_count == 0 && notification_i)
         empty_ack_arrivals++;
-      /* a valid pop provides capacity even when the queue started full. */
+      // a valid pop provides capacity even when the queue started full.
       if (pop && old_count == capacity(profile) && notification_i) full_ack_arrivals++;
-      /* the visible queue and sticky events survive platform delivery masking. */
+      // the visible queue and sticky events survive platform delivery masking.
       if (pending(profile) != 0 && model[profile].enables == 0) masked_pending_edges++;
-      /* count actual unsigned timer wrap edges rather than a near-boundary value. */
+      // count actual unsigned timer wrap edges rather than a near-boundary value.
       if (old_time == 64'hffffffffffffffff && !(effect && index <= 1)) timer_wraps++;
     end
   endtask
 
-  /* score each combinational preview and every stored/source output at the sampling edge. */
+  // score each combinational preview and every stored/source output at the sampling edge.
   task automatic step();
     int index;
     bit observed_error, observed_overflow;
@@ -174,16 +174,16 @@ module cpu5_irq_platform_tb;
     logic [63:0] observed_time;
     #1;
     index = register_index();
-    /* query checks happen before the reference changes or the clock rises. */
+    // query checks happen before the reference changes or the clock rises.
     for (int profile = 0; profile < 3; profile++) begin
       observed_error = error_o[profile];
       observed_data = rdata_o[profile];
-      /* corrupt one illegal-access observation to calibrate permission detection. */
+      // corrupt one illegal-access observation to calibrate permission detection.
       if ($test$plusargs("mutate_error") && !mutation_applied && rejected(profile, index)) begin
         observed_error = !observed_error;
         mutation_applied = 1;
       end
-      /* a stale read snapshot must fail even when the stored state is otherwise correct. */
+      // a stale read snapshot must fail even when the stored state is otherwise correct.
       if ($test$plusargs("mutate_read") && !mutation_applied && command_i && !write_i &&
           !rejected(profile, index)) begin
         observed_data ^= 1;
@@ -191,21 +191,21 @@ module cpu5_irq_platform_tb;
       end
       check(observed_error == rejected(profile, index), "MMIO permission mismatch", profile);
       check(observed_data == read_value(profile, index), "MMIO read snapshot mismatch", profile);
-      /* retained counts distinguish legal transactions from rejected physical commands. */
+      // retained counts distinguish legal transactions from rejected physical commands.
       if (command_i && !system_reset_i) begin
-        /* error responses never imply a permitted register action. */
+        // error responses never imply a permitted register action.
         if (rejected(profile, index)) errors++;
-        /* writes and reads are counted independently, including legal no-ops. */
+        // writes and reads are counted independently, including legal no-ops.
         else if (write_i) writes++;
         else reads++;
       end
     end
-    /* advance independent state before checking the resulting registered DUT state. */
+    // advance independent state before checking the resulting registered DUT state.
     for (int profile = 0; profile < 3; profile++) update_model(profile, index);
     clk_i = 1;
     #1;
     edges++;
-    /* each configured capacity has its own retained state and permission consequences. */
+    // each configured capacity has its own retained state and permission consequences.
     for (int profile = 0; profile < 3; profile++) begin
       observed_time = mtime_o[profile];
       observed_pending = ext_pending_o[profile];
@@ -216,27 +216,27 @@ module cpu5_irq_platform_tb;
       expected_irq[3] = model[profile].software_pending;
       expected_irq[7] = model[profile].time_value >= model[profile].comparison;
       expected_irq[11] = (pending(profile) & model[profile].enables) != 0;
-      /* mutate observations only; expected state remains independent. */
+      // mutate observations only; expected state remains independent.
       if ($test$plusargs("mutate_timer") && !mutation_applied && !system_reset_i && index == 0 && write_i) begin
         observed_time ^= 1;
         mutation_applied = 1;
       end
-      /* a missing pending bit must be detected even while delivery is masked. */
+      // a missing pending bit must be detected even while delivery is masked.
       if ($test$plusargs("mutate_pending") && !mutation_applied && event_set_i != 0 && !system_reset_i) begin
         observed_pending ^= 32'h2;
         mutation_applied = 1;
       end
-      /* losing a counted notification cannot be hidden behind a single external IRQ bit. */
+      // losing a counted notification cannot be hidden behind a single external IRQ bit.
       if ($test$plusargs("mutate_count") && !mutation_applied && notification_i && !system_reset_i) begin
         observed_count ^= 1;
         mutation_applied = 1;
       end
-      /* source level comparison is independent from pending-storage comparison. */
+      // source level comparison is independent from pending-storage comparison.
       if ($test$plusargs("mutate_irq") && !mutation_applied && expected_irq != 0) begin
         observed_irq ^= 32'h800;
         mutation_applied = 1;
       end
-      /* saturation reporting must fail independently of the count comparator. */
+      // saturation reporting must fail independently of the count comparator.
       if ($test$plusargs("mutate_overflow") && !mutation_applied && model[profile].overflow) begin
         observed_overflow = !observed_overflow;
         mutation_applied = 1;
@@ -254,36 +254,36 @@ module cpu5_irq_platform_tb;
     clk_i = 0;
   endtask
 
-  /* inactive commands preserve platform state except the normal timer and source evolution. */
+  // inactive commands preserve platform state except the normal timer and source evolution.
   task automatic defaults();
     system_reset_i = 0; command_i = 0; write_i = 0; addr_i = 0; wdata_i = 0;
     size_i = 2; wstrb_i = 0; event_set_i = 0; notification_i = 0;
   endtask
 
-  /* explicit reset is a platform event, never an alias for CPU hart reset. */
+  // explicit reset is a platform event, never an alias for CPU hart reset.
   task automatic reset_platform();
     defaults(); system_reset_i = 1; step(); defaults();
   endtask
 
-  /* form one aligned word command and retain its acceptance for exactly one scored edge. */
+  // form one aligned word command and retain its acceptance for exactly one scored edge.
   task automatic command(input bit write_access, input int offset, input logic [31:0] data = 0);
     defaults(); command_i = 1; write_i = write_access; addr_i = 32'h40001000 + 32'(offset);
     wdata_i = data; wstrb_i = write_access ? 15 : 0; step(); defaults();
   endtask
 
-  /* choose deterministic high bits so adjacent generator draws do not collapse coverage. */
+  // choose deterministic high bits so adjacent generator draws do not collapse coverage.
   function automatic logic [31:0] random_word();
     random_state = random_state * 32'd1664525 + 32'd1013904223;
     return random_state;
   endfunction
 
-  /* exercise exact timer boundaries, source persistence and independently rejected commands. */
+  // exercise exact timer boundaries, source persistence and independently rejected commands.
   initial begin
     logic [31:0] draw;
-    /* each reported seed is independent of Verilator's initialization seed. */
+    // each reported seed is independent of Verilator's initialization seed.
     if ($value$plusargs("seed=%d", seed)) begin end
     random_state = seed;
-    /* models begin only with defined platform reset state. */
+    // models begin only with defined platform reset state.
     for (int profile = 0; profile < 3; profile++) model[profile] = '0;
     reset_platform();
     command(1, 0, 32'hffffffff); command(1, 4, 32'hffffffff);
@@ -294,7 +294,7 @@ module cpu5_irq_platform_tb;
     command(1, 8, 32'hffffffff); command(1, 12, 32'hffffffff);
     command(1, 8, 1000);
     command(1, 16, 32'hffffffff); command(0, 16); command(1, 16, 32'hfffffffe);
-    /* every coalescible source survives masking and wins over its simultaneous clear. */
+    // every coalescible source survives masking and wins over its simultaneous clear.
     for (int bit_index = 1; bit_index < 32; bit_index++) begin
       defaults(); event_set_i = 31'(32'b1 << (bit_index - 1)); step();
       command(0, 20); command(1, 24, 32'b1 << bit_index);
@@ -304,26 +304,26 @@ module cpu5_irq_platform_tb;
       command(1, 20, 32'b1 << bit_index); command(1, 24, 0);
     end
     reset_platform();
-    /* empty acknowledgement is rejected while a simultaneous arrival remains queued. */
+    // empty acknowledgement is rejected while a simultaneous arrival remains queued.
     defaults(); command_i = 1; write_i = 1; addr_i = 32'h40001020;
     wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
-    /* repeated pulses fill every capacity without depending on the delivery mask. */
+    // repeated pulses fill every capacity without depending on the delivery mask.
     for (int event_index = 0; event_index < 64; event_index++) begin
       defaults(); notification_i = 1; step();
     end
     command(1, 24, 1);
-    /* full queue pop plus push conserves notifications and does not create a new overflow. */
+    // full queue pop plus push conserves notifications and does not create a new overflow.
     defaults(); command_i = 1; write_i = 1; addr_i = 32'h40001020;
     wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
-    /* a pending-word write cannot acknowledge the counted notification source. */
+    // a pending-word write cannot acknowledge the counted notification source.
     command(1, 20, 1); command(0, 28); command(0, 36);
-    /* accepted acknowledgements consume one notification rather than clearing the whole queue. */
+    // accepted acknowledgements consume one notification rather than clearing the whole queue.
     for (int event_index = 0; event_index < 66; event_index++) command(1, 32, 1);
     command(1, 32, 0); command(0, 32); command(1, 28, '1); command(1, 36, '1);
-    /* each capacity must accept a full pop/push before overflow has ever been set. */
+    // each capacity must accept a full pop/push before overflow has ever been set.
     for (int profile = 0; profile < 3; profile++) begin
       reset_platform();
-      /* fill the selected profile exactly, retaining a clean overflow flag. */
+      // fill the selected profile exactly, retaining a clean overflow flag.
       for (int event_index = 0; event_index < int'(capacity(profile)); event_index++) begin
         defaults(); notification_i = 1; step();
       end
@@ -332,31 +332,31 @@ module cpu5_irq_platform_tb;
       wdata_i = 1; wstrb_i = 15; notification_i = 1; step();
       check(!overflow_o[profile], "full pop/push newly overflowed", profile);
     end
-    /* decoded reserved words and nearby aliases reject in both directions. */
+    // decoded reserved words and nearby aliases reject in both directions.
     for (int offset = -4; offset <= 80; offset++) begin
       command(0, offset); command(1, offset, 32'hdeadbeef);
     end
-    /* malformed widths and byte lanes cannot affect a valid timer register. */
+    // malformed widths and byte lanes cannot affect a valid timer register.
     for (int width = 0; width < 4; width++) begin
-      /* every strobe pattern is tested for both read and write commands. */
+      // every strobe pattern is tested for both read and write commands.
       for (int strobe = 0; strobe < 16; strobe++) begin
-        /* reads and writes have different canonical strobes. */
+        // reads and writes have different canonical strobes.
         for (int direction = 0; direction < 2; direction++) begin
           defaults(); command_i = 1; write_i = 1'(direction); addr_i = 32'h40001000;
           size_i = 2'(width); wstrb_i = 4'(strobe); wdata_i = 32'h12345678; step();
         end
       end
     end
-    /* this idle interval represents an always-clocked platform while the CPU is inactive. */
+    // this idle interval represents an always-clocked platform while the CPU is inactive.
     defaults(); event_set_i = '1; notification_i = 1; step();
     defaults();
-    /* neither waiting software nor absent MMIO traffic may stop the timer. */
+    // neither waiting software nor absent MMIO traffic may stop the timer.
     repeat (128) step();
-    /* reset dominates coincident source sets, commands, acknowledgements and ticks. */
+    // reset dominates coincident source sets, commands, acknowledgements and ticks.
     defaults(); system_reset_i = 1; command_i = 1; write_i = 1;
     addr_i = 32'h40001018; wdata_i = '1; wstrb_i = 15; event_set_i = '1; notification_i = 1; step();
     defaults(); step();
-    /* random full-width operands and event/control collisions supplement directed cases. */
+    // random full-width operands and event/control collisions supplement directed cases.
     for (int vector = 0; vector < 12000; vector++) begin
       defaults(); draw = random_word();
       addr_i = 32'h40001000 + {26'b0, draw[31:28], 2'b0};
@@ -366,7 +366,7 @@ module cpu5_irq_platform_tb;
       draw = random_word(); wdata_i = draw;
       draw = random_word(); size_i = draw[31:30]; wstrb_i = draw[23:20];
       width_bins |= 1 << size_i;
-      /* some random accesses use canonical width/strobes to reach actual register effects. */
+      // some random accesses use canonical width/strobes to reach actual register effects.
       if (draw[19]) begin size_i = 2; wstrb_i = write_i ? 15 : 0; end
       draw = random_word(); event_set_i = draw[31:1];
       draw = random_word(); notification_i = draw[31]; step();

@@ -1,4 +1,4 @@
-/* retain each I request from first valid through delivery or contained discard. */
+// retain each I request from first valid through delivery or contained discard.
 module cpu5_fetch #(
   parameter bit C_FETCH = 0,
   parameter integer GEN_BITS = 8,
@@ -50,7 +50,7 @@ module cpu5_fetch #(
   logic [1:0] need_parcels, allowed, denied, fill_parcels, fill_fault;
   logic [GEN_BITS-1:0] fill_generation;
 
-  /* a qualified cold reset is a positive old-traffic isolation boundary. */
+  // a qualified cold reset is a positive old-traffic isolation boundary.
   assign cold = cold_reset_i && isolated_i;
   assign invalidate = hart_reset_i || redirect_valid_i;
   assign restart_pc = hart_reset_i || cold ? RESET_PC : redirect_pc_i;
@@ -69,16 +69,16 @@ module cpu5_fetch #(
                     i_rsp_tag_i == owner_tag_q && i_rsp_parcels_i == owner_parcels_q;
   assign complete_o = matching;
 
-  /* canonical replies distinguish precise rejection from broken ownership. */
+  // canonical replies distinguish precise rejection from broken ownership.
   always_comb begin
     bad_payload = 0;
-    /* successful parcel results cannot carry data in absent or faulted lanes. */
+    // successful parcel results cannot carry data in absent or faulted lanes.
     if (i_rsp_status_i == 0) begin
       bad_payload = (i_rsp_fault_i & ~owner_parcels_q) != 0 ||
           ((!owner_parcels_q[0] || i_rsp_fault_i[0]) && i_rsp_data_i[15:0] != 0) ||
           ((!owner_parcels_q[1] || i_rsp_fault_i[1]) && i_rsp_data_i[31:16] != 0);
     end
-    /* a proven whole-beat rejection faults every requested parcel with no data. */
+    // a proven whole-beat rejection faults every requested parcel with no data.
     else if (i_rsp_status_i == 1) begin
       bad_payload = i_rsp_data_i != 0 || i_rsp_fault_i != owner_parcels_q;
     end
@@ -87,7 +87,7 @@ module cpu5_fetch #(
   assign timeout = (state_q == OFFER || state_q == WAIT_RESPONSE) && !matching &&
                    age_q == AGE_BITS'(MAX_WAIT_CYCLES - 1) && !cold;
 
-  /* the guard sees the full address before any first-valid presentation. */
+  // the guard sees the full address before any first-valid presentation.
   cpu5_fetch_guard #(.TEST_REGIONS(TEST_REGIONS)) guard (
     .word_addr_i(need_addr), .want_i(need_parcels), .allow_o(allowed)
   );
@@ -100,27 +100,27 @@ module cpu5_fetch #(
   assign fatal_event = bad_response || timeout || tag_failure || (cold_reset_i && !isolated_i);
   assign fatal_o = fatal_q || fatal_event;
   assign fatal_reason_o = fatal_q ? reason_q : event_reason;
-  /* tag exhaustion is registered to avoid feeding need back into its own reset. */
+  // tag exhaustion is registered to avoid feeding need back into its own reset.
   assign buffer_reset = cold || hart_reset_i || fatal_q || bad_response || timeout ||
                         (cold_reset_i && !isolated_i);
   assign live_fill = matching && !fatal_o && !discard_q && !invalidate &&
                      owner_generation_q == generation_q;
   assign drop_o = matching && !live_fill;
 
-  /* preserve the first failure reason until isolated cold recovery. */
+  // preserve the first failure reason until isolated cold recovery.
   always_comb begin
     event_reason = 0;
-    /* unsafe reset requests do not authorize withdrawing an offered request. */
+    // unsafe reset requests do not authorize withdrawing an offered request.
     if (cold_reset_i && !isolated_i) event_reason = 4;
-    /* protocol failures remain fatal even for a stale stream. */
+    // protocol failures remain fatal even for a stale stream.
     else if (bad_response) event_reason = 1;
-    /* a terminal matching response on the deadline edge defeats timeout. */
+    // a terminal matching response on the deadline edge defeats timeout.
     else if (timeout) event_reason = 2;
-    /* exhausted tags require isolation, never modulo reuse. */
+    // exhausted tags require isolation, never modulo reuse.
     else if (tag_failure) event_reason = 3;
   end
 
-  /* a local deny fills only denied parcels and never touches an external target. */
+  // a local deny fills only denied parcels and never touches an external target.
   always_comb begin
     fill_valid = local_deny || live_fill;
     fill_addr = local_deny ? need_addr : owner_addr_q;
@@ -130,7 +130,7 @@ module cpu5_fetch #(
     fill_fault = local_deny ? denied : i_rsp_fault_i;
   end
 
-  /* the assembly window owns buffered parcels and the held instruction packet. */
+  // the assembly window owns buffered parcels and the held instruction packet.
   cpu5_fetch_buffer #(.C_FETCH(C_FETCH), .GEN_BITS(GEN_BITS)) buffer (
     .clk_i, .reset_i(buffer_reset), .restart_i(redirect_valid_i),
     .restart_pc_i(restart_pc), .restart_generation_i(restart_generation),
@@ -142,9 +142,9 @@ module cpu5_fetch #(
     .insn_generation_o, .insn_fault_o, .insn_cause_o, .insn_mtval_o
   );
 
-  /* architectural redirects never reset the surviving transaction manager. */
+  // architectural redirects never reset the surviving transaction manager.
   always_ff @(posedge clk_i) begin
-    /* only positive isolation permits abandoning an old external obligation. */
+    // only positive isolation permits abandoning an old external obligation.
     if (cold) begin
       state_q <= FREE;
       owner_addr_q <= 0;
@@ -160,24 +160,24 @@ module cpu5_fetch #(
       reason_q <= 0;
       reset_hold_q <= 1;
     end
-    /* keep acceptance and response accounting active during architectural reset. */
+    // keep acceptance and response accounting active during architectural reset.
     else begin
-      /* the first edge releasing reset cannot allocate a new external offer. */
+      // the first edge releasing reset cannot allocate a new external offer.
       reset_hold_q <= hart_reset_i || cold_reset_i;
-      /* sticky revocation survives any number of generation-counter wraps. */
+      // sticky revocation survives any number of generation-counter wraps.
       if (invalidate) begin
         generation_q <= generation_q + 1'b1;
-        /* no live owner can regain permission through a later numerical alias. */
+        // no live owner can regain permission through a later numerical alias.
         if (state_q != FREE) discard_q <= 1;
       end
-      /* fatal containment also revokes delivery without erasing bus ownership. */
+      // fatal containment also revokes delivery without erasing bus ownership.
       if (fatal_event) begin
         fatal_q <= 1;
         discard_q <= 1;
-        /* later symptoms cannot erase the first diagnosed failure. */
+        // later symptoms cannot erase the first diagnosed failure.
         if (!fatal_q) reason_q <= event_reason;
       end
-      /* launch reserves the exact descriptor and sink before valid becomes visible. */
+      // launch reserves the exact descriptor and sink before valid becomes visible.
       if (launch_o) begin
         state_q <= OFFER;
         owner_addr_q <= need_addr;
@@ -189,15 +189,15 @@ module cpu5_fetch #(
         discard_q <= 0;
         age_q <= 0;
       end
-      /* an accepted offer cannot be offered again while its response is pending. */
+      // an accepted offer cannot be offered again while its response is pending.
       else if (accept_o) begin
         state_q <= WAIT_RESPONSE;
       end
-      /* capture ends a normal owner, or preserves a fatal recovery record. */
+      // capture ends a normal owner, or preserves a fatal recovery record.
       if (matching) begin
         state_q <= fatal_o ? RECOVER : FREE;
       end
-      /* saturating age counts all acceptance and response waiting edges. */
+      // saturating age counts all acceptance and response waiting edges.
       if ((state_q == OFFER || state_q == WAIT_RESPONSE) && !matching &&
           age_q < AGE_BITS'(MAX_WAIT_CYCLES - 1)) begin
         age_q <= age_q + 1'b1;
@@ -206,7 +206,7 @@ module cpu5_fetch #(
   end
 
 `ifndef SYNTHESIS
-  /* reject unsupported elaboration settings before verification starts. */
+  // reject unsupported elaboration settings before verification starts.
   initial begin
     assert (GEN_BITS >= 1 && GEN_BITS <= 32 && TAG_BITS >= 1 && TAG_BITS <= 32 &&
             MAX_WAIT_CYCLES >= 1) else $fatal(1, "invalid fetch parameters");

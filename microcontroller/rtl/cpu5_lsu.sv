@@ -1,4 +1,4 @@
-/* validate one data transfer and form little-endian lanes without owning a bus request. */
+// validate one data transfer and form little-endian lanes without owning a bus request.
 module cpu5_lsu #(
   parameter bit TEST_REGIONS = 0,
   parameter bit IRAM_WRITE = 0,
@@ -15,7 +15,7 @@ module cpu5_lsu #(
   logic region_allowed;
   logic [31:0] selected_data;
 
-  /* a widened inclusive endpoint rejects wrap and requires the whole footprint. */
+  // a widened inclusive endpoint rejects wrap and requires the whole footprint.
   always_comb begin
     last_address = {1'b0, addr_i} +
                    (size_i == 0 ? 33'd0 : size_i == 1 ? 33'd1 : 33'd3);
@@ -35,39 +35,39 @@ module cpu5_lsu #(
     wdata_o = 0;
     wstrb_o = 0;
     load_value_o = 0;
-    /* a denied operation has no active byte lanes or consumable load result. */
+    // a denied operation has no active byte lanes or consumable load result.
     if (allowed_o) begin
-      /* only the requested low source bytes enter the addressed write lanes. */
+      // only the requested low source bytes enter the addressed write lanes.
       if (write_i) begin
-        /* byte and halfword masking prevents neighboring-lane data leakage. */
+        // byte and halfword masking prevents neighboring-lane data leakage.
         case (size_i)
-          /* a byte enables exactly its addressed lane. */
+          // a byte enables exactly its addressed lane.
           0: begin
             wdata_o = {24'b0, store_value_i[7:0]} << {addr_i[1:0], 3'b000};
             wstrb_o = 4'b0001 << addr_i[1:0];
           end
-          /* natural halfword alignment restricts the lane to zero or two. */
+          // natural halfword alignment restricts the lane to zero or two.
           1: begin
             wdata_o = {16'b0, store_value_i[15:0]} << {addr_i[1:0], 3'b000};
             wstrb_o = 4'b0011 << addr_i[1:0];
           end
-          /* an allowed word always starts at lane zero. */
+          // an allowed word always starts at lane zero.
           2: begin
             wdata_o = store_value_i;
             wstrb_o = 4'b1111;
           end
-          /* rejected widths cannot reach an active store. */
+          // rejected widths cannot reach an active store.
           default: begin end
         endcase
       end
-      /* successful reads extract their lane before applying the requested extension. */
+      // successful reads extract their lane before applying the requested extension.
       else begin
-        /* signedness affects only narrow loads; word data are unchanged. */
+        // signedness affects only narrow loads; word data are unchanged.
         case (size_i)
           0: load_value_o = {{24{signed_i && selected_data[7]}}, selected_data[7:0]};
           1: load_value_o = {{16{signed_i && selected_data[15]}}, selected_data[15:0]};
           2: load_value_o = selected_data;
-          /* rejected widths cannot reach an active load. */
+          // rejected widths cannot reach an active load.
           default: begin end
         endcase
       end

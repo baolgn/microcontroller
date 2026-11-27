@@ -50,7 +50,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='cpu5-package-test-') as temporary:
         base = Path(temporary); root = base / 'source'
         (root / 'microcontroller/rtl').mkdir(parents=True); (root / 'docs/release').mkdir(parents=True)
-        (root / 'microcontroller/rtl/core.sv').write_text('/* fixture */\nmodule core; endmodule\n')
+        (root / 'microcontroller/rtl/core.sv').write_text('// fixture\nmodule core; endmodule\n')
         (root / 'microcontroller/run.sh').write_text('#!/bin/sh\nexit 0\n'); (root / 'microcontroller/run.sh').chmod(0o755)
         (root / 'docs/release/README.md').write_text('fixture\n')
         (root / 'microcontroller/__pycache__').mkdir(); (root / 'microcontroller/__pycache__/secret.pyc').write_bytes(b'cache')

@@ -1,4 +1,4 @@
-/* preserve fetched identity and faults at the raw-machine pipeline boundary. */
+// preserve fetched identity and faults at the raw-machine pipeline boundary.
 module cpu5_frontend #(
   parameter bit C_ENABLED = 0,
   parameter integer GEN_BITS = 8,
@@ -35,7 +35,7 @@ module cpu5_frontend #(
   logic [2:0] length;
   logic [1:0] unused_length_kind;
 
-  /* stop new launches before entry while owned requests keep their manager. */
+  // stop new launches before entry while owned requests keep their manager.
   cpu5_fetch #(.C_FETCH(C_ENABLED), .GEN_BITS(GEN_BITS), .TAG_BITS(TAG_BITS),
       .MAX_WAIT_CYCLES(MAX_WAIT_CYCLES), .TEST_REGIONS(TEST_REGIONS), .RESET_PC(RESET_PC)) fetch (
     .clk_i, .cold_reset_i, .isolated_i, .hart_reset_i,
@@ -50,7 +50,7 @@ module cpu5_frontend #(
     .fatal_reason_o, .generation_o, .launch_o, .accept_o, .complete_o, .drop_o
   );
 
-  /* a fetched packet has no trusted execution annotations or supplied expansion. */
+  // a fetched packet has no trusted execution annotations or supplied expansion.
   always_comb begin
     insn_packet_o = '0;
     insn_packet_o.op = OP_MACHINE;

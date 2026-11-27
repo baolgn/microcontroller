@@ -1,4 +1,4 @@
-/* qualify clock/reset, synchronous RAM and the local CPU on the exact ULX3S pin map. */
+// qualify clock/reset, synchronous RAM and the local CPU on the exact ULX3S pin map.
 module cpu5_ulx3s #(
   parameter integer CLOCK_HZ = 80000000,
   parameter integer STAGE = 2,
@@ -13,18 +13,18 @@ module cpu5_ulx3s #(
   (* async_reg = "true" *) logic [1:0] reset_release_q = 2'b11;
   logic unused_observation;
 
-  /* the generated PLL and timing profile must describe the same physical output frequency. */
+  // the generated PLL and timing profile must describe the same physical output frequency.
   cpu5_board_pll pll (.clk25_i, .clk_cpu_o(clk_cpu), .locked_o(locked));
   assign reset_async = reset_btn_i || !locked;
   assign reset = reset_release_q[1];
 
-  /* loss of lock or a held reset button asserts immediately; release takes two fabric edges. */
+  // loss of lock or a held reset button asserts immediately; release takes two fabric edges.
   always_ff @(posedge clk_cpu or posedge reset_async) begin
     if (reset_async) reset_release_q <= 2'b11;
     else reset_release_q <= {reset_release_q[0], 1'b0};
   end
 
-  /* early stages avoid CPU state while checking the clock, reset and a synchronous RAM port. */
+  // early stages avoid CPU state while checking the clock, reset and a synchronous RAM port.
   generate if (STAGE < 2) begin : diagnostic
     logic [31:0] count_q;
     logic [31:0] ram [0:255];
@@ -38,34 +38,34 @@ module cpu5_ulx3s #(
     assign led_o = {reset, 1'b0, failed_q, 1'b0, passed_q, 2'b0, count_q[24]};
     assign unused_observation = event_btn_i;
 
-    /* native RAM receives a registered read and a single synchronous write port. */
+    // native RAM receives a registered read and a single synchronous write port.
     always_ff @(posedge clk_cpu) begin
       if (!reset && STAGE == 1 && state_q == 0) ram[address_q] <= pattern;
       if (!reset && STAGE == 1 && state_q == 1) data_q <= ram[address_q];
     end
 
-    /* fill every word, then compare registered reads before declaring diagnostic success. */
+    // fill every word, then compare registered reads before declaring diagnostic success.
     always_ff @(posedge clk_cpu) begin
-      /* restart diagnostics without assuming any RAM power-up contents. */
+      // restart diagnostics without assuming any RAM power-up contents.
       if (reset) begin
         count_q <= 0;
         address_q <= 0;
         state_q <= 0;
         passed_q <= 0;
         failed_q <= 0;
-      /* the heartbeat remains observable after the finite RAM check. */
+      // the heartbeat remains observable after the finite RAM check.
       end else begin
         count_q <= count_q + 1'b1;
-        /* stage zero only verifies reference/PLL/reset and heartbeat behavior. */
+        // stage zero only verifies reference/PLL/reset and heartbeat behavior.
         if (STAGE == 1) begin
           case (state_q)
-            /* write all addresses before beginning readback. */
+            // write all addresses before beginning readback.
             0: begin
               address_q <= address_q + 1'b1;
               if (address_q == 255) state_q <= 1;
             end
             1: state_q <= 2;
-            /* synchronous read data belongs to the unchanged address. */
+            // synchronous read data belongs to the unchanged address.
             2: begin
               if (data_q != pattern) failed_q <= 1;
               address_q <= address_q + 1'b1;
@@ -77,7 +77,7 @@ module cpu5_ulx3s #(
         end
       end
     end
-  /* the integrated image runs the same compiled program used by the portable board simulation. */
+  // the integrated image runs the same compiled program used by the portable board simulation.
   end else begin : application
     logic uart_busy, uart_overflow, output_valid, status_write, fatal, idle, busy;
     logic [6:0] uart_queued;

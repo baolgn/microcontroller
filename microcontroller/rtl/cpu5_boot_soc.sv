@@ -1,4 +1,4 @@
-/* hand the local data port from the flash loader to a reset-held CPU without overlapping owners. */
+// hand the local data port from the flash loader to a reset-held CPU without overlapping owners.
 module cpu5_boot_soc #(
   parameter ROM_FILE = "",
   parameter IRAM_FILE = "",
@@ -70,7 +70,7 @@ module cpu5_boot_soc #(
   logic [1:0] fabric_d_size, fabric_rsp_status;
   logic [3:0] fabric_d_strobes;
 
-  /* boot writes retain their owner through the local response before the CPU can leave reset. */
+  // boot writes retain their owner through the local response before the CPU can leave reset.
   assign cpu_reset = reset_i || boot_hold_i;
   assign fabric_d_valid = boot_hold_i ? boot_write_valid_i && !boot_wait_q : d_req_valid_o;
   assign fabric_d_addr = boot_hold_i ? boot_write_addr_i : d_req_addr_o;
@@ -88,16 +88,16 @@ module cpu5_boot_soc #(
   assign boot_write_ready_o = boot_hold_i && boot_wait_q && fabric_rsp_valid;
   assign boot_write_error_o = fabric_rsp_status != 0 || fabric_rsp_tag != boot_tag_q;
 
-  /* the loader handshake denotes completed response, not mere write acceptance. */
+  // the loader handshake denotes completed response, not mere write acceptance.
   always_ff @(posedge clk_i) begin
-    /* only isolated board reset may abandon the local owner. */
+    // only isolated board reset may abandon the local owner.
     if (reset_i) begin
       boot_wait_q <= 0;
       boot_tag_q <= 0;
-    /* one retained word can be exposed until acceptance, then only its response may finish it. */
+    // one retained word can be exposed until acceptance, then only its response may finish it.
     end else begin
       if (boot_hold_i && fabric_d_valid && fabric_d_ready) boot_wait_q <= 1;
-      /* each completed word advances the loader's transaction identity once. */
+      // each completed word advances the loader's transaction identity once.
       if (boot_write_ready_o) begin
         boot_wait_q <= 0;
         boot_tag_q <= boot_tag_q + 1'b1;
@@ -106,10 +106,10 @@ module cpu5_boot_soc #(
   end
 
 `ifndef SYNTHESIS
-  /* the permanent master handoff requires a drained boot response and an executable-only target. */
+  // the permanent master handoff requires a drained boot response and an executable-only target.
   always_ff @(posedge clk_i) begin
     if (!reset_i && !boot_hold_i) assert (!boot_wait_q) else $fatal(1, "boot handoff with owned response");
-    /* a loader may never target boot ROM, data storage or a side-effectful peripheral. */
+    // a loader may never target boot ROM, data storage or a side-effectful peripheral.
     if (!reset_i && boot_hold_i && boot_write_valid_i) begin
       assert (boot_write_addr_i >= 32'h10000 && boot_write_addr_i < 32'h20000 && boot_write_addr_i[1:0] == 0)
         else $fatal(1, "boot write outside IRAM");
@@ -117,7 +117,7 @@ module cpu5_boot_soc #(
   end
 `endif
 
-  /* local storage and peripherals remain clocked while useful CPU issue is paused. */
+  // local storage and peripherals remain clocked while useful CPU issue is paused.
   cpu5_local_fabric #(.ROM_FILE(ROM_FILE), .IRAM_FILE(IRAM_FILE), .DRAM_FILE(DRAM_FILE)) fabric (
     .clk_i, .reset_i, .isolated_i, .i_accept_delay_i, .i_response_delay_i, .d_accept_delay_i, .d_response_delay_i,
     .i_req_valid_i(i_req_valid_o), .i_req_ready_o, .i_req_addr_i(i_req_addr_o), .i_req_tag_i(i_req_tag_o),
@@ -132,12 +132,12 @@ module cpu5_boot_soc #(
   );
   assign busy_o = fetch_busy || mem_busy || fabric_busy;
   assign fatal_o = core_fatal || fetch_fatal;
-  /* expose sticky failure provenance without changing containment or transaction ownership. */
+  // expose sticky failure provenance without changing containment or transaction ownership.
   assign fetch_fatal_reason_o = fetch_reason;
   assign core_fatal_record_o = fatal_record;
   assign irq_event_o = {irq_valid, irq_pc, irq_cause, mtvec};
 
-  /* execute permissions and obsolete-response ownership remain in the production frontend. */
+  // execute permissions and obsolete-response ownership remain in the production frontend.
   cpu5_frontend #(.C_ENABLED(C_ENABLED), .GEN_BITS(2), .MAX_WAIT_CYCLES(128)) frontend (
     .clk_i, .cold_reset_i(cpu_reset), .isolated_i(cpu_reset), .hart_reset_i(1'b0),
     .permit_i, .entry_pending_i(entry_pending), .core_fatal_i(core_fatal),
@@ -150,7 +150,7 @@ module cpu5_boot_soc #(
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* the local prototype executes raw instructions with IRQ, timer and instruction synchronization. */
+  // the local prototype executes raw instructions with IRQ, timer and instruction synchronization.
   cpu5_control #(.C_ENABLED(C_ENABLED), .M_ENABLED(M_ENABLED), .IRQ_ENABLED(1), .TIMER_ENABLED(1),
       .ZIFENCEI_ENABLED(1), .IRAM_WRITE(1), .DIAGNOSTIC(DIAGNOSTIC), .FORWARDING(FORWARDING),
       .D_MAX_WAIT_CYCLES(128)) core (
@@ -175,7 +175,7 @@ module cpu5_boot_soc #(
     .debug_reg_ready_o(unused_debug_reg_ready), .debug_reg_rdata_o(unused_debug_reg_rdata), .debug_reg_error_o(unused_debug_reg_error)
   );
 
-  /* unused diagnostics remain observational and cannot constrain the architectural test. */
+  // unused diagnostics remain observational and cannot constrain the architectural test.
   assign unused_observation = ^{stages, kills, stage_tokens[0], stage_tokens[1], stage_tokens[2],
       stage_tokens[3], stage_tokens[4], kill_uids[0], kill_uids[1], kill_uids[2], kill_uids[3], kill_uids[4],
       transfers, fetch_generation, packet_generation, fetch_discard, fetch_launch, fetch_accept, fetch_complete,

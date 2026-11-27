@@ -35,7 +35,7 @@ SECTIONS { .text : { *(.text.init) *(.text*) } > iram
 def program(seed,c,m):
     """generate terminating programs with arithmetic, hazards, branches, CSRs and traps."""
     rng=random.Random(seed);registers=[n for n in range(1,24)]
-    text=['/* real firmware initializes reference state and trap handling. */','.section .text.init',
+    text=['// real firmware initializes reference state and trap handling.','.section .text.init',
           '.option norelax','.globl _start,reference_stop','_start:', 'li x5,5','csrw mcountinhibit,x5',
           'li x25,0x20000000','la x26,trap_handler','csrw mtvec,x26','li x29,0']
     # randomized constants include signed and unsigned extrema before dependent operations.
@@ -46,7 +46,7 @@ def program(seed,c,m):
     # every initialized data word has an independent known compiler-emitted store.
     for offset in range(0,128,4):
         text.append(f'sw x{rng.choice(registers)},{offset}(x25)')
-    text.append('/* deliberate arithmetic corners precede randomized dependency chains. */')
+    text.append('// deliberate arithmetic corners precede randomized dependency chains.')
     # every M operation sees zero divisors and the signed overflow operands.
     if m:
         # exercise each multiply and divide operation with both corner inputs.
@@ -56,7 +56,7 @@ def program(seed,c,m):
     for index in range(384):
         rd,rs1,rs2=[rng.choice(registers) for _ in range(3)]
         choice=index%12
-        text.append(f'/* generated dependency group {index}. */')
+        text.append(f'// generated dependency group {index}.')
         # register arithmetic stresses newest-producer selection across several distances.
         if choice in (0,1):
             op=rng.choice(['add','sub','sll','slt','sltu','xor','srl','sra','or','and'])
@@ -102,7 +102,7 @@ def program(seed,c,m):
         # short counted loops exercise backward redirects without unbounded random control flow.
         else:
             text += ['li x24,3',f'loop_{index}:',f'addi x{rd},x{rd},-1','addi x24,x24,-1',f'bne x24,x0,loop_{index}']
-    text += ['/* precise traps preserve the instruction-start PC and advance by its actual length. */',
+    text += ['// precise traps preserve the instruction-start PC and advance by its actual length.',
              '.option push','.option norvc','ecall','ebreak','.word 0x0200000b','csrr x5,0x7c0',
              'lw x6,1(x25)','sw x7,2(x25)','li x24,0x60000000','lw x0,0(x24)','.option pop']
     # compressed traps require a two-byte return increment.
@@ -112,7 +112,7 @@ def program(seed,c,m):
              'csrr x26,mepc','lhu x27,0(x26)','andi x27,x27,3','li x28,3','bne x27,x28,short_trap',
              'addi x26,x26,4','j trap_return','short_trap:','addi x26,x26,2','trap_return:',
              'addi x29,x29,1','csrw mepc,x26','mret',
-             '/* reference comparison ends before device-specific destructive MMIO self-checks. */',
+             '// reference comparison ends before device-specific destructive MMIO self-checks.',
              'reference_stop:','li x25,0x40000000','lw x0,32(x25)','lw x5,32(x25)','li x6,2',
              'bne x5,x6,failed','sw x5,36(x25)','sw x5,36(x25)','lw x5,40(x25)',
              'bne x5,x6,failed','lw x5,44(x25)','bne x5,x6,failed','li x5,1','sw x5,0(x25)',

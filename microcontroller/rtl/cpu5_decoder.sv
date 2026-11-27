@@ -1,6 +1,6 @@
 `include "cpu5_datapath_defs.svh"
 
-/* decode RV32I 2.1 only; legality does not certify a complete CPU. */
+// decode RV32I 2.1 only; legality does not certify a complete CPU.
 module cpu5_decoder (
   input logic [31:0] instr_i,
   output logic legal_o,
@@ -15,7 +15,7 @@ module cpu5_decoder (
 );
   logic has_rd;
 
-  /* default every output so rejected instructions request no work. */
+  // default every output so rejected instructions request no work.
   always_comb begin
     legal_o = 0;
     kind_o = `CPU5_KIND_NONE;
@@ -33,9 +33,9 @@ module cpu5_decoder (
     branch_cond_o = 0;
     mem_size_o = 0;
     load_signed_o = 0;
-    /* match complete base opcodes, including the instruction-length bits. */
+    // match complete base opcodes, including the instruction-length bits.
     case (instr_i[6:0])
-      /* LUI writes the upper immediate without reading either source. */
+      // LUI writes the upper immediate without reading either source.
       7'h37: begin
         legal_o = 1;
         kind_o = `CPU5_KIND_LUI;
@@ -44,7 +44,7 @@ module cpu5_decoder (
         has_rd = 1;
         b_imm_o = 1;
       end
-      /* AUIPC adds its upper immediate to the instruction PC. */
+      // AUIPC adds its upper immediate to the instruction PC.
       7'h17: begin
         legal_o = 1;
         kind_o = `CPU5_KIND_AUIPC;
@@ -53,7 +53,7 @@ module cpu5_decoder (
         a_pc_o = 1;
         b_imm_o = 1;
       end
-      /* JAL uses a PC-relative target; link generation remains separate. */
+      // JAL uses a PC-relative target; link generation remains separate.
       7'h6f: begin
         legal_o = 1;
         kind_o = `CPU5_KIND_JAL;
@@ -62,7 +62,7 @@ module cpu5_decoder (
         a_pc_o = 1;
         b_imm_o = 1;
       end
-      /* JALR requires funct3 zero; clear target bit zero after address addition. */
+      // JALR requires funct3 zero; clear target bit zero after address addition.
       7'h67: begin
         legal_o = instr_i[14:12] == 0;
         kind_o = `CPU5_KIND_JALR;
@@ -71,7 +71,7 @@ module cpu5_decoder (
         has_rd = 1;
         b_imm_o = 1;
       end
-      /* branch operands feed comparison; a separate adder forms PC plus offset. */
+      // branch operands feed comparison; a separate adder forms PC plus offset.
       7'h63: begin
         legal_o = instr_i[14:12] == 0 || instr_i[14:12] == 1 || instr_i[14];
         kind_o = `CPU5_KIND_BRANCH;
@@ -81,7 +81,7 @@ module cpu5_decoder (
         rs2_used_o = 1;
         branch_cond_o = instr_i[14:12];
       end
-      /* all legal loads access memory even when their destination is x0. */
+      // all legal loads access memory even when their destination is x0.
       7'h03: begin
         legal_o = instr_i[14:12] == 0 || instr_i[14:12] == 1 ||
                   instr_i[14:12] == 2 || instr_i[14:12] == 4 || instr_i[14:12] == 5;
@@ -93,7 +93,7 @@ module cpu5_decoder (
         mem_size_o = instr_i[13:12];
         load_signed_o = !instr_i[14];
       end
-      /* store rs2 supplies data while rs1 plus immediate supplies its address. */
+      // store rs2 supplies data while rs1 plus immediate supplies its address.
       7'h23: begin
         legal_o = instr_i[14:12] <= 2;
         kind_o = `CPU5_KIND_STORE;
@@ -103,7 +103,7 @@ module cpu5_decoder (
         b_imm_o = 1;
         mem_size_o = instr_i[13:12];
       end
-      /* arithmetic immediates never consume the encoded rs2 field. */
+      // arithmetic immediates never consume the encoded rs2 field.
       7'h13: begin
         legal_o = 1;
         kind_o = `CPU5_KIND_IMM;
@@ -111,10 +111,10 @@ module cpu5_decoder (
         rs1_used_o = 1;
         has_rd = 1;
         b_imm_o = 1;
-        /* shift prefixes are exact RV32 encodings, not arbitrary immediates. */
+        // shift prefixes are exact RV32 encodings, not arbitrary immediates.
         case (instr_i[14:12])
           0: alu_op_o = `CPU5_ALU_ADD;
-          /* SLLI reserves every upper immediate bit. */
+          // SLLI reserves every upper immediate bit.
           1: begin
             legal_o = instr_i[31:25] == 0;
             alu_op_o = `CPU5_ALU_SLL;
@@ -123,7 +123,7 @@ module cpu5_decoder (
           2: alu_op_o = `CPU5_ALU_SLT;
           3: alu_op_o = `CPU5_ALU_SLTU;
           4: alu_op_o = `CPU5_ALU_XOR;
-          /* SRLI and SRAI differ only in the permitted upper prefix. */
+          // SRLI and SRAI differ only in the permitted upper prefix.
           5: begin
             legal_o = instr_i[31:25] == 0 || instr_i[31:25] == 7'h20;
             alu_op_o = instr_i[30] ? `CPU5_ALU_SRA : `CPU5_ALU_SRL;
@@ -134,7 +134,7 @@ module cpu5_decoder (
           default: legal_o = 0;
         endcase
       end
-      /* only SUB and SRA admit funct7=0x20; M encodings remain illegal. */
+      // only SUB and SRA admit funct7=0x20; M encodings remain illegal.
       7'h33: begin
         legal_o = instr_i[31:25] == 0 ||
                   (instr_i[31:25] == 7'h20 &&
@@ -143,7 +143,7 @@ module cpu5_decoder (
         rs1_used_o = 1;
         rs2_used_o = 1;
         has_rd = 1;
-        /* choose the operation after independently checking the prefix. */
+        // choose the operation after independently checking the prefix.
         case (instr_i[14:12])
           0: alu_op_o = instr_i[30] ? `CPU5_ALU_SUB : `CPU5_ALU_ADD;
           1: alu_op_o = `CPU5_ALU_SLL;
@@ -156,21 +156,21 @@ module cpu5_decoder (
           default: legal_o = 0;
         endcase
       end
-      /* accept all base FENCE fields; the consumer enforces a full barrier. */
+      // accept all base FENCE fields; the consumer enforces a full barrier.
       7'h0f: begin
         legal_o = instr_i[14:12] == 0;
         kind_o = `CPU5_KIND_FENCE;
       end
-      /* ECALL and EBREAK are exact encodings, not a permissive SYSTEM group. */
+      // ECALL and EBREAK are exact encodings, not a permissive SYSTEM group.
       7'h73: begin
-        /* all CSR, privileged and other SYSTEM instructions are unsupported. */
+        // all CSR, privileged and other SYSTEM instructions are unsupported.
         case (instr_i)
-          /* the later execution environment chooses the precise trap action. */
+          // the later execution environment chooses the precise trap action.
           32'h00000073: begin
             legal_o = 1;
             kind_o = `CPU5_KIND_ECALL;
           end
-          /* debug routing is not enabled by recognizing the base EBREAK opcode. */
+          // debug routing is not enabled by recognizing the base EBREAK opcode.
           32'h00100073: begin
             legal_o = 1;
             kind_o = `CPU5_KIND_EBREAK;
@@ -180,7 +180,7 @@ module cpu5_decoder (
       end
       default: legal_o = 0;
     endcase
-    /* legality gates every control field, not only architectural writeback. */
+    // legality gates every control field, not only architectural writeback.
     if (!legal_o) begin
       kind_o = `CPU5_KIND_NONE;
       alu_op_o = 0;
@@ -194,7 +194,7 @@ module cpu5_decoder (
       mem_size_o = 0;
       load_signed_o = 0;
     end
-    /* x0 remains an operand, but never a register dependency or destination. */
+    // x0 remains an operand, but never a register dependency or destination.
     rs1_o = rs1_used_o ? instr_i[19:15] : 5'b0;
     rs2_o = rs2_used_o ? instr_i[24:20] : 5'b0;
     rd_o = has_rd ? instr_i[11:7] : 5'b0;

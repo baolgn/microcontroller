@@ -1,4 +1,4 @@
-/* exercise architectural debug boundaries independently of the external Debug Module. */
+// exercise architectural debug boundaries independently of the external Debug Module.
 module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTIC = 0);
   import cpu5_control_pkg::*;
   logic clk_i = 0, cold_reset_i = 0, isolated_i = 1, hart_reset_i = 0;
@@ -42,7 +42,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
       kill_uid_o[3], kill_uid_o[4], inspect_value_o, inspect_defined_o, mscratch_o, mip_o, mie_o,
       trace_o, mstatus_o, mtvec_o, entry_pending_o, mem_launch_o};
 
-  /* enable the same ordered admission path in overlapping and diagnostic builds. */
+  // enable the same ordered admission path in overlapping and diagnostic builds.
   cpu5_control #(.C_ENABLED(C_ENABLED), .DIAGNOSTIC(DIAGNOSTIC), .DEBUG_ENABLED(1),
       .IRQ_ENABLED(1), .M_ENABLED(1), .ZIFENCEI_ENABLED(1), .D_MAX_WAIT_CYCLES(128)) dut (.*);
 
@@ -62,15 +62,15 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
   logic [63:0] cycle_ref = 0, instret_ref = 0;
   logic [31:0] inhibit_ref = 5;
 
-  /* every failure retains the reproducible schedule and public architectural state. */
+  // every failure retains the reproducible schedule and public architectural state.
   task automatic check(input bit condition, input string message);
     checks++;
-    /* preserve ordinary detector text for intentional corruption controls. */
+    // preserve ordinary detector text for intentional corruption controls.
     if (!condition) $fatal(1, "debug-core seed=%0d case=%0d edge=%0d dpc=%08x: %s",
         seed, cases, edges, debug_dpc_o, message);
   endtask
 
-  /* use nonzero xorshift state to vary independent memory service phases. */
+  // use nonzero xorshift state to vary independent memory service phases.
   function automatic int random_word();
     random_state ^= random_state << 13;
     random_state ^= random_state >> 17;
@@ -78,19 +78,19 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     return random_state & 'h7fffffff;
   endfunction
 
-  /* write original instruction bytes without using a production decoder. */
+  // write original instruction bytes without using a production decoder.
   task automatic put32(input int address, input logic [31:0] raw);
-    /* little-endian byte layout also permits halfword-aligned wide instructions. */
+    // little-endian byte layout also permits halfword-aligned wide instructions.
     for (int lane = 0; lane < 4; lane++) code[address+lane] = raw[8*lane +: 8];
   endtask
 
-  /* short encodings retain their two original bytes. */
+  // short encodings retain their two original bytes.
   task automatic put16(input int address, input logic [15:0] raw);
     code[address] = raw[7:0];
     code[address+1] = raw[15:8];
   endtask
 
-  /* the fixture varies acceptance and response latency without repeating device effects. */
+  // the fixture varies acceptance and response latency without repeating device effects.
   task automatic tick();
     bit before_halted, before_reset, before_ebreak, command_write, accept_now, respond_now;
     logic [15:0] command_addr;
@@ -101,20 +101,20 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     in_packet_i = '0;
     in_packet_i.pc = issue_pc;
     in_packet_i.op = OP_MACHINE;
-    /* an out-of-image fetch becomes a precise instruction access fault. */
+    // an out-of-image fetch becomes a precise instruction access fault.
     if (issue_pc >= 4096) begin
       in_packet_i.length = 4;
       in_packet_i.fault = 1;
       in_packet_i.cause = 1;
       in_packet_i.mtval = issue_pc;
-    /* deliver raw bytes and architectural length, never decoded execution intent. */
+    // deliver raw bytes and architectural length, never decoded execution intent.
     end else begin
       raw = {code[issue_pc+3], code[issue_pc+2], code[issue_pc+1], code[issue_pc]};
       in_packet_i.length = C_ENABLED && raw[1:0] != 3 ? 3'd2 : 3'd4;
       in_packet_i.raw_valid = in_packet_i.length == 2 ? 4'h3 : 4'hf;
       in_packet_i.raw = in_packet_i.length == 2 ? {16'b0, raw[15:0]} : raw;
     end
-    /* first request presentation establishes an immutable physical owner. */
+    // first request presentation establishes an immutable physical owner.
     if (d_req_valid_o && !owner) begin
       owner = 1;
       accepted = 0;
@@ -142,37 +142,37 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     command_data = debug_reg_wdata_i;
     accept_now = d_req_valid_o && d_req_ready_i;
     respond_now = d_rsp_valid_i && d_rsp_ready_o;
-    /* all offered descriptors remain identical through acceptance. */
+    // all offered descriptors remain identical through acceptance.
     if (d_req_valid_o) check(owner && !accepted &&
         {d_req_tag_o, d_req_addr_o, d_req_wdata_o, d_req_write_o, d_req_wstrb_o} ==
         {owner_tag, owner_addr, owner_data, owner_write, owner_strobes}, "owned request changed");
-    /* acceptance alone creates one device effect when the responder guarantees success. */
+    // acceptance alone creates one device effect when the responder guarantees success.
     if (accept_now) begin
       accepted = 1;
-      /* no-effect error responses cannot touch the modeled MMIO device. */
+      // no-effect error responses cannot touch the modeled MMIO device.
       if (owner_status == 0) begin
         if (owner_write) writes++;
         else reads++;
       end
     end
-    /* the independent stream advances only on input acceptance or a registered redirect. */
+    // the independent stream advances only on input acceptance or a registered redirect.
     if (in_valid_i && in_ready_o) issue_pc += {29'b0, in_packet_i.length};
     clk_i = 1;
     #1;
     edges++;
     entered = debug_halted_o && !before_halted;
-    /* reset clears counters; all other edges use the independently retained old inhibit. */
+    // reset clears counters; all other edges use the independently retained old inhibit.
     if (before_reset) begin
       cycle_ref = 0;
       instret_ref = 0;
       inhibit_ref = 5;
-    /* debug entry by EBREAK suppresses both increments on that entry edge. */
+    // debug entry by EBREAK suppresses both increments on that entry edge.
     end else begin
       if (!before_halted && !(entered && before_ebreak) && !inhibit_ref[0]) cycle_ref++;
       if (trace_o.valid && !trace_o.trap && !before_halted && !inhibit_ref[2]) instret_ref++;
-      /* explicit debug writes replace the addressed half without an implicit increment. */
+      // explicit debug writes replace the addressed half without an implicit increment.
       if (command_write) begin
-        /* no running instruction can compete with a permitted halted write. */
+        // no running instruction can compete with a permitted halted write.
         case (command_addr)
           16'hb00: cycle_ref[31:0] = command_data;
           16'hb80: cycle_ref[63:32] = command_data;
@@ -184,12 +184,12 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
       end
     end
     observed_cycle = mcycle_o;
-    /* corrupt a halted counter observation to calibrate the ordinary edge comparator. */
+    // corrupt a halted counter observation to calibrate the ordinary edge comparator.
     if ($test$plusargs("mutate_counter") && before_halted) observed_cycle++;
     check(observed_cycle == cycle_ref && minstret_o == instret_ref && mcountinhibit_o == inhibit_ref,
           "independent debug counter mismatch");
     check(!fatal_o, "unexpected fatal containment");
-    /* terminal records are counted separately from debugger register transactions. */
+    // terminal records are counted separately from debugger register transactions.
     if (trace_o.valid) begin
       if (trace_o.trap) traps++;
       else retires++;
@@ -197,19 +197,19 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     if (irq_valid_o) irqs++;
     if (entered) halt_entries++;
     if (debug_resumeack_o) resumes++;
-    /* halted state never coexists with a physical request or a normal instruction. */
+    // halted state never coexists with a physical request or a normal instruction.
     if (debug_halted_o) check(!mem_busy_o && !fetch_busy_i && stage_valid_o == 0 &&
         !trace_o.valid && !irq_valid_o, "halt before physical and instruction drainage");
-    /* an injected repeated device effect must fail the same ordinary transaction ledger. */
+    // an injected repeated device effect must fail the same ordinary transaction ledger.
     if ($test$plusargs("mutate_duplicate") && entered && writes > 0) writes++;
-    /* mutation changes only observation, not the RTL or test's expected continuation. */
+    // mutation changes only observation, not the RTL or test's expected continuation.
     observed_pc = debug_dpc_o;
     if ($test$plusargs("mutate_dpc") && entered && debug_dcsr_o[8:6] == 4) observed_pc ^= 4;
-    /* a completed step reports the last terminal continuation, including a trap vector. */
+    // a completed step reports the last terminal continuation, including a trap vector.
     if (entered && debug_dcsr_o[8:6] == 4)
       check(observed_pc == issue_pc, "step continuation mismatch");
     if (redirect_valid_o) issue_pc = redirect_pc_o;
-    /* response completion releases the physical owner exactly once. */
+    // response completion releases the physical owner exactly once.
     if (respond_now) begin
       responses++;
       owner = 0;
@@ -221,17 +221,17 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     #1;
   endtask
 
-  /* bounded waits turn deadlocked halt sequencing into a reproducible failure. */
+  // bounded waits turn deadlocked halt sequencing into a reproducible failure.
   task automatic await_halt();
     int start;
     start = edges;
-    /* hold the request and every bus owner until actual halted status appears. */
+    // hold the request and every bus owner until actual halted status appears.
     while (!debug_halted_o && edges-start < 160) tick();
     check(debug_halted_o, "debug halt deadline exceeded");
     if (edges-start > max_halt) max_halt = edges-start;
   endtask
 
-  /* abstract register access checks accepted commands before mutating reference state. */
+  // abstract register access checks accepted commands before mutating reference state.
   task automatic access(input bit write_reg, input logic [15:0] address,
       input logic [31:0] value, input logic [2:0] expected_error, output logic [31:0] result);
     debug_reg_valid_i = 1;
@@ -246,20 +246,20 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     debug_reg_write_i = 0;
   endtask
 
-  /* debugger writes are explicit commands, never direct hierarchical state injection. */
+  // debugger writes are explicit commands, never direct hierarchical state injection.
   task automatic wr(input logic [15:0] address, input logic [31:0] value);
     logic [31:0] unused_result;
     access(1, address, value, 0, unused_result);
   endtask
 
-  /* compare readback against the scenario's independent expected value. */
+  // compare readback against the scenario's independent expected value.
   task automatic rd(input logic [15:0] address, input logic [31:0] expected_value);
     logic [31:0] result;
     access(0, address, 0, 0, result);
     check(result == expected_value, "abstract register value mismatch");
   endtask
 
-  /* each scenario starts with reset-halt before any instruction can execute. */
+  // each scenario starts with reset-halt before any instruction can execute.
   task automatic initialize();
     cases++;
     feed = 0;
@@ -274,7 +274,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     configured_status = 0;
     accept_delay = random_word() % 5;
     response_delay = 1 + random_word() % 8;
-    /* clear every code byte so each scenario supplies its complete program. */
+    // clear every code byte so each scenario supplies its complete program.
     for (int address = 0; address < 4096; address += 4) put32(address, 32'h00000013);
     check(!owner, "reset scenario retained a bus owner");
     cold_reset_i = 1;
@@ -288,11 +288,11 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     check(debug_dpc_o == 0 && debug_dcsr_o[8:6] == 5 && stage_valid_o == 0,
           "reset-halt executed an instruction");
     wr('h320, 0);
-    /* initialize GPRs deliberately; normal reset promises only x0. */
+    // initialize GPRs deliberately; normal reset promises only x0.
     for (int regno = 1; regno < 32; regno++) wr(16'('h1000+regno), 0);
   endtask
 
-  /* one resume request must acknowledge once even if the hart halts again quickly. */
+  // one resume request must acknowledge once even if the hart halts again quickly.
   task automatic resume_run(input bit stepping, input bit breakpoint_debug = 1);
     wr('h7b0, (breakpoint_debug ? 32'h8000 : 32'b0) | (stepping ? 32'h4 : 32'b0));
     debug_haltreq_i = 0;
@@ -302,7 +302,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     debug_resumereq_i = 0;
   endtask
 
-  /* independent instruction and trap totals verify exactly one attempted step. */
+  // independent instruction and trap totals verify exactly one attempted step.
   task automatic step_to(input logic [31:0] expected_pc, input bit traps_expected,
       input bit breakpoint_debug = 1);
     int before_retire, before_trap;
@@ -315,14 +315,14 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
           traps == before_trap + (traps_expected ? 1 : 0), "step executed wrong instruction count");
   endtask
 
-  /* directed and seeded schedules cover each advertised CPU-side debug operation. */
+  // directed and seeded schedules cover each advertised CPU-side debug operation.
   initial begin
     logic [31:0] unused_result;
     int old_reads, old_writes, old_responses, start, old_irqs;
     if ($value$plusargs("seed=%d", seed)) begin end
     random_state = seed == 0 ? 32'h6d2b79f5 : seed;
     initialize();
-    /* every GPR is writable except x0, and fixed debug fields resist all-one writes. */
+    // every GPR is writable except x0, and fixed debug fields resist all-one writes.
     for (int regno = 0; regno < 32; regno++) begin
       wr(16'('h1000+regno), 32'h12340000 + 32'(regno));
       rd(16'('h1000+regno), regno == 0 ? 0 : 32'h12340000 + 32'(regno));
@@ -351,7 +351,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     rd('h1003, 20);
     step_to(32, 0);
     rd('h1004, 28);
-    /* mixed width link/continuation checks include a wide instruction at pc+2. */
+    // mixed width link/continuation checks include a wide instruction at pc+2.
     if (C_ENABLED) begin
       put16(32, 'h0085);
       put32(34, 'h00900313);
@@ -370,7 +370,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     rd('h1007, 0);
     step_to('h104, 0);
     rd('h1007, 1);
-    /* ordinary M-mode reads of DCSR are illegal despite debugger access permission. */
+    // ordinary M-mode reads of DCSR are illegal despite debugger access permission.
     put32('h104, 'h7b002473);
     step_to('h100, 1);
     check(mepc_o == 'h104 && mcause_o == 2, "debug CSR exposed to M mode");
@@ -410,7 +410,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     resume_run(0);
     await_halt();
     check(debug_dcsr_o[8:6] == 1 && debug_dpc_o == 0, "ordinary debug EBREAK failed");
-    /* the compressed breakpoint uses the same debug-entry path without retirement. */
+    // the compressed breakpoint uses the same debug-entry path without retirement.
     if (C_ENABLED) begin
       put16(0, 'h9002);
       resume_run(0);
@@ -418,7 +418,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
       check(debug_dcsr_o[8:6] == 1 && debug_dpc_o == 0, "debug C.EBREAK failed");
     end
 
-    /* delayed loads to x0 and stores must finish once before halt, then never replay. */
+    // delayed loads to x0 and stores must finish once before halt, then never replay.
     for (int store = 0; store < 2; store++) begin
       initialize();
       put32(0, store != 0 ? 32'h0020a023 : 32'h0000a003);
@@ -438,7 +438,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
       check(d_req_valid_o, "memory operation failed to launch");
       debug_haltreq_i = 1;
       fetch_busy_i = 1;
-      /* a live fetch independently delays debug entry after the data transaction drains. */
+      // a live fetch independently delays debug entry after the data transaction drains.
       repeat (4) tick();
       check(!debug_halted_o, "halt discarded launched ownership");
       fetch_busy_i = 0;
@@ -477,7 +477,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     step_to('h100, 1, 0);
     check(mepc_o == 0 && mcause_o == 3 && mtval_o == 0,
           "stepped exception EBREAK failed");
-    /* C.EBREAK also updates machine state when its debug-routing bit is clear. */
+    // C.EBREAK also updates machine state when its debug-routing bit is clear.
     if (C_ENABLED) begin
       put16(0, 'h9002);
       wr('h7b1, 0);
@@ -500,9 +500,9 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     put32(0, 'h00108067);
     wr('h1001, 6);
     wr('h305, 'h100);
-    /* JALR clears bit zero before the active IALIGN check. */
+    // JALR clears bit zero before the active IALIGN check.
     if (C_ENABLED) step_to(6, 0);
-    /* the non-C target fails before any destination instruction can execute. */
+    // the non-C target fails before any destination instruction can execute.
     else begin
       step_to('h100, 1);
       check(mepc_o == 0 && mcause_o == 0 && mtval_o == 6,
@@ -516,7 +516,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     feed_limit = 4;
     resume_run(0);
     start = edges;
-    /* the admitted divider must complete rather than being replaced on halt selection. */
+    // the admitted divider must complete rather than being replaced on halt selection.
     while (!(stage_valid_o[2] && stage_token_o[2].md_issued) && edges-start < 50) tick();
     check(stage_valid_o[2] && stage_token_o[2].md_issued, "division did not acquire its token");
     debug_haltreq_i = 1;
@@ -544,12 +544,12 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     put32(4, 'hffdff06f);
     resume_run(0);
     access(1, 'h1001, 'hdeadbeef, 4, unused_result);
-    /* a running command cannot modify GPR state or steal a normal retirement edge. */
+    // a running command cannot modify GPR state or steal a normal retirement edge.
     debug_haltreq_i = 1;
     await_halt();
     access(0, 'h1001, 0, 0, unused_result);
     check(unused_result != 'hdeadbeef, "running abstract write modified a GPR");
-    /* request priority prevents resume while haltreq remains asserted. */
+    // request priority prevents resume while haltreq remains asserted.
     debug_resumereq_i = 1;
     repeat (3) tick();
     check(debug_halted_o && !debug_resumeack_o, "resume defeated simultaneous halt request");
@@ -559,7 +559,7 @@ module cpu5_debug_core_tb #(parameter bit C_ENABLED = 1, parameter bit DIAGNOSTI
     put32(0, 'h00100073);
     resume_run(0);
     start = edges;
-    /* a halt that arrives after EBREAK admission outranks its entry cause. */
+    // a halt that arrives after EBREAK admission outranks its entry cause.
     while (!(stage_valid_o[4] && stage_token_o[4].admitted) && edges-start < 60) tick();
     check(stage_valid_o[4] && stage_token_o[4].admitted, "EBREAK never became ordered");
     debug_haltreq_i = 1;

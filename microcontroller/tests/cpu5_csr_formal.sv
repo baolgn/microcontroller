@@ -1,4 +1,4 @@
-/* prove previews and one-edge transitions for every symbolic CSR input. */
+// prove previews and one-edge transitions for every symbolic CSR input.
 module cpu5_csr_formal #(
   parameter bit C_ENABLED = 0,
   parameter bit MUTATE_COUNTER = 0
@@ -29,7 +29,7 @@ module cpu5_csr_formal #(
   logic unused_pending_bits;
   assign unused_pending_bits = ^(mip_levels_i & ~32'h888);
 
-  /* use enumerated addresses and independent per-bit write semantics for preview. */
+  // use enumerated addresses and independent per-bit write semantics for preview.
   always_comb begin
     expected_pending = 0;
     expected_pending[3] = mip_levels_i[3];
@@ -40,60 +40,60 @@ module cpu5_csr_formal #(
             (addr_i > 12'hb82 && addr_i < 12'hba0);
     readonly_address = 0;
     expected_old = 0;
-    /* absent ranges remain absent rather than becoming writable zero storage. */
+    // absent ranges remain absent rather than becoming writable zero storage.
     case (addr_i)
-      /* status exposes only the implemented machine fields. */
+      // status exposes only the implemented machine fields.
       12'h300: begin known = 1; expected_old = mstatus_o; end
-      /* the prototype advertises I only. */
+      // the prototype advertises I only.
       12'h301: begin known = 1; expected_old = 32'h40000100; end
-      /* interrupt enables are stored machine state. */
+      // interrupt enables are stored machine state.
       12'h304: begin known = 1; expected_old = mie_o; end
-      /* the vector contains a direct aligned base. */
+      // the vector contains a direct aligned base.
       12'h305: begin known = 1; expected_old = mtvec_o; end
       12'h310: known = 1;
-      /* inhibit bits control subsequent increments. */
+      // inhibit bits control subsequent increments.
       12'h320: begin known = 1; expected_old = mcountinhibit_o; end
-      /* scratch exposes its full stored word. */
+      // scratch exposes its full stored word.
       12'h340: begin known = 1; expected_old = mscratch_o; end
-      /* the saved PC obeys the fixed alignment. */
+      // the saved PC obeys the fixed alignment.
       12'h341: begin known = 1; expected_old = mepc_o; end
-      /* cause exposes the selected legal state. */
+      // cause exposes the selected legal state.
       12'h342: begin known = 1; expected_old = mcause_o; end
-      /* trap value exposes its full stored word. */
+      // trap value exposes its full stored word.
       12'h343: begin known = 1; expected_old = mtval_o; end
-      /* pending state follows synchronized levels. */
+      // pending state follows synchronized levels.
       12'h344: begin known = 1; expected_old = expected_pending; end
-      /* read the cycle counter's low half. */
+      // read the cycle counter's low half.
       12'hb00: begin known = 1; expected_old = mcycle_o[31:0]; end
-      /* read the cycle counter's high half. */
+      // read the cycle counter's high half.
       12'hb80: begin known = 1; expected_old = mcycle_o[63:32]; end
-      /* read the retirement counter's low half. */
+      // read the retirement counter's low half.
       12'hb02: begin known = 1; expected_old = minstret_o[31:0]; end
-      /* read the retirement counter's high half. */
+      // read the retirement counter's high half.
       12'hb82: begin known = 1; expected_old = minstret_o[63:32]; end
-      /* all identity addresses reject requested writes. */
+      // all identity addresses reject requested writes.
       12'hf11, 12'hf12, 12'hf13, 12'hf14, 12'hf15: begin known = 1; readonly_address = 1; end
-      /* retain the absent or constant-range classification. */
+      // retain the absent or constant-range classification.
       default: begin end
     endcase
     expected_legal = access_i && known && !(readonly_address && write_i);
     candidate = expected_old;
-    /* the three mutating operations are defined independently for each bit. */
+    // the three mutating operations are defined independently for each bit.
     for (int b = 0; b < 32; b++) begin
-      /* requested writes remain distinct from a source mask containing zero. */
+      // requested writes remain distinct from a source mask containing zero.
       if (write_i) begin
-        /* select replacement, set or clear for this bit. */
+        // select replacement, set or clear for this bit.
         case (op_i)
           1: candidate[b] = source_i[b];
           2: candidate[b] = source_i[b] ? 1'b1 : expected_old[b];
           3: candidate[b] = source_i[b] ? 1'b0 : expected_old[b];
-          /* normalized READ retains the old bit. */
+          // normalized READ retains the old bit.
           default: begin end
         endcase
       end
     end
     expected_new = expected_old;
-    /* fixed fields are reconstructed instead of trusting a requested whole word. */
+    // fixed fields are reconstructed instead of trusting a requested whole word.
     case (addr_i)
       12'h300: expected_new = {19'b0, 2'b11, 3'b0, candidate[7], 3'b0, candidate[3], 3'b0};
       12'h304: expected_new = {20'b0, candidate[11], 3'b0, candidate[7], 3'b0, candidate[3], 3'b0};
@@ -101,21 +101,21 @@ module cpu5_csr_formal #(
       12'h320: expected_new = {29'b0, candidate[2], 1'b0, candidate[0]};
       12'h340, 12'h343, 12'hb00, 12'hb80, 12'hb02, 12'hb82: expected_new = candidate;
       12'h341: expected_new = C_ENABLED ? {candidate[31:1], 1'b0} : {candidate[31:2], 2'b0};
-      /* every unlisted software cause preserves the old WLRL value. */
+      // every unlisted software cause preserves the old WLRL value.
       12'h342: begin
-        /* enumerate the complete permitted cause set. */
+        // enumerate the complete permitted cause set.
         case (candidate)
           0, 1, 2, 3, 4, 5, 6, 7, 11, 32'h80000003, 32'h80000007, 32'h8000000b: expected_new = candidate;
-          /* unsupported software causes preserve state. */
+          // unsupported software causes preserve state.
           default: begin end
         endcase
       end
-      /* other implemented registers are constants. */
+      // other implemented registers are constants.
       default: begin end
     endcase
   end
 
-  /* derive next values independently for each public register and counter half. */
+  // derive next values independently for each public register and counter half.
   always_comb begin
     take_write = commit_i && expected_legal && write_i && !trap_i && !mret_i;
     count_cycle = !debug_mode_i && !debug_ebreak_entry_i && !mcountinhibit_o[0];
@@ -130,41 +130,41 @@ module cpu5_csr_formal #(
     next_inhibit = take_write && addr_i == 12'h320 ? expected_new : mcountinhibit_o;
     next_cycle = mcycle_o;
     next_retirement = minstret_o;
-    /* carry into the upper half is checked separately from the DUT's wide addition. */
+    // carry into the upper half is checked separately from the DUT's wide addition.
     if (count_cycle) begin
       next_cycle[31:0] = mcycle_o[31:0] + 32'd1;
       next_cycle[63:32] = mcycle_o[63:32] + (mcycle_o[31:0] == 32'hffffffff ? 32'd1 : 32'b0);
     end
-    /* retiring a counter-write instruction cannot add one after its explicit write. */
+    // retiring a counter-write instruction cannot add one after its explicit write.
     if (count_retirement) begin
       next_retirement[31:0] = minstret_o[31:0] + 32'd1;
       next_retirement[63:32] = minstret_o[63:32] + (minstret_o[31:0] == 32'hffffffff ? 32'd1 : 32'b0);
     end
-    /* trap state has precedence over every normal state update. */
+    // trap state has precedence over every normal state update.
     if (trap_i) begin
       next_status = 32'h1800; next_status[7] = mstatus_o[3];
       next_epc = C_ENABLED ? {trap_pc_i[31:1], 1'b0} : {trap_pc_i[31:2], 2'b0};
       next_cause = trap_cause_i; next_tval = trap_tval_i;
     end
-    /* return updates only the interrupt stack. */
+    // return updates only the interrupt stack.
     else if (mret_i) begin
       next_status = 32'h1880; next_status[3] = mstatus_o[7];
     end
-    /* an ordinary status write reaches only its two writable bits. */
+    // an ordinary status write reaches only its two writable bits.
     else if (take_write && addr_i == 12'h300) next_status = expected_new;
-    /* each half-write restores the untouched half from the pre-edge counter. */
+    // each half-write restores the untouched half from the pre-edge counter.
     if (take_write) begin
-      /* update only the addressed counter half. */
+      // update only the addressed counter half.
       case (addr_i)
         12'hb00: next_cycle = {mcycle_o[63:32], expected_new};
         12'hb80: next_cycle = {expected_new, mcycle_o[31:0]};
         12'hb02: next_retirement = {minstret_o[63:32], expected_new};
         12'hb82: next_retirement = {expected_new, minstret_o[31:0]};
-        /* other writes cannot alter counters. */
+        // other writes cannot alter counters.
         default: begin end
       endcase
     end
-    /* synchronous reset ignores every conflicting write, event and increment. */
+    // synchronous reset ignores every conflicting write, event and increment.
     if (reset_i) begin
       next_status = 32'h1800; next_mie = 0; next_vector = 0; next_scratch = 0;
       next_epc = 0; next_cause = 0; next_tval = 0; next_inhibit = 5;
@@ -172,17 +172,17 @@ module cpu5_csr_formal #(
     end
   end
 
-  /* initial reset and implemented caller trap causes are the only environment constraints. */
+  // initial reset and implemented caller trap causes are the only environment constraints.
   always_ff @(posedge clk_i) begin
     past_valid <= 1;
-    /* architectural storage is unspecified until one reset edge has occurred. */
+    // architectural storage is unspecified until one reset edge has occurred.
     if (!past_valid) assume(reset_i);
-    /* invalid caller trap metadata is rejected by the active simulation assertion. */
+    // invalid caller trap metadata is rejected by the active simulation assertion.
     assume(reset_i || !trap_i || trap_cause_i <= 7 || trap_cause_i == 11 ||
            trap_cause_i == 32'h80000003 || trap_cause_i == 32'h80000007 || trap_cause_i == 32'h8000000b);
     expected_state_q <= {next_status, next_mie, next_vector, next_scratch, next_epc,
                          next_cause, next_tval, next_inhibit, next_cycle, next_retirement};
-    /* induction checks all legal previews and all next-state transitions after reset. */
+    // induction checks all legal previews and all next-state transitions after reset.
     if (past_valid) begin
       assert(legal_o == expected_legal);
       assert(old_o == (expected_legal ? expected_old : 32'b0));

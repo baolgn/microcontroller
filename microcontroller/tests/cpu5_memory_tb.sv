@@ -1,14 +1,14 @@
-/* verify decoded memory operations, precise effects and surviving transaction ownership. */
+// verify decoded memory operations, precise effects and surviving transaction ownership.
 module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 128, parameter integer SCENARIO = 0);
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
-  /* preserve the explicitly IRQ-disabled compatibility profile. */
+  // preserve the explicitly IRQ-disabled compatibility profile.
   logic unused_entry_pending, unused_idle, unused_irq_valid;
   logic [31:0] unused_irq_pc, unused_irq_cause;
-  /* all stimulus and ownership records are bounded independently of DUT counters. */
+  // all stimulus and ownership records are bounded independently of DUT counters.
   localparam integer CAPACITY = 128;
   localparam bit C_ENABLED = 0;
   logic clk_i = 0, cold_reset_i = 0, isolated_i = 1, hart_reset_i = 0;
@@ -37,11 +37,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
   logic [31:0] inspect_value_o;
   logic inspect_defined_o;
   logic [31:0] mstatus_o, mtvec_o, mscratch_o, mepc_o, mcause_o, mtval_o;
-  /* this compatibility fixture leaves new interrupt levels disconnected. */
+  // this compatibility fixture leaves new interrupt levels disconnected.
   logic [31:0] unused_mie, unused_mip, unused_mcountinhibit;
   logic [63:0] unused_mcycle, unused_minstret;
 
-  /* expected packets come from explicit stimulus intent rather than observed decode. */
+  // expected packets come from explicit stimulus intent rather than observed decode.
   typedef struct packed {
     packet_t p;
     logic redirects;
@@ -88,7 +88,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
   bit target_external = 0, reference_external = 0;
   bit mutation_applied = 0;
 
-  /* overlapping occupancy is essential to the issued-load and younger-jump cases. */
+  // overlapping occupancy is essential to the issued-load and younger-jump cases.
   cpu5_control #(.IRQ_ENABLED(0), .FORWARDING(SCENARIO == 2), .DIAGNOSTIC(SCENARIO == 2), .TEST_REGIONS(SCENARIO != 2), .IRAM_WRITE(PROFILE),
       .TIMER_ENABLED(PROFILE), .D_MAX_WAIT_CYCLES(MAX_WAIT)) dut (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
@@ -102,14 +102,14 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     .minstret_o(unused_minstret), .*
   );
 
-  /* stop at the first mismatch before another edge can corrupt the ownership ledger. */
+  // stop at the first mismatch before another edge can corrupt the ownership ledger.
   function automatic void check(input bit condition, input string message);
     checks++;
-    /* each failure names the exact scenario and independently selected PC. */
+    // each failure names the exact scenario and independently selected PC.
     if (!condition) $fatal(1, "case=%0d profile=%0d scenario=%0d seed=%0d cycle=%0d pc=%08x: %s", cases, PROFILE, SCENARIO, schedule_seed, cycles, arch_pc, message);
   endfunction
 
-  /* ordinary operations are synthetic packet stimulus rather than decoded ISA instructions. */
+  // ordinary operations are synthetic packet stimulus rather than decoded ISA instructions.
   function automatic packet_t packet(input logic [31:0] pc, input op_t op = OP_RESULT,
       input logic [4:0] rd = 0, input logic [31:0] value = 0);
     packet_t p;
@@ -127,7 +127,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return p;
   endfunction
 
-  /* produce a true JAL encoding while poisoning annotations that D must replace. */
+  // produce a true JAL encoding while poisoning annotations that D must replace.
   function automatic packet_t jal(input logic [31:0] pc, input logic [31:0] offset,
       input logic [4:0] rd = 2);
     packet_t p;
@@ -144,7 +144,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return p;
   endfunction
 
-  /* construct the expected JAL effect from its declared offset, not decoded DUT fields. */
+  // construct the expected JAL effect from its declared offset, not decoded DUT fields.
   function automatic expected_t jal_expected(input packet_t p, input logic [31:0] offset,
       input logic [4:0] rd = 2);
     expected_t q;
@@ -167,7 +167,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return q;
   endfunction
 
-  /* this fixture uses BEQ of the same independently supplied register on both ports. */
+  // this fixture uses BEQ of the same independently supplied register on both ports.
   function automatic packet_t equal_branch(input logic [31:0] pc, input logic [4:0] source);
     packet_t p;
     p = jal(pc, 8);
@@ -175,7 +175,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return p;
   endfunction
 
-  /* equal source operands make the declared BEQ target independently certain. */
+  // equal source operands make the declared BEQ target independently certain.
   function automatic expected_t branch_expected(input packet_t p, input logic [4:0] source,
       input logic [31:0] value);
     expected_t q;
@@ -190,7 +190,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return q;
   endfunction
 
-  /* CSR inputs remain explicit synthetic operations with real W storage semantics. */
+  // CSR inputs remain explicit synthetic operations with real W storage semantics.
   function automatic packet_t csr_write(input logic [31:0] pc, input logic [11:0] address,
       input logic [31:0] value, input logic read_old = 0, input logic [4:0] rd = 0);
     packet_t p;
@@ -203,14 +203,14 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return p;
   endfunction
 
-  /* select reference CSR values without reading exposed DUT storage. */
+  // select reference CSR values without reading exposed DUT storage.
   function automatic logic [31:0] csr_value(input logic [11:0] address);
-    /* the fixture deliberately limits its synthetic CSR operation subset. */
+    // the fixture deliberately limits its synthetic CSR operation subset.
     case (address)
       'h300: return status_ref;
       'h305: return vector_ref;
       'h341: return epc_ref;
-      /* unsupported fixture addresses are test construction errors. */
+      // unsupported fixture addresses are test construction errors.
       default: begin
         check(0, "fixture used an unmodeled CSR");
         return 0;
@@ -218,36 +218,36 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     endcase
   endfunction
 
-  /* advance a replayable schedule generator without depending on DUT readiness or data. */
+  // advance a replayable schedule generator without depending on DUT readiness or data.
   function automatic logic [31:0] next_random();
     random_state = 32'd1664525 * random_state + 32'd1013904223;
     return random_state;
   endfunction
 
-  /* map only the two real RAM regions; denied addresses must never alias an array index. */
+  // map only the two real RAM regions; denied addresses must never alias an array index.
   function automatic integer ram_index(input logic [31:0] address);
     check((address >= 'h20000000 && address <= 'h20007fff) ||
           (address >= 'h10000 && address <= 'h1ffff), "target RAM address was outside its region");
     return address >= 'h20000000 ? int'(address - 'h20000000) : int'(address - 'h10000) + 32768;
   endfunction
 
-  /* both models start from the same immutable input image, never from a DUT result. */
+  // both models start from the same immutable input image, never from a DUT result.
   function automatic logic [7:0] image_byte(input logic [31:0] address);
     logic [20:0] unused_high_image_address;
-    /* this recorded image pattern deliberately repeats above its low eleven address bits. */
+    // this recorded image pattern deliberately repeats above its low eleven address bits.
     unused_high_image_address = address[31:11];
     return 8'(address ^ (address >> 3) ^ 'ha5);
   endfunction
 
-  /* validate every requested byte independently of the LSU's widened-endpoint implementation. */
+  // validate every requested byte independently of the LSU's widened-endpoint implementation.
   function automatic bit region_permitted(input logic [31:0] address,
       input logic [1:0] size, input bit write);
     logic [31:0] at;
     bit okay;
     okay = size != 3;
-    /* natural alignment and valid widths are required before any target sees a command. */
+    // natural alignment and valid widths are required before any target sees a command.
     if (size != 3 && (address % (1 << size)) != 0) okay = 0;
-    /* a full footprint must remain in one independently permitted byte region. */
+    // a full footprint must remain in one independently permitted byte region.
     for (int byte_number = 0; byte_number < (1 << size); byte_number++) begin
       at = address + 32'(byte_number);
       okay &= at >= address &&
@@ -261,17 +261,17 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return okay;
   endfunction
 
-  /* construct real I/S-format memory encodings separately from their declared intent. */
+  // construct real I/S-format memory encodings separately from their declared intent.
   function automatic packet_t memory_instruction(input logic [31:0] pc, input bit write,
       input logic [2:0] funct3, input logic [11:0] immediate,
       input logic [4:0] base = 1, input logic [4:0] data_or_destination = 3);
     packet_t p;
     p = packet(pc, OP_MEMORY, 31, 'hdeadbeef);
     p.raw = (32'(base) << 15) | (32'(funct3) << 12);
-    /* the source bytes and destination field occupy different bits in I and S formats. */
+    // the source bytes and destination field occupy different bits in I and S formats.
     if (write) p.raw |= (32'(immediate[11:5]) << 25) | (32'(data_or_destination) << 20) |
                         (32'(immediate[4:0]) << 7) | 'h23;
-    /* load immediates are contiguous and have a true destination register field. */
+    // load immediates are contiguous and have a true destination register field.
     else p.raw |= (32'(immediate) << 20) | (32'(data_or_destination) << 7) | 3;
     p.rs1_used = 0;
     p.rs2_used = 0;
@@ -285,7 +285,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return p;
   endfunction
 
-  /* specify normalized memory intent using known operands and displacement, not observed decoding. */
+  // specify normalized memory intent using known operands and displacement, not observed decoding.
   function automatic expected_t memory_expected(input packet_t original_packet, input bit write,
       input logic [1:0] size, input bit signed_load, input logic [31:0] base_value,
       input logic [31:0] displacement, input logic [31:0] store_value = 0,
@@ -312,9 +312,9 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     q.p.cause = q.p.fault ? ((q.p.mem_addr % (1 << size)) != 0 ? (write ? 6 : 4) :
                            (write ? 7 : 5)) : 0;
     q.p.mtval = q.p.fault ? q.p.mem_addr : 0;
-    /* emit store lanes byte by byte; every unselected byte stays zero. */
+    // emit store lanes byte by byte; every unselected byte stays zero.
     if (write && !q.p.fault) begin
-      /* each low source byte goes to its actual addressed lane. */
+      // each low source byte goes to its actual addressed lane.
       for (int byte_number = 0; byte_number < (1 << size); byte_number++) begin
         q.p.mem_wdata[8*(int'(q.p.mem_addr[1:0])+byte_number) +: 8] = store_value[8*byte_number +: 8];
       end
@@ -322,32 +322,32 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     return q;
   endfunction
 
-  /* derive the external lane mask from independently accepted memory intent. */
+  // derive the external lane mask from independently accepted memory intent.
   function automatic logic [3:0] lane_mask(input logic [1:0] offset, input logic [1:0] size);
     logic [3:0] mask;
     mask = 0;
-    /* every naturally aligned requested byte sets exactly one addressed word lane. */
+    // every naturally aligned requested byte sets exactly one addressed word lane.
     for (int byte_number = 0; byte_number < (1 << size); byte_number++) begin
       mask[int'(offset) + byte_number] = 1;
     end
     return mask;
   endfunction
 
-  /* the actual bus target services each physical acceptance once and never deduplicates tags. */
+  // the actual bus target services each physical acceptance once and never deduplicates tags.
   task automatic target_service(input logic [31:0] address, input logic [31:0] data,
       input logic [1:0] size, input logic [3:0] strobes, input bit write);
     logic [31:0] word, byte_address;
     bit perform;
     word = 0;
     target_status = force_status;
-    /* predefined target-error registers reject without any effect. */
+    // predefined target-error registers reject without any effect.
     if (address >= 'h50001000 && address < 'h50002000) target_status = 1;
-    /* the uncertainty register supports only offset zero and complete word commands. */
+    // the uncertainty register supports only offset zero and complete word commands.
     if (address >= 'h50002000 && address < 'h50003000 &&
         (address != 'h50002000 || size != 2)) target_status = 1;
-    /* device permissions belong to the responder after the window-level guard. */
+    // device permissions belong to the responder after the window-level guard.
     if (address >= 'h40000000 && address < 'h40001000) begin
-      /* exact register direction and offset are independently decoded by this physical target. */
+      // exact register direction and offset are independently decoded by this physical target.
       case (address - 'h40000000)
         0, 8, 12, 16: target_status = write ? 1 : force_status;
         4: target_status = write ? force_status : 1;
@@ -355,22 +355,22 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         default: target_status = 1;
       endcase
     end
-    /* the enabled timer window is a plain bus-register fixture, not a timer implementation. */
+    // the enabled timer window is a plain bus-register fixture, not a timer implementation.
     if (address >= 'h40001000 && address < 'h40002000 && address > 'h40001010) target_status = 1;
     perform = target_status == 0 || (target_status == 2 && uncertain_effect);
-    /* only this explicit service point can mutate real target storage. */
+    // only this explicit service point can mutate real target storage.
     if (perform) begin
-      /* the MMIO device has observable read and write actions even when software discards data. */
+      // the MMIO device has observable read and write actions even when software discards data.
       if (address >= 'h40000000 && address < 'h40001000) begin
-        /* access direction already passed the physical target's independent permissions. */
+        // access direction already passed the physical target's independent permissions.
         case (address - 'h40000000)
-          /* reading a ticket increments the physical read counter exactly once. */
+          // reading a ticket increments the physical read counter exactly once.
           0: begin
             word = 32'(target_reads);
             target_reads++;
             target_effects++;
           end
-          /* writing a ticket preserves its payload and increments the physical write count. */
+          // writing a ticket preserves its payload and increments the physical write count.
           4: begin
             target_writes++;
             target_last_write = data;
@@ -379,39 +379,39 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           8: word = 32'(target_reads);
           12: word = 32'(target_writes);
           16: word = target_last_write;
-          /* external pending is a held bit with explicit write-one-to-clear behavior. */
+          // external pending is a held bit with explicit write-one-to-clear behavior.
           20: begin
             word = {31'b0, target_external};
-            /* writing bit zero acknowledges this fixture's held external state. */
+            // writing bit zero acknowledges this fixture's held external state.
             if (write && data[0]) target_external = 0;
           end
           default: check(0, "physical device serviced a rejected offset");
         endcase
       end
-      /* the optional timer aperture verifies forwarding of complete word transactions. */
+      // the optional timer aperture verifies forwarding of complete word transactions.
       else if (address >= 'h40001000 && address <= 'h40001010) begin
         word = target_timer[(address - 'h40001000) / 4];
-        /* this target register has an ordinary single accepted write effect. */
+        // this target register has an ordinary single accepted write effect.
         if (write) target_timer[(address - 'h40001000) / 4] = data;
       end
-      /* explicit uncertainty scripts choose whether a real accepted write changes this register. */
+      // explicit uncertainty scripts choose whether a real accepted write changes this register.
       else if (address >= 'h50002000 && address < 'h50003000) begin
         word = target_uncertain;
-        /* this scripted effect is visible even though the CPU cannot know its outcome. */
+        // this scripted effect is visible even though the CPU cannot know its outcome.
         if (write) begin
           target_uncertain = data;
           target_effects++;
         end
       end
-      /* RAM and ROM expose only requested byte lanes in a registered read result. */
+      // RAM and ROM expose only requested byte lanes in a registered read result.
       else if (address < 'h2000 || (address >= 'h10000 && address < 'h20000) ||
                (address >= 'h20000000 && address < 'h20008000)) begin
-        /* process each physical word lane independently of the expected instruction. */
+        // process each physical word lane independently of the expected instruction.
         for (int lane = 0; lane < 4; lane++) begin
           byte_address = (address & 32'hfffffffc) + 32'(lane);
-          /* every asserted store strobe is a real external write, even if a mutant duplicates it. */
+          // every asserted store strobe is a real external write, even if a mutant duplicates it.
           if (write && strobes[lane]) target_ram[ram_index(byte_address)] = data[8*lane +: 8];
-          /* unrequested load bytes never enter the response payload. */
+          // unrequested load bytes never enter the response payload.
           if (!write && lane >= int'(address[1:0]) && lane < int'(address[1:0]) + (1 << size)) begin
             word[8*lane +: 8] = byte_address < 'h2000 ? image_byte(byte_address) : target_ram[ram_index(byte_address)];
           end
@@ -421,7 +421,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     target_data = target_status == 0 && !write ? word : 0;
   endtask
 
-  /* reference memory effects follow validated immutable intents rather than actual bus data. */
+  // reference memory effects follow validated immutable intents rather than actual bus data.
   task automatic reference_service(input logic [6:0] id);
     packet_t p;
     logic [31:0] value, address;
@@ -429,7 +429,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     bit permitted_effect;
     logic [362:0] unused_architectural_fields;
     p = expected[id].p;
-    /* target effects do not consume instruction identity, result intent or unrelated CSR metadata. */
+    // target effects do not consume instruction identity, result intent or unrelated CSR metadata.
     unused_architectural_fields = {p.pc, p.raw, p.raw_valid, p.length, p.expanded_valid, p.expanded,
         p.rs1_used, p.rs2_used, p.rs1, p.rs2, p.rd, p.rs1_value, p.rd_write, p.result,
         p.next_pc, p.mem_wdata, p.csr_addr, p.csr_op, p.csr_read, p.csr_write, p.csr_source,
@@ -437,7 +437,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     address = p.mem_addr;
     value = 0;
     status = force_status;
-    /* classify no-effect device rejects from the expected requested register and direction. */
+    // classify no-effect device rejects from the expected requested register and direction.
     if ((address >= 'h50001000 && address < 'h50002000) ||
         (address >= 'h50002000 && address < 'h50003000 && (address != 'h50002000 || p.mem_size != 2)) ||
         (address >= 'h40000000 && address < 'h40001000 &&
@@ -446,19 +446,19 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         (address >= 'h40001014 && address < 'h40002000)) status = 1;
     check(status == target_status, "physical response status differs from independent target intent");
     permitted_effect = status == 0 || (status == 2 && uncertain_effect);
-    /* the reference and physical target never share mutable storage or returned data. */
+    // the reference and physical target never share mutable storage or returned data.
     if (permitted_effect) begin
-      /* expected device values and effect totals derive solely from preceding expected commands. */
+      // expected device values and effect totals derive solely from preceding expected commands.
       if (address >= 'h40000000 && address < 'h40001000) begin
-        /* each expected device operation has its own explicit state transition. */
+        // each expected device operation has its own explicit state transition.
         case (address)
-          /* expected ticket reads advance only the independent effect history. */
+          // expected ticket reads advance only the independent effect history.
           'h40000000: begin
             value = 32'(reference_reads);
             reference_reads++;
             reference_effects++;
           end
-          /* expected ticket writes use the immutable captured source value. */
+          // expected ticket writes use the immutable captured source value.
           'h40000004: begin
             reference_writes++;
             reference_last_write = p.rs2_value;
@@ -467,51 +467,51 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           'h40000008: value = 32'(reference_reads);
           'h4000000c: value = 32'(reference_writes);
           'h40000010: value = reference_last_write;
-          /* the reference held bit has no implicit timer or external stimulus. */
+          // the reference held bit has no implicit timer or external stimulus.
           'h40000014: begin
             value = {31'b0, reference_external};
-            /* this fixture has no asynchronous source events while the LSU is qualified. */
+            // this fixture has no asynchronous source events while the LSU is qualified.
             if (p.op == OP_STORE && p.rs2_value[0]) reference_external = 0;
           end
           default: check(0, "reference serviced an invalid device offset");
         endcase
       end
-      /* timer-profile checks use a separately maintained plain-register target bank. */
+      // timer-profile checks use a separately maintained plain-register target bank.
       else if (address >= 'h40001000 && address <= 'h40001010) begin
         value = reference_timer[(address - 'h40001000) / 4];
-        /* immutable store intent supplies the expected write value. */
+        // immutable store intent supplies the expected write value.
         if (p.op == OP_STORE) reference_timer[(address - 'h40001000) / 4] = p.rs2_value;
       end
-      /* a scripted uncertain target effect is counted independently and must never be replayed. */
+      // a scripted uncertain target effect is counted independently and must never be replayed.
       else if (address >= 'h50002000 && address < 'h50003000) begin
         value = reference_uncertain;
-        /* the expected write value comes from the captured raw instruction's source operand. */
+        // the expected write value comes from the captured raw instruction's source operand.
         if (p.op == OP_STORE) begin
           reference_uncertain = p.rs2_value;
           reference_effects++;
         end
       end
-      /* assemble little-endian values from addressed bytes before extending them. */
+      // assemble little-endian values from addressed bytes before extending them.
       else if (address < 'h2000 || (address >= 'h10000 && address < 'h20000) ||
                (address >= 'h20000000 && address < 'h20008000)) begin
-        /* expected stores write source bytes, independently of physical lane strobes. */
+        // expected stores write source bytes, independently of physical lane strobes.
         for (int byte_number = 0; byte_number < (1 << p.mem_size); byte_number++) begin
-          /* the target's mutable RAM is never read by this architectural prediction. */
+          // the target's mutable RAM is never read by this architectural prediction.
           if (p.op == OP_STORE) reference_ram[ram_index(address + 32'(byte_number))] = p.rs2_value[8*byte_number +: 8];
-          /* ROM bytes are the shared immutable input image only. */
+          // ROM bytes are the shared immutable input image only.
           else value[8*byte_number +: 8] = address < 'h2000 ? image_byte(address + 32'(byte_number)) :
               reference_ram[ram_index(address + 32'(byte_number))];
         end
-        /* signed extension fills only bits above the requested byte width. */
+        // signed extension fills only bits above the requested byte width.
         if (p.mem_signed && p.mem_size < 2 && value[(8 << p.mem_size)-1]) begin
-          /* each high result bit repeats the independently assembled sign bit. */
+          // each high result bit repeats the independently assembled sign bit.
           for (int bit_number = (8 << p.mem_size); bit_number < 32; bit_number++) value[bit_number] = 1;
         end
       end
     end
     load_value[id] = value;
     failed[id] = status == 1;
-    /* a deliberate extra physical effect must be exposed even for an x0 destination. */
+    // a deliberate extra physical effect must be exposed even for an x0 destination.
     if ($test$plusargs("mutate_effect") && !mutation_applied && address == 'h40000000 && status == 0) begin
       target_reads++;
       mutation_applied = 1;
@@ -521,22 +521,22 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           target_external == reference_external && target_uncertain == reference_uncertain, "physical device effect differs from independent intent");
   endtask
 
-  /* a completed data response updates only the immutable original load's expectation. */
+  // a completed data response updates only the immutable original load's expectation.
   function automatic expected_t disposition(input logic [6:0] id);
     expected_t q;
     q = expected[id];
-    /* no synthetic early load result is accepted before its planned response. */
+    // no synthetic early load result is accepted before its planned response.
     if ((q.p.op == OP_LOAD || q.p.op == OP_STORE) && completed[id]) begin
       q.p.fault = failed[id];
       q.p.cause = failed[id] ? (q.p.op == OP_LOAD ? 5 : 7) : 0;
       q.p.mtval = failed[id] ? q.p.mem_addr : 0;
-      /* access faults preserve the original packet's result field. */
+      // access faults preserve the original packet's result field.
       if (!failed[id] && q.p.op == OP_LOAD) q.p.result = load_value[id];
     end
     return q;
   endfunction
 
-  /* compare and commit one independently eligible architectural terminal. */
+  // compare and commit one independently eligible architectural terminal.
   task automatic terminal(input trace_t actual, input packet_t p);
     logic [6:0] id;
     logic [31:0] old_csr, new_csr, write_value, continuation;
@@ -553,11 +553,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           "terminal packet or fault differed from independent intent");
     old_csr = p.op == OP_CSR ? csr_value(p.csr_addr) : 0;
     new_csr = p.csr_source;
-    /* the tested WARL masks are defined independently of DUT readback. */
+    // the tested WARL masks are defined independently of DUT readback.
     if (p.csr_addr == 'h300) new_csr = 'h1800 | (new_csr & 'h88);
-    /* mtvec remains word aligned in both active configurations. */
+    // mtvec remains word aligned in both active configurations.
     if (p.csr_addr == 'h305) new_csr &= 32'hfffffffc;
-    /* mepc reflects IALIGN, preserving bit one only when C is enabled. */
+    // mepc reflects IALIGN, preserving bit one only when C is enabled.
     if (p.csr_addr == 'h341) new_csr &= C_ENABLED ? 32'hfffffffe : 32'hfffffffc;
     write_value = p.op == OP_CSR ? (p.csr_read ? old_csr : 0) : p.result;
     do_write = !p.fault && p.rd_write && p.rd != 0 &&
@@ -572,7 +572,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           actual.csr_new == (actual.csr_write ? new_csr : 0), "CSR old/new trace value mismatch");
     continuation = p.op == OP_MRET ? epc_ref : p.next_pc;
     check(actual.next_pc == (p.fault ? vector_ref : continuation), "wrong terminal continuation");
-    /* trap disposition changes only trap state and consumes its original instruction. */
+    // trap disposition changes only trap state and consumes its original instruction.
     if (p.fault) begin
       epc_ref = p.pc & (C_ENABLED ? 32'hfffffffe : 32'hfffffffc);
       cause_ref = p.cause;
@@ -581,17 +581,17 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       arch_pc = vector_ref;
       traps++;
     end
-    /* all normal register and CSR effects happen on this one checked W edge. */
+    // all normal register and CSR effects happen on this one checked W edge.
     else begin
       arch_pc = continuation;
-      /* x0 cannot become a stored link or CSR destination. */
+      // x0 cannot become a stored link or CSR destination.
       if (do_write) begin
         regs_ref[p.rd] = write_value;
         defined_ref[p.rd] = 1;
       end
-      /* explicit synthetic CSR writes update the independent bank atomically. */
+      // explicit synthetic CSR writes update the independent bank atomically.
       if (actual.csr_write) begin
-        /* the fixture covers all CSR fields it can write. */
+        // the fixture covers all CSR fields it can write.
         case (p.csr_addr)
           'h300: status_ref = new_csr;
           'h305: vector_ref = new_csr;
@@ -599,7 +599,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           default: check(0, "unmodeled CSR update");
         endcase
       end
-      /* MRET restores the independently stored previous interrupt enable. */
+      // MRET restores the independently stored previous interrupt enable.
       if (p.op == OP_MRET) status_ref = 'h1880 | (status_ref[7] ? 8 : 0);
     end
     live[id] = 0;
@@ -607,17 +607,17 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     next_order++;
   endtask
 
-  /* the oldest surviving accepted UID is independent of pipeline stage placement. */
+  // the oldest surviving accepted UID is independent of pipeline stage placement.
   function automatic logic [63:0] next_terminal_uid();
-    /* holes represent independently justified squash or reset dispositions. */
+    // holes represent independently justified squash or reset dispositions.
     for (int id = 0; id < CAPACITY; id++) begin
-      /* a live older owner cannot be skipped even if it has no architectural write. */
+      // a live older owner cannot be skipped even if it has no architectural write.
       if (live[id]) return 64'(id);
     end
     return '1;
   endfunction
 
-  /* one edge predicts all control events before sampling registered DUT witnesses. */
+  // one edge predicts all control events before sampling registered DUT witnesses.
   task automatic tick();
     logic [4:0] before_valid, wanted_kill, observed_kill;
     token_t before_token [0:4];
@@ -644,7 +644,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     d_rsp_tag_i = inject_response ? (inject_wrong_tag ? owner_tag + 1 : owner_tag) : target_tag;
     d_rsp_rdata_i = inject_response ? 0 : target_data;
     d_rsp_status_i = inject_response ? 0 : target_status;
-    /* malformed payload injection changes only the physical response, never expected memory state. */
+    // malformed payload injection changes only the physical response, never expected memory state.
     if (corrupt_reply && d_rsp_valid_i) d_rsp_rdata_i ^= 32'h80000000;
     #2;
     reset_active = cold_reset_i || hart_reset_i;
@@ -664,9 +664,9 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     complete_reply = accept_response && owner && !recover_owner && d_rsp_tag_i == owner_tag &&
                      (owner_accepted || accept_request);
     response_mask = 0;
-    /* build canonical response bytes independently of the target's own payload construction. */
+    // build canonical response bytes independently of the target's own payload construction.
     for (int lane = 0; lane < 4; lane++) begin
-      /* requested lanes alone may carry successful load data. */
+      // requested lanes alone may carry successful load data.
       if (owner_lanes[lane]) response_mask[8*lane +: 8] = '1;
     end
     payload_bad = (d_rsp_status_i != 0 || owner_write) ? d_rsp_rdata_i != 0 :
@@ -676,13 +676,13 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
                cycles + 1 - offer_cycle >= 32'(MAX_WAIT);
     fatal_active = fatal_ref || bad_reply || deadline;
     next_fatal_record = fatal_record_ref;
-    /* first containment captures immutable exposure, including same-edge physical events. */
+    // first containment captures immutable exposure, including same-edge physical events.
     if (!cold_reset_i && !fatal_ref && (bad_reply || deadline)) begin
       next_fatal_record = '0;
       next_fatal_record.valid = 1;
       next_fatal_record.reason = bad_reply ?
           (complete_reply && d_rsp_status_i == 2 && !payload_bad ? 2 : 1) : 3;
-      /* an orphan response cannot invent an original instruction or descriptor. */
+      // an orphan response cannot invent an original instruction or descriptor.
       if (owner) begin
         next_fatal_record.owned = 1;
         next_fatal_record.accepted = owner_accepted || accept_request || recover_owner;
@@ -709,11 +709,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     protect_w = before_valid[4] && (issued[w_id] || w.p.fault);
     w_done = before_valid[4] && !hold_i[4] && !reset_active && !fatal_active && (!active_flush || protect_w);
     wanted_kill = 0;
-    /* reset revokes instruction ownership while a physical data owner remains separately live. */
+    // reset revokes instruction ownership while a physical data owner remains separately live.
     if (reset_active) wanted_kill = before_valid;
-    /* precise W control wins over any requested external flush. */
+    // precise W control wins over any requested external flush.
     else if (w_done && (w.p.fault || w.redirects)) wanted_kill = before_valid & 5'b01111;
-    /* a flush preserves the issued token until its W disposition, even after bus response. */
+    // a flush preserves the issued token until its W disposition, even after bus response.
     else if (active_flush && !fatal_active) begin
       wanted_kill = before_valid;
       wanted_kill[3] = before_valid[3] && !protect_m;
@@ -723,7 +723,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
                      (!protect_w || w_done) && !owner_before;
     wanted_redirect = flush_complete || (w_done && (w.p.fault || w.redirects));
     redirect_target = active_target;
-    /* a trap or normal return/control terminal supplies its own independently known target. */
+    // a trap or normal return/control terminal supplies its own independently known target.
     if (w_done && (w.p.fault || w.redirects)) redirect_target = w.p.fault ? vector_ref :
         (w.p.op == OP_MRET ? epc_ref : w.p.next_pc);
     wanted_abort = reset_active ? flush_pending : (w_done && w.p.fault && active_flush);
@@ -733,33 +733,33 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         (!before_valid[4] || (w_done && !w.p.fault && !w.redirects));
     check(mem_launch_o == launch_expected, "unexpected or missing first-valid memory grant");
     observed_valid = d_req_valid_o;
-    /* an ownerless valid signal must be detected even while target ready is low. */
+    // an ownerless valid signal must be detected even while target ready is low.
     if ($test$plusargs("mutate_orphan") && !mutation_applied && !reset_active && !recovery_ref && !owner) begin
       observed_valid = 1;
       mutation_applied = 1;
     end
     check(mem_busy_o == owner && observed_valid == (owner && !owner_accepted && !recover_owner),
           "physical request owner disappeared or appeared without permission");
-    /* first-valid request ownership makes the complete external descriptor immutable. */
+    // first-valid request ownership makes the complete external descriptor immutable.
     observed_wdata = d_req_wdata_o;
-    /* corrupt one observed store lane without altering the independently expected intent. */
+    // corrupt one observed store lane without altering the independently expected intent.
     if ($test$plusargs("mutate_lane") && !mutation_applied && owner && owner_write) begin
       observed_wdata ^= 1;
       mutation_applied = 1;
     end
-    /* physical exposure remains immutable after reset and containment as well as normal stalls. */
+    // physical exposure remains immutable after reset and containment as well as normal stalls.
     if (owner) check(d_req_tag_o == owner_tag && d_req_addr_o == owner_addr &&
         observed_wdata == owner_wdata && d_req_write_o == owner_write && d_req_size_o == owner_size &&
         d_req_wstrb_o == (owner_write ? owner_lanes : 0), "owned request descriptor changed");
     accepted_input = in_valid_i && in_ready_o;
     accept_request = d_req_valid_o && d_req_ready_i;
     accept_response = d_rsp_valid_i && d_rsp_ready_o;
-    /* decoded memory sources must wait for every nearer unready writer. */
+    // decoded memory sources must wait for every nearer unready writer.
     matching_writers = 0;
-    /* only a successfully decoded memory instruction participates in this source dependency check. */
+    // only a successfully decoded memory instruction participates in this source dependency check.
     if (before_valid[1] && original[7'(before_token[1].uid)].op == OP_MEMORY &&
         expected[7'(before_token[1].uid)].p.op inside {OP_LOAD, OP_STORE}) begin
-      /* use immutable expected source indices instead of the DUT's normalized fields. */
+      // use immutable expected source indices instead of the DUT's normalized fields.
       for (int stage = 2; stage < 5; stage++) begin
         source_match = before_valid[stage] && expected[7'(before_token[stage].uid)].p.rd_write &&
             expected[7'(before_token[stage].uid)].p.rd != 0 &&
@@ -767,26 +767,26 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
               expected[7'(before_token[1].uid)].p.rs1 == expected[7'(before_token[stage].uid)].p.rd) ||
              (expected[7'(before_token[1].uid)].p.rs2_used &&
               expected[7'(before_token[1].uid)].p.rs2 == expected[7'(before_token[stage].uid)].p.rd));
-        /* only a successful W value is eligible for same-edge source capture. */
+        // only a successful W value is eligible for same-edge source capture.
         if (source_match && !wanted_kill[1]) begin
           matching_writers++;
-          /* X/M and held/faulting W producers must interlock the actual D transfer. */
+          // X/M and held/faulting W producers must interlock the actual D transfer.
           if (stage != 4 || !w_done || w.p.fault) begin
             check(!before_transfer[1], "memory source bypassed an unresolved older writer");
             dependency_stalls++;
           end
-          /* exact D capture checks below independently verify the forwarded value. */
+          // exact D capture checks below independently verify the forwarded value.
           else if (before_transfer[1]) dual_bypasses++;
         end
       end
-      /* a nearer matching destination must hide a farther producer's available value. */
+      // a nearer matching destination must hide a farther producer's available value.
       if (matching_writers > 1) nearest_stalls++;
     end
     clk_i = 1;
     #2;
     cycles++;
     observed_kill = kill_valid_o;
-    /* a hidden extra killed instruction must fail the exact independently justified mask. */
+    // a hidden extra killed instruction must fail the exact independently justified mask.
     if ($test$plusargs("mutate_kill") && !mutation_applied && !reset_active && before_valid[4] && hold_i[4] &&
         !active_flush) begin
       observed_kill[4] = !observed_kill[4];
@@ -797,15 +797,15 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(redirect_valid_o == wanted_redirect && (!wanted_redirect || redirect_pc_o == redirect_target),
           "incorrect event redirect arbitration");
     observed_abort = flush_aborted_o;
-    /* a missing flush-abort pulse cannot hide behind a correct trap redirect. */
+    // a missing flush-abort pulse cannot hide behind a correct trap redirect.
     if ($test$plusargs("mutate_abort") && !mutation_applied && wanted_abort) begin
       mutation_applied = 1;
       observed_abort = !observed_abort;
     end
     check(observed_abort == wanted_abort, "missing or spurious flush abort");
-    /* consume only independently justified instruction kills. */
+    // consume only independently justified instruction kills.
     for (int stage = 0; stage < 5; stage++) begin
-      /* every reported kill must name the exact pre-edge stage owner. */
+      // every reported kill must name the exact pre-edge stage owner.
       if (wanted_kill[stage]) begin
         check(kill_uid_o[stage] == before_token[stage].uid &&
               live[7'(kill_uid_o[stage])], "kill changed or repeated an accepted identity");
@@ -813,7 +813,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         killed++;
       end
     end
-    /* every physical acceptance services the actual target before reference comparison. */
+    // every physical acceptance services the actual target before reference comparison.
     if (accept_request) begin
       check(owner && !owner_accepted && !recover_owner, "duplicate or ownerless target acceptance");
       target_service(sample_addr, sample_wdata, sample_size, sample_lanes, sample_write);
@@ -826,27 +826,27 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       target_tag = owner_tag;
       response_due = cycles + response_delay - 1;
     end
-    /* preserve actual response edges separately from selected delay parameters and script overrides. */
+    // preserve actual response edges separately from selected delay parameters and script overrides.
     if (accept_response) $display("RESPONSE profile=%0d scenario=%0d seed=%0d cycle=%0d tag=%0d status=%0d data=%08x matching=%0d contained=%0d",
         PROFILE, SCENARIO, schedule_seed, cycles, d_rsp_tag_i, d_rsp_status_i, d_rsp_rdata_i,
         complete_reply, fatal_active);
-    /* only the physical target's own response handshake consumes its pending payload. */
+    // only the physical target's own response handshake consumes its pending payload.
     if (accept_response && !inject_response) begin
       check(target_pending, "target emitted an unowned response");
       target_pending = 0;
     end
-    /* matching replies resolve physical ownership even after architectural containment/reset. */
+    // matching replies resolve physical ownership even after architectural containment/reset.
     if (complete_reply) begin
-      /* the explicit minimum-deadline mode is a separate combinational target compatibility case. */
+      // the explicit minimum-deadline mode is a separate combinational target compatibility case.
       if (zero_latency) target_pending = 0;
-      /* normal architectural delivery additionally requires the surviving instruction owner. */
+      // normal architectural delivery additionally requires the surviving instruction owner.
       if (!reset_active && !orphan && !fatal_active) completed[owner_uid] = 1;
-      /* late or uncertain completions remain contained until a qualified cold fence. */
+      // late or uncertain completions remain contained until a qualified cold fence.
       if (fatal_active) begin
         recover_owner = 1;
         owner_accepted = 1;
       end
-      /* a successful or proven-rejected ordinary response releases the physical request. */
+      // a successful or proven-rejected ordinary response releases the physical request.
       else begin
         owner = 0;
         owner_accepted = 0;
@@ -856,7 +856,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     end
     fatal_ref = fatal_active;
     fatal_record_ref = next_fatal_record;
-    /* apply reset to architectural state while preserving hart-reset identity counters. */
+    // apply reset to architectural state while preserving hart-reset identity counters.
     if (reset_active) begin
       check(!cold_reset_i || isolated_i, "fixture attempted an unqualified cold fence");
       recovery_ref = 1;
@@ -867,12 +867,12 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       cause_ref = 0;
       tval_ref = 0;
       arch_pc = 0;
-      /* only the architecturally hardwired zero register has a defined reset value. */
+      // only the architecturally hardwired zero register has a defined reset value.
       for (int reg_index = 0; reg_index < 32; reg_index++) begin
         defined_ref[reg_index] = reg_index == 0;
         regs_ref[reg_index] = 0;
       end
-      /* cold reset restarts observation identities; hart reset never does. */
+      // cold reset restarts observation identities; hart reset never does.
       if (cold_reset_i) begin
         next_uid = 0;
         next_order = 0;
@@ -893,38 +893,38 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         target_external = 0;
         reference_external = 0;
       end
-      /* a surviving request remains owed even after its instruction was reset-aborted. */
+      // a surviving request remains owed even after its instruction was reset-aborted.
       if (hart_reset_i && owner) orphan = 1;
       resets++;
     end
-    /* normal clocking resolves pending control events in their independent order. */
+    // normal clocking resolves pending control events in their independent order.
     else begin
-      /* recovery lasts through at least the edge observing no physical obligation. */
+      // recovery lasts through at least the edge observing no physical obligation.
       if (recovery_ref && !owner_before && !fatal_active) recovery_ref = 0;
-      /* accept one external flush descriptor before any later fault can supersede it. */
+      // accept one external flush descriptor before any later fault can supersede it.
       if (flush_accept) begin
         flush_pending = 1;
         flush_target = flush_pc_i;
         flushes++;
       end
-      /* terminal comparison commits state before an independent external flush changes PC. */
+      // terminal comparison commits state before an independent external flush changes PC.
       if (w_done) begin
         observed_trace = trace_o;
-        /* a corrupt load writeback must fail against independently serviced reference memory. */
+        // a corrupt load writeback must fail against independently serviced reference memory.
         if ($test$plusargs("mutate_load") && !mutation_applied && w.p.op == OP_LOAD && trace_o.rd_write) begin
           observed_trace.value ^= 1;
           mutation_applied = 1;
         end
         terminal(observed_trace, w.p);
       end
-      /* a surviving external flush can complete on the successful protected load's W edge. */
+      // a surviving external flush can complete on the successful protected load's W edge.
       if (flush_complete && !(w_done && (w.p.fault || w.redirects))) begin
         arch_pc = active_target;
         flush_redirects++;
       end
-      /* neither a completed nor an aborted flush may reappear on a later edge. */
+      // neither a completed nor an aborted flush may reappear on a later edge.
       if (flush_complete || wanted_abort) flush_pending = 0;
-      /* allocate exact independent identities only for accepted external packets. */
+      // allocate exact independent identities only for accepted external packets.
       if (accepted_input) begin
         check(next_uid < 64'(CAPACITY), "input owner ledger exhausted");
         original[7'(next_uid)] = in_packet_i;
@@ -938,7 +938,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       end
     end
     aborts += int'(wanted_abort);
-    /* reserve the first-valid physical owner only for the independently permitted memory intent. */
+    // reserve the first-valid physical owner only for the independently permitted memory intent.
     if (launch_expected) begin
       check(!owner, "new memory grant overlapped an existing owner");
       owner = 1;
@@ -965,35 +965,35 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(mem_busy_o == owner && d_req_valid_o == (owner && !owner_accepted && !recover_owner),
           "first-valid external request did not match independent grant");
     next_fatal_record = fatal_record_o;
-    /* an incorrect deadline snapshot must fail independently of visible retirement suppression. */
+    // an incorrect deadline snapshot must fail independently of visible retirement suppression.
     if ($test$plusargs("mutate_deadline") && !mutation_applied && fatal_record_ref.valid && fatal_record_ref.reason == 3) begin
       next_fatal_record.reason ^= 1;
       mutation_applied = 1;
     end
     check(next_fatal_record == fatal_record_ref, "fatal exposure snapshot mismatch");
     check(fatal_o == fatal_ref, "public fatal status was not registered and sticky");
-    /* every live input has one physical pipeline slot, even when it has no visible effect. */
+    // every live input has one physical pipeline slot, even when it has no visible effect.
     for (int id = 0; id < CAPACITY; id++) begin
       count = 0;
-      /* multiplicity prevents one duplicate from concealing a different lost instruction. */
+      // multiplicity prevents one duplicate from concealing a different lost instruction.
       for (int stage = 0; stage < 5; stage++) begin
         count += int'(stage_valid_o[stage] && stage_token_o[stage].uid == 64'(id));
       end
       check(count == int'(live[id]), "accepted event instruction lost or duplicated");
     end
-    /* all movement witnesses must preserve the unique accepted source owner. */
+    // all movement witnesses must preserve the unique accepted source owner.
     for (int stage = 0; stage < 4; stage++) begin
-      /* a transfer installs its old source in exactly the next stage. */
+      // a transfer installs its old source in exactly the next stage.
       if (before_transfer[stage]) check(before_valid[stage] && stage_valid_o[stage+1] &&
           stage_token_o[stage+1].uid == before_token[stage].uid, "event transfer changed identity");
     end
-    /* D captures real RF operands before X; supplied poison cannot become source authority. */
+    // D captures real RF operands before X; supplied poison cannot become source authority.
     if (before_transfer[1] && stage_valid_o[2] &&
         original[7'(stage_token_o[2].uid)].op inside {OP_CONTROL, OP_MEMORY}) begin
       x_packet = expected[7'(stage_token_o[2].uid)].p;
       x_packet.result = 0;
       x_packet.next_pc = 0;
-      /* memory effective address and lanes are formed only after D captures actual RF operands. */
+      // memory effective address and lanes are formed only after D captures actual RF operands.
       if (original[7'(stage_token_o[2].uid)].op == OP_MEMORY && x_packet.op inside {OP_LOAD, OP_STORE}) begin
         x_packet.mem_addr = 0;
         x_packet.mem_wdata = 0;
@@ -1001,35 +1001,35 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         x_packet.cause = 0;
         x_packet.mtval = 0;
       end
-      /* a taken-target alignment failure belongs to X, not D capture. */
+      // a taken-target alignment failure belongs to X, not D capture.
       if (x_packet.fault && x_packet.cause == 0) begin
         x_packet.fault = 0;
         x_packet.mtval = 0;
       end
       check(stage_token_o[2].p == x_packet, "control D capture ignored independent operand intent");
     end
-    /* device effect totals remain independent of observed GPR or trace values. */
+    // device effect totals remain independent of observed GPR or trace values.
     check(target_reads == reference_reads && target_writes == reference_writes &&
           target_last_write == reference_last_write && target_effects == reference_effects,
           "physical device effect differs from independent intent");
-    /* a protected held W fault must remain bit-for-bit stable until it can trap. */
+    // a protected held W fault must remain bit-for-bit stable until it can trap.
     if (before_valid[4] && hold_i[4] && !wanted_kill[4]) check(stage_valid_o[4] &&
         stage_token_o[4] == before_token[4], "held protected W token changed");
     check(mstatus_o == status_ref && mtvec_o == vector_ref && mscratch_o == 0 &&
           mepc_o == epc_ref && mcause_o == cause_ref && mtval_o == tval_ref,
           "event CSR state differs from independent committed bank");
-    /* inspect the full GPR bank to detect speculative or killed link writes. */
+    // inspect the full GPR bank to detect speculative or killed link writes.
     for (int reg_index = 0; reg_index < 32; reg_index++) begin
       inspect_reg_i = 5'(reg_index);
       #1;
       check(inspect_defined_o == defined_ref[reg_index], "early or killed GPR definedness change");
-      /* reset leaves nonzero stored bits unspecified until a real commit defines them. */
+      // reset leaves nonzero stored bits unspecified until a real commit defines them.
       if (defined_ref[reg_index]) check(inspect_value_o == regs_ref[reg_index], "event GPR storage mismatch");
     end
     clk_i = 0;
   endtask
 
-  /* start a scenario only after every old instruction and physical obligation is resolved. */
+  // start a scenario only after every old instruction and physical obligation is resolved.
   task automatic begin_case();
     check(!owner && stage_valid_o == 0 && !flush_pending, "new case abandoned an owner or flush");
     in_valid_i = 0;
@@ -1051,7 +1051,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     cases++;
   endtask
 
-  /* hold one packet and its independently constructed intent until input acceptance. */
+  // hold one packet and its independently constructed intent until input acceptance.
   task automatic send(input packet_t p, input expected_t q);
     logic [63:0] initial_uid;
     integer clocks;
@@ -1060,7 +1060,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     offered_expectation = q;
     in_valid_i = 1;
     clocks = 0;
-    /* bounded input readiness is required while this fixture has not held an older stage. */
+    // bounded input readiness is required while this fixture has not held an older stage.
     while (next_uid == initial_uid && clocks < 50) begin
       tick();
       clocks++;
@@ -1069,7 +1069,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(next_uid == initial_uid + 1, "event packet input acceptance did not progress");
   endtask
 
-  /* ordinary precomputed operations retain their original complete packet as expectation. */
+  // ordinary precomputed operations retain their original complete packet as expectation.
   task automatic send_plain(input packet_t p);
     expected_t q;
     q.p = p;
@@ -1077,11 +1077,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     send(p, q);
   endtask
 
-  /* wait for a named stage only to place an event, never to determine expected effects. */
+  // wait for a named stage only to place an event, never to determine expected effects.
   task automatic reach(input logic [2:0] stage, input logic [31:0] pc);
     integer clocks;
     clocks = 0;
-    /* a missing or duplicated instruction must also violate this independent finite bound. */
+    // a missing or duplicated instruction must also violate this independent finite bound.
     while (!(stage_valid_o[stage] && stage_token_o[stage].p.pc == pc) && clocks < 50) begin
       tick();
       clocks++;
@@ -1089,22 +1089,22 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(clocks < 50, "target instruction did not reach requested event boundary");
   endtask
 
-  /* consume every normal terminal and completed external flush without using reset as cleanup. */
+  // consume every normal terminal and completed external flush without using reset as cleanup.
   task automatic drain();
     integer clocks;
     clocks = 0;
-    /* response permission and holds are explicitly controlled by each scenario. */
+    // response permission and holds are explicitly controlled by each scenario.
     while ((stage_valid_o != 0 || owner || flush_pending) && clocks < MAX_WAIT + 80) begin
       tick();
       clocks++;
     end
     check(clocks < MAX_WAIT + 80 && !owner && !flush_pending && stage_valid_o == 0, "event drainage bound expired");
-    /* two quiet edges reject repeated redirect, terminal, abort or request activity. */
+    // two quiet edges reject repeated redirect, terminal, abort or request activity.
     repeat (2) tick();
     compare_storage();
   endtask
 
-  /* accept one explicit flush request and retain its target through all protected work. */
+  // accept one explicit flush request and retain its target through all protected work.
   task automatic request_flush(input logic [31:0] target = 'h300);
     int unsigned before_count;
     before_count = flushes;
@@ -1115,20 +1115,20 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(flushes == before_count + 1, "directed external flush was not accepted");
   endtask
 
-  /* compare actual storage with a separately updated reference, including unrequested neighbors. */
+  // compare actual storage with a separately updated reference, including unrequested neighbors.
   task automatic compare_storage();
-    /* a wrong strobe must not hide outside the bytes returned by a later load. */
+    // a wrong strobe must not hide outside the bytes returned by a later load.
     for (int index = 0; index < 98304; index++) begin
       check(target_ram[index] == reference_ram[index], "RAM contents differ from independent memory effects");
     end
-    /* optional aperture registers verify profile forwarding without claiming timer behavior. */
+    // optional aperture registers verify profile forwarding without claiming timer behavior.
     for (int index = 0; index < 5; index++) begin
       check(target_timer[index] == reference_timer[index], "timer aperture storage mismatch");
     end
     check(target_uncertain == reference_uncertain, "uncertain scripted effect changed or replayed");
   endtask
 
-  /* one directed operation initializes every real source before using the raw instruction. */
+  // one directed operation initializes every real source before using the raw instruction.
   task automatic operation_case(input logic [31:0] base_value, displacement, store_value,
       input bit write, input logic [1:0] size, input bit signed_load = 0,
       input logic [4:0] destination = 3, input bit same_source = 0, input bit zero_base = 0);
@@ -1142,12 +1142,12 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     pc = 'h100;
     base_register = zero_base ? 0 : 1;
     data_register = same_source ? base_register : 2;
-    /* x0 is already defined and must never be initialized by a diagnostic write. */
+    // x0 is already defined and must never be initialized by a diagnostic write.
     if (!zero_base) begin
       send_plain(packet(pc, OP_RESULT, base_register, base_value));
       pc += 4;
     end
-    /* a store with equal source indices consumes the actual base value as its data. */
+    // a store with equal source indices consumes the actual base value as its data.
     if (write && !same_source) begin
       send_plain(packet(pc, OP_RESULT, data_register, store_value));
       pc += 4;
@@ -1166,21 +1166,21 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     rejection_cases += int'(q.p.fault || cause_ref inside {5, 7});
   endtask
 
-  /* malformed encodings and metadata cannot inherit any supplied memory intent. */
+  // malformed encodings and metadata cannot inherit any supplied memory intent.
   task automatic invalid_memory_case(input integer variant);
     packet_t p;
     expected_t q;
     int unsigned before_launches;
     begin_case();
     p = memory_instruction('h100, variant == 1, 2, 0);
-    /* isolate invalid funct3, raw metadata, expansion misuse and earlier fetch fault precedence. */
+    // isolate invalid funct3, raw metadata, expansion misuse and earlier fetch fault precedence.
     case (variant)
       0: p = memory_instruction('h100, 0, 3, 0);
       1: p = memory_instruction('h100, 1, 3, 0);
       2: p.raw_valid = 7;
       3: p.length = 2;
       4: p.expanded_valid = 1;
-      /* a supplied fault wins even when the encoded memory operation itself is valid. */
+      // a supplied fault wins even when the encoded memory operation itself is valid.
       default: begin
         p.fault = 1;
         p.cause = 1;
@@ -1210,7 +1210,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     invalid_cases++;
   endtask
 
-  /* prepare a decoded memory instruction and stop exactly at its first registered offer. */
+  // prepare a decoded memory instruction and stop exactly at its first registered offer.
   task automatic prepare_owner(input bit write = 0, input logic [31:0] address = 'h20000000,
       input logic [1:0] size = 2, input logic [4:0] destination = 3);
     packet_t p;
@@ -1221,7 +1221,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     pc = 'h100;
     send_plain(packet(pc, OP_RESULT, 1, address));
     pc += 4;
-    /* this store source is deliberately rich in high and low byte patterns. */
+    // this store source is deliberately rich in high and low byte patterns.
     if (write) begin
       send_plain(packet(pc, OP_RESULT, 2, 'h89abcdef));
       pc += 4;
@@ -1230,7 +1230,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     send(p, memory_expected(p, write, size, 1, address, 0, 'h89abcdef, 1,
                             write ? 5'd2 : destination));
     clocks = 0;
-    /* the checked first-valid grant is the only authority for creating this owner. */
+    // the checked first-valid grant is the only authority for creating this owner.
     while (!owner && clocks < 30) begin
       tick();
       clocks++;
@@ -1238,12 +1238,12 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(owner && !owner_accepted && clocks < 30, "decoded memory did not produce its initial offer");
   endtask
 
-  /* force a target acceptance without allowing its registered response to complete yet. */
+  // force a target acceptance without allowing its registered response to complete yet.
   task automatic reach_accepted();
     integer clocks;
     hold_accept = 0;
     clocks = 0;
-    /* ordinary schedules must accept well before the finite deadline. */
+    // ordinary schedules must accept well before the finite deadline.
     while (!owner_accepted && clocks < 10) begin
       tick();
       clocks++;
@@ -1251,11 +1251,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(owner_accepted && target_pending, "target acceptance did not create a response obligation");
   endtask
 
-  /* wait for the independent model's fatal edge and require the same sticky public state. */
+  // wait for the independent model's fatal edge and require the same sticky public state.
   task automatic wait_fatal();
     integer clocks;
     clocks = 0;
-    /* no protocol failure can be mistaken for an unbounded architectural wait. */
+    // no protocol failure can be mistaken for an unbounded architectural wait.
     while (!fatal_ref && clocks < MAX_WAIT + 20) begin
       tick();
       clocks++;
@@ -1263,7 +1263,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check(fatal_ref && fatal_o && clocks < MAX_WAIT + 20, "expected memory containment did not occur");
   endtask
 
-  /* drain a surviving physical obligation, then reset-abort frozen instructions and positively fence recovery. */
+  // drain a surviving physical obligation, then reset-abort frozen instructions and positively fence recovery.
   task automatic finish_fatal();
     integer clocks;
     fatal_record_t snapshot;
@@ -1274,7 +1274,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     hold_accept = 0;
     hold_response = 0;
     clocks = 0;
-    /* late ordinary acceptance and response must never re-enable a contained instruction. */
+    // late ordinary acceptance and response must never re-enable a contained instruction.
     while (owner && !recover_owner && clocks < 30) begin
       tick();
       clocks++;
@@ -1297,7 +1297,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     fatal_cases++;
   endtask
 
-  /* exercise the smallest advertised deadline separately from the registered RAM fixture. */
+  // exercise the smallest advertised deadline separately from the registered RAM fixture.
   task automatic minimum_deadline_cases();
     int unsigned before_terminals;
     check(MAX_WAIT == 1, "minimum-deadline scenario used the wrong parameter");
@@ -1314,14 +1314,14 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           "final-edge same-cycle acceptance/response lost to the minimum deadline");
     drain();
     check(terminals == before_terminals + 1, "minimum-deadline x0 load did not terminate once");
-    /* no response on the first allowed edge must capture an unaccepted exposed owner. */
+    // no response on the first allowed edge must capture an unaccepted exposed owner.
     begin_case();
     prepare_owner();
     tick();
     check(fatal_record_ref.reason == 3 && !fatal_record_ref.accepted &&
           cycles == offer_cycle + 1, "minimum OFFER timeout occurred on the wrong edge");
     finish_fatal();
-    /* accepting on the last edge does not extend the deadline without a matching reply. */
+    // accepting on the last edge does not extend the deadline without a matching reply.
     begin_case();
     prepare_owner();
     accept_delay = 0;
@@ -1333,7 +1333,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     finish_fatal();
   endtask
 
-  /* run replayable memory cases without assuming reset values for nonzero GPRs. */
+  // run replayable memory cases without assuming reset values for nonzero GPRs.
   initial begin : regression
     packet_t p;
     expected_t q;
@@ -1343,7 +1343,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     check($value$plusargs("seed=%d", schedule_seed) || schedule_seed == 1, "schedule seed parse failed");
     random_state = schedule_seed;
     fatal_record_ref = '0;
-    /* initialize only the observer ledgers and immutable test input image. */
+    // initialize only the observer ledgers and immutable test input image.
     for (int id = 0; id < CAPACITY; id++) begin
       original[id] = '0;
       expected[id] = '0;
@@ -1353,22 +1353,22 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       failed[id] = 0;
       load_value[id] = 0;
     end
-    /* target and reference storage start equal but remain separate mutable arrays. */
+    // target and reference storage start equal but remain separate mutable arrays.
     for (int index = 0; index < 98304; index++) begin
       target_ram[index] = image_byte(32'(index));
       reference_ram[index] = image_byte(32'(index));
     end
-    /* exact byte boundaries expose both positive and negative sign-extension cases. */
+    // exact byte boundaries expose both positive and negative sign-extension cases.
     for (int byte_number = 0; byte_number < 4; byte_number++) begin
       target_ram[byte_number] = 8'(32'h80ff7f01 >> (8 * byte_number));
       reference_ram[byte_number] = 8'(32'h80ff7f01 >> (8 * byte_number));
     end
-    /* enabled-profile timer apertures use deterministic plain register values only. */
+    // enabled-profile timer apertures use deterministic plain register values only.
     for (int index = 0; index < 5; index++) begin
       target_timer[index] = 'h55667788 + 32'(index);
       reference_timer[index] = 'h55667788 + 32'(index);
     end
-    /* establish qualified reset before any checked observation of potentially unspecified DUT state. */
+    // establish qualified reset before any checked observation of potentially unspecified DUT state.
     cold_reset_i = 1;
     #2;
     clk_i = 1;
@@ -1377,16 +1377,16 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
     cold_reset_i = 0;
     cycles++;
     resets++;
-    /* minimum timing compatibility is deliberately separate from registered target-read tests. */
+    // minimum timing compatibility is deliberately separate from registered target-read tests.
     if (SCENARIO == 1) minimum_deadline_cases();
-    /* the default occupancy and guard parameters execute real decoded memory independently. */
+    // the default occupancy and guard parameters execute real decoded memory independently.
     else if (SCENARIO == 2) begin
       check(!PROFILE && MAX_WAIT == 128, "default diagnostic scenario used nondefault parameters");
-      /* exercise every default-mode transfer width and its actual load/store path. */
+      // exercise every default-mode transfer width and its actual load/store path.
       for (int width = 0; width < 3; width++) begin
         operation_case('h20000000, 0, 'h80ff7f01, 1, 2'(width));
         operation_case('h20000000, 0, 0, 0, 2'(width), 1);
-        /* narrow unsigned reads use the same default occupancy mode. */
+        // narrow unsigned reads use the same default occupancy mode.
         if (width != 2) operation_case('h20000000, 0, 0, 0, 2'(width), 0);
       end
       operation_case('h20000001, 0, 0, 0, 2, 1);
@@ -1396,28 +1396,28 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       operation_case('h40000000, 0, 0, 0, 2, 1, 0);
       operation_case('hfffffff0, 32, 0, 0, 2, 1);
     end
-    /* the default deadline profile runs decoded memory, side effects and containment cases. */
+    // the default deadline profile runs decoded memory, side effects and containment cases.
     else begin
-      /* decoding failures and earlier fetch faults must suppress all memory actions. */
+      // decoding failures and earlier fetch faults must suppress all memory actions.
       for (int variant = 0; variant < 6; variant++) invalid_memory_case(variant);
-      /* every byte and halfword lane is read with both sign-extension choices. */
+      // every byte and halfword lane is read with both sign-extension choices.
       for (int width = 0; width < 3; width++) begin
-        /* natural alignment determines the valid lane positions for each transfer width. */
+        // natural alignment determines the valid lane positions for each transfer width.
         for (int lane = 0; lane < 4; lane += (1 << width)) begin
           operation_case('h20000000 + 32'(lane), 0, 0, 0, 2'(width), 1);
-          /* unsigned narrow loads must never replicate the selected sign bit. */
+          // unsigned narrow loads must never replicate the selected sign bit.
           if (width != 2) operation_case('h20000000 + 32'(lane), 0, 0, 0, 2'(width), 0);
           operation_case('h20000000 + 32'(lane), 0, 'h89abcdef, 1, 2'(width));
           operation_case('h20000000 + 32'(lane), 0, 0, 0, 2'(width), 0);
         end
       end
-      /* source/destination overlap and modulo address arithmetic use real captured registers. */
+      // source/destination overlap and modulo address arithmetic use real captured registers.
       operation_case('h20000000, 0, 0, 0, 2, 1, 1);
       operation_case('h20000000, 4, 0, 1, 2, 0, 3, 1);
       operation_case('h20000010, -32'd16, 0, 0, 2, 1);
       operation_case('hfffffff0, 32, 0, 0, 2, 1);
       operation_case(0, 4, 0, 0, 2, 1, 0, 0, 1);
-      /* natural alignment wins before region access faults and never creates a bus owner. */
+      // natural alignment wins before region access faults and never creates a bus owner.
       for (int write = 0; write < 2; write++) begin
         operation_case('h20000001, 0, 'h12345678, 1'(write), 1);
         operation_case('h70000001, 0, 'h12345678, 1'(write), 2);
@@ -1438,11 +1438,11 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       operation_case('h40000024, 0, 0, 0, 2);
       operation_case('h50002001, 0, 0, 0, 0);
       operation_case('h50002004, 0, 'h12345678, 1, 2);
-      /* one device stream proves x0 reads still create effects and writes retain their payload. */
+      // one device stream proves x0 reads still create effects and writes retain their payload.
       begin_case();
       send_plain(packet('h100, OP_RESULT, 1, 'h40000000));
       pc = 'h104;
-      /* the first ticket is discarded through x0; the second returns the previous increment. */
+      // the first ticket is discarded through x0; the second returns the previous increment.
       for (int destination = 0; destination < 2; destination++) begin
         p = memory_instruction(pc, 0, 2, 0, 1, destination == 0 ? 0 : 3);
         send(p, memory_expected(p, 0, 2, 1, 'h40000000, 0, 0, 1, destination == 0 ? 0 : 3));
@@ -1465,7 +1465,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       check(regs_ref[3] == 1 && regs_ref[4] == 2 && regs_ref[5] == 1 &&
             regs_ref[6] == 'hdeadbeef && target_reads == 2 && target_writes == 1,
             "MMIO exact-once stream lost an x0 effect or payload");
-      /* a nearer base-register writer must hide an older stale unmapped value. */
+      // a nearer base-register writer must hide an older stale unmapped value.
       begin_case();
       send_plain(packet('h100, OP_RESULT, 1, 'h70000000));
       send_plain(packet('h104, OP_RESULT, 1, 'h20000000));
@@ -1473,7 +1473,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       send(p, memory_expected(p, 0, 2, 1, 'h20000000, 0));
       drain();
       check(nearest_stalls != 0, "nearest memory base writer was not exercised");
-      /* a load updates its own base register, then supplies the next load and store sources. */
+      // a load updates its own base register, then supplies the next load and store sources.
       begin_case();
       before_bypasses = dual_bypasses;
       send_plain(packet('h100, OP_RESULT, 1, 'h20000080));
@@ -1483,7 +1483,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       p = memory_instruction('h10c, 0, 2, 0, 1, 1);
       send(p, memory_expected(p, 0, 2, 1, 'h20000080, 0, 0, 1, 1));
       value = {24'b0, reference_ram['h41]};
-      /* the independently stored byte defines both the expected load and following store operand. */
+      // the independently stored byte defines both the expected load and following store operand.
       if (value[7]) value |= 'hffffff00;
       p = memory_instruction('h110, 0, 0, 1, 1, 3);
       send(p, memory_expected(p, 0, 0, 1, 'h20000040, 1, 0, 1, 3));
@@ -1492,7 +1492,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       drain();
       check(dual_bypasses >= before_bypasses + 2 && dependency_stalls != 0,
             "load-to-memory source dependencies did not exercise W forwarding");
-      /* a normal held older result blocks effects, then permits exactly one eventual command. */
+      // a normal held older result blocks effects, then permits exactly one eventual command.
       begin_case();
       send_plain(packet('h100, OP_RESULT, 1, 'h40000000));
       drain();
@@ -1502,20 +1502,20 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       send(p, memory_expected(p, 0, 2, 1, 'h40000000, 0, 0, 1, 0));
       reach(3, 'h108);
       before_launches = launches;
-      /* withheld W completion denies launch without losing the waiting memory token. */
+      // withheld W completion denies launch without losing the waiting memory token.
       repeat (3) tick();
       check(launches == before_launches && target_reads == 0, "held normal W allowed an early memory effect");
       hold_i[4] = 0;
       drain();
       check(launches == before_launches + 1 && target_reads == 1 && regs_ref[4] == 'h44,
             "normal W release lost or duplicated the younger command");
-      /* a real decoded read or store remains protected through external flush in OFFER and WAIT. */
+      // a real decoded read or store remains protected through external flush in OFFER and WAIT.
       for (int write = 0; write < 2; write++) begin
-        /* phase zero flushes before physical acceptance; phase one flushes its accepted owner. */
+        // phase zero flushes before physical acceptance; phase one flushes its accepted owner.
         for (int accepted_phase = 0; accepted_phase < 2; accepted_phase++) begin
           begin_case();
           prepare_owner(1'(write), write != 0 ? 'h40000004 : 'h40000000, 2, 0);
-          /* the accepted phase already has exactly one target effect before the flush request. */
+          // the accepted phase already has exactly one target effect before the flush request.
           if (accepted_phase != 0) reach_accepted();
           send_plain(packet(original[owner_uid].pc + 4, OP_RESULT, 5, 'hbad0bad0));
           request_flush();
@@ -1528,7 +1528,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           memory_flush_cases++;
         end
       end
-      /* held older W instructions deny younger memory effects until their own disposition. */
+      // held older W instructions deny younger memory effects until their own disposition.
       for (int older_fault = 0; older_fault < 2; older_fault++) begin
         begin_case();
         send_plain(packet('h100, OP_RESULT, 1, 'h40000000));
@@ -1536,7 +1536,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         hold_i[4] = 1;
         p = jal('h104, 'h1fc);
         q = jal_expected(p, 'h1fc);
-        /* a supplied earlier fetch fault is a distinct precise instruction event. */
+        // a supplied earlier fetch fault is a distinct precise instruction event.
         if (older_fault != 0) begin
           p = packet('h104);
           p.fault = 1;
@@ -1550,20 +1550,20 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
         send(p, memory_expected(p, 0, 2, 1, 'h40000000, 0, 0, 1, 0));
         reach(3, 'h108);
         before_launches = launches;
-        /* holding W cannot authorize speculative MMIO reads whose result will be discarded. */
+        // holding W cannot authorize speculative MMIO reads whose result will be discarded.
         repeat (3) tick();
         hold_i[4] = 0;
         drain();
         check(launches == before_launches && target_reads == 0,
               "younger MMIO read escaped an older held control or fault");
       end
-      /* hart reset preserves an offered or accepted device obligation while aborting its instruction. */
+      // hart reset preserves an offered or accepted device obligation while aborting its instruction.
       for (int phase = 0; phase < 3; phase++) begin
         begin_case();
         prepare_owner(0, 'h40000000, 2, 0);
-        /* the accepted variant has already produced its single physical read effect. */
+        // the accepted variant has already produced its single physical read effect.
         if (phase == 1) reach_accepted();
-        /* the collision variant accepts the still-offered request on the reset edge itself. */
+        // the collision variant accepts the still-offered request on the reset edge itself.
         if (phase == 2) begin
           hold_accept = 0;
           accept_delay = 0;
@@ -1579,25 +1579,25 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
               "hart reset replayed an x0 device read or retired its orphan instruction");
         reset_cases++;
       end
-      /* an exact last-edge response wins over deadline detection. */
+      // an exact last-edge response wins over deadline detection.
       begin_case();
       prepare_owner();
       first_offer_edge = offer_cycle;
       reach_accepted();
-      /* the registered target keeps its completed data private until the last allowed edge. */
+      // the registered target keeps its completed data private until the last allowed edge.
       while (cycles < first_offer_edge + 32'(MAX_WAIT) - 1) tick();
       hold_response = 0;
       tick();
       check(!fatal_ref && cycles == first_offer_edge + 32'(MAX_WAIT), "deadline-edge response lost priority");
       drain();
-      /* both exposed and accepted effectful reads/stores retain their first-valid deadline. */
+      // both exposed and accepted effectful reads/stores retain their first-valid deadline.
       for (int write = 0; write < 2; write++) begin
-        /* the target may perform its one effect before timeout or only during late acceptance. */
+        // the target may perform its one effect before timeout or only during late acceptance.
         for (int accepted_phase = 0; accepted_phase < 2; accepted_phase++) begin
           begin_case();
           before_effects = target_effects;
           prepare_owner(1'(write), write != 0 ? 'h40000004 : 'h40000000, 2, 0);
-          /* acceptance alone cannot restart the first-valid deadline. */
+          // acceptance alone cannot restart the first-valid deadline.
           if (accepted_phase != 0) reach_accepted();
           wait_fatal();
           check(fatal_record_ref.reason == 3 && cycles == offer_cycle + 32'(MAX_WAIT) &&
@@ -1607,9 +1607,9 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           check(target_effects == before_effects + 1, "timed-out device command was lost or replayed");
         end
       end
-      /* uncertainty may mean either zero or one actual effect, and neither case authorizes replay. */
+      // uncertainty may mean either zero or one actual effect, and neither case authorizes replay.
       for (int write = 0; write < 2; write++) begin
-        /* the independently declared script chooses the physical outcome hidden from the CPU. */
+        // the independently declared script chooses the physical outcome hidden from the CPU.
         for (int perform = 0; perform < 2; perform++) begin
           begin_case();
           before_effects = target_effects;
@@ -1625,20 +1625,20 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
           check(target_effects == before_effects + 64'(perform), "uncertain device operation was replayed");
         end
       end
-      /* early, wrong-tag, malformed and uncertain responses all have distinct explicit dispositions. */
+      // early, wrong-tag, malformed and uncertain responses all have distinct explicit dispositions.
       for (int error = 0; error < 7; error++) begin
         begin_case();
         force_status = error == 4 ? 1 : error == 5 ? 2 : error == 6 ? 3 : 0;
         uncertain_effect = error == 5;
         prepare_owner(error == 3 || error >= 5, error >= 5 ? 'h50002000 : 'h20000000, error == 2 ? 0 : 2);
-        /* premature matching replies deliberately leave ready low at the first offer. */
+        // premature matching replies deliberately leave ready low at the first offer.
         if (error != 0) reach_accepted();
-        /* injected identity errors must not consume the real target's future response. */
+        // injected identity errors must not consume the real target's future response.
         if (error < 2) begin
           inject_response = 1;
           inject_wrong_tag = error == 1;
         end
-        /* matching malformed payloads still physically respond but cannot reach W. */
+        // matching malformed payloads still physically respond but cannot reach W.
         else begin
           corrupt_reply = error inside {2, 3, 4};
           hold_response = 0;
@@ -1648,7 +1648,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
               fatal_record_ref.responded == (error >= 2), "response-error classification or snapshot is wrong");
         finish_fatal();
       end
-      /* an orphan reply has no instruction descriptor to invent or overwrite. */
+      // an orphan reply has no instruction descriptor to invent or overwrite.
       begin_case();
       inject_response = 1;
       inject_wrong_tag = 1;
@@ -1656,7 +1656,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       check(fatal_record_ref.valid && !fatal_record_ref.owned && fatal_record_ref.reason == 1,
             "orphan response acquired a fictitious owner");
       finish_fatal();
-      /* a duplicate reply after a completed command is independently rejected as an orphan. */
+      // a duplicate reply after a completed command is independently rejected as an orphan.
       begin_case();
       prepare_owner();
       hold_accept = 0;
@@ -1666,7 +1666,7 @@ module cpu5_memory_tb #(parameter bit PROFILE = 0, parameter integer MAX_WAIT = 
       tick();
       check(fatal_record_ref.valid && !fatal_record_ref.owned, "duplicate response acquired a released owner");
       finish_fatal();
-      /* seeded aligned writes and reads vary operand bytes independently of bus-delay choices. */
+      // seeded aligned writes and reads vary operand bytes independently of bus-delay choices.
       for (int sample = 0; sample < 24; sample++) begin
         value = next_random();
         address = 'h20000040 + (next_random() & 'h3c);

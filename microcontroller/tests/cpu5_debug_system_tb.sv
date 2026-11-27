@@ -1,4 +1,4 @@
-/* exercise the complete debug wrapper through JTAG and independently owned memory targets. */
+// exercise the complete debug wrapper through JTAG and independently owned memory targets.
 module cpu5_debug_system_tb;
   import cpu5_control_pkg::*;
   logic clk_i, power_reset_i, isolated_i;
@@ -45,7 +45,7 @@ module cpu5_debug_system_tb;
       d_req_wdata_o, d_req_write_o, d_req_size_o, d_req_wstrb_o, sb_req_size_o,
       sb_req_wstrb_o, mepc_o, mcause_o, mtval_o, mcycle_o, minstret_o, debug_dcsr_o, trace_o};
 
-  /* keep the production deadline and all external debug blocks in this composition. */
+  // keep the production deadline and all external debug blocks in this composition.
   cpu5_debug_system #(.MAX_WAIT_CYCLES(128)) dut (.*);
   bit i_owned = 0, i_accepted = 0, d_owned = 0, d_accepted = 0, s_owned = 0, s_accepted = 0;
   logic [31:0] i_tag, i_addr, d_tag, s_addr, s_data;
@@ -63,18 +63,18 @@ module cpu5_debug_system_tb;
   bit unused_bit;
   logic [40:0] scan_result;
 
-  /* assertions report public state and the independent physical-owner ledger. */
+  // assertions report public state and the independent physical-owner ledger.
   task automatic check(input bit condition, input string message);
     checks++;
     if (!condition) $fatal(1, "SYSTEM_CHECK seed=%0d case=%0d cycle=%0d I=%0d D=%0d S=%0d: %s",
         seed, cases, cycles, i_owned, d_owned, s_owned, message);
   endtask
 
-  /* instruction memory is synchronous and has no device read effect. */
+  // instruction memory is synchronous and has no device read effect.
   function automatic logic [31:0] instruction(input logic [31:0] address);
     if (address == 'h10000) return iram_word;
     if (address == 'h10004) return 32'h00100073;
-    /* one mode launches a single MMIO read before a local loop. */
+    // one mode launches a single MMIO read before a local loop.
     if (rom_mode == 1) begin
       if (address == 0) return 32'h400000b7;
       if (address == 4) return 32'h0000a003;
@@ -82,19 +82,19 @@ module cpu5_debug_system_tb;
     return 32'h0000006f;
   endfunction
 
-  /* advance a fabric edge independently from TCK and service each accepted owner once. */
+  // advance a fabric edge independently from TCK and service each accepted owner once.
   task automatic tick();
     bit ia, ir, da, dr, sa, sr, old_reset;
-    /* capture immutable descriptors before their first acceptance. */
+    // capture immutable descriptors before their first acceptance.
     if (i_req_valid_o && !i_owned) begin
       i_owned = 1; i_accepted = 0; i_tag = i_req_tag_o; i_addr = i_req_addr_o;
       i_parcels = i_req_parcels_o; i_age = 0;
     end
-    /* CPU data transactions have their own response owner and age. */
+    // CPU data transactions have their own response owner and age.
     if (d_req_valid_o && !d_owned) begin
       d_owned = 1; d_accepted = 0; d_tag = d_req_tag_o; d_age = 0;
     end
-    /* SBA lifetime begins at public request presentation, before acceptance. */
+    // SBA lifetime begins at public request presentation, before acceptance.
     if (sb_req_valid_o && !s_owned) begin
       s_owned = 1; s_accepted = 0; s_addr = sb_req_addr_o; s_data = sb_req_wdata_o;
       s_write = sb_req_write_o; s_age = 0; s_offer_age = 0;
@@ -103,7 +103,7 @@ module cpu5_debug_system_tb;
     i_req_ready_i = i_owned && !i_accepted;
     i_rsp_valid_i = i_owned && i_accepted && i_age >= i_delay;
     i_rsp_tag_i = i_tag; i_rsp_data_i = instruction(i_addr);
-    /* unrequested parcels carry zero even when the backing word contains other code. */
+    // unrequested parcels carry zero even when the backing word contains other code.
     if (!i_parcels[0]) i_rsp_data_i[15:0] = 0;
     if (!i_parcels[1]) i_rsp_data_i[31:16] = 0;
     i_rsp_parcels_i = i_parcels; i_rsp_fault_i = 0; i_rsp_status_i = 0;
@@ -119,34 +119,34 @@ module cpu5_debug_system_tb;
     da = d_req_valid_o && d_req_ready_i; dr = d_rsp_valid_i && d_rsp_ready_o;
     sa = sb_req_valid_o && sb_req_ready_i; sr = sb_rsp_valid_i && sb_rsp_ready_o;
     old_reset = system_reset_o;
-    /* every stalled offer retains its originally latched descriptor. */
+    // every stalled offer retains its originally latched descriptor.
     if (sb_req_valid_o) check(!s_accepted && s_addr == sb_req_addr_o && s_data == sb_req_wdata_o &&
         s_write == sb_req_write_o, "SBA offer ownership changed");
     clk_i = 1; #1;
     cycles++;
-    /* remove completed target pulses before evaluating the next request generation. */
+    // remove completed target pulses before evaluating the next request generation.
     i_rsp_valid_i = 0; d_rsp_valid_i = 0; sb_rsp_valid_i = 0;
-    /* power isolation is the only event that abandons a physical test target owner. */
+    // power isolation is the only event that abandons a physical test target owner.
     if (power_reset_i) begin
       i_owned = 0; d_owned = 0; s_owned = 0;
       i_accepted = 0; d_accepted = 0; s_accepted = 0;
-    /* ordinary reset and halt cannot abandon any physical target state. */
+    // ordinary reset and halt cannot abandon any physical target state.
     end else begin
       if (ia) i_accepted = 1;
-      /* an accepted CPU read creates one peripheral effect. */
+      // an accepted CPU read creates one peripheral effect.
       if (da) begin d_accepted = 1; d_effects++; end
-      /* external effects occur only at a permitted, sampled SBA acceptance. */
+      // external effects occur only at a permitted, sampled SBA acceptance.
       if (sa) begin
         s_accepted = 1; s_effects++;
         if (s_write) writes++;
         else reads++;
         if (s_write && s_addr == 'h10000) iram_word = s_data;
       end
-      /* instruction responses release only their own ledger entry. */
+      // instruction responses release only their own ledger entry.
       if (ir) begin i_owned = 0; i_accepted = 0; i_responses++; end
-      /* data completion follows its single prior peripheral acceptance. */
+      // data completion follows its single prior peripheral acceptance.
       if (dr) begin d_owned = 0; d_accepted = 0; d_responses++; end
-      /* SBA completion never synthesizes another read or write effect. */
+      // SBA completion never synthesizes another read or write effect.
       if (sr) begin s_owned = 0; s_accepted = 0; s_responses++; end
     end
     if (i_accepted) i_age++;
@@ -158,7 +158,7 @@ module cpu5_debug_system_tb;
     clk_i = 0; #1;
   endtask
 
-  /* JTAG scans can continue while the fabric clock is paused; CDC service is explicit. */
+  // JTAG scans can continue while the fabric clock is paused; CDC service is explicit.
   task automatic tap(input bit mode, data, output bit result);
     tms_i = mode; tdi_i = data; tck_i = 0; #2;
     result = tdo_o;
@@ -166,13 +166,13 @@ module cpu5_debug_system_tb;
     check(tdo_o == result, "TDO changed on sampling edge");
   endtask
 
-  /* enter idle from any TAP state without resetting the CPU or physical owners. */
+  // enter idle from any TAP state without resetting the CPU or physical owners.
   task automatic tap_reset();
     repeat (6) tap(1, 0, unused_bit);
     tap(0, 0, unused_bit);
   endtask
 
-  /* select a five-bit JTAG instruction with the mandatory capture pattern. */
+  // select a five-bit JTAG instruction with the mandatory capture pattern.
   task automatic select_ir(input logic [4:0] instruction_ir);
     logic [4:0] capture;
     tap(1, 0, unused_bit); tap(1, 0, unused_bit); tap(0, 0, unused_bit); tap(0, 0, unused_bit);
@@ -182,7 +182,7 @@ module cpu5_debug_system_tb;
     check(capture == 1, "IR capture mismatch");
   endtask
 
-  /* shift exactly one DMI descriptor and return the previous completed response. */
+  // shift exactly one DMI descriptor and return the previous completed response.
   task automatic scan(input logic [40:0] outgoing, output logic [40:0] incoming);
     tap(1, 0, unused_bit); tap(0, 0, unused_bit); tap(0, 0, unused_bit);
     for (int bit_index = 0; bit_index < 41; bit_index++)
@@ -190,7 +190,7 @@ module cpu5_debug_system_tb;
     tap(1, 0, unused_bit); tap(0, 0, unused_bit);
   endtask
 
-  /* every request crosses into the fabric before its response is captured through TCK. */
+  // every request crosses into the fabric before its response is captured through TCK.
   task automatic dmi(input logic [1:0] op, input logic [6:0] address,
       input logic [31:0] value, output logic [31:0] result);
     scan({address, value, op}, scan_result);
@@ -202,13 +202,13 @@ module cpu5_debug_system_tb;
     repeat (2) tick();
   endtask
 
-  /* writes retain their own DMI completion even when they launch a longer SBA owner. */
+  // writes retain their own DMI completion even when they launch a longer SBA owner.
   task automatic dw(input logic [6:0] address, input logic [31:0] value);
     logic [31:0] unused_result;
     dmi(2, address, value, unused_result);
   endtask
 
-  /* abstract accesses are issued through data0 and command, never through internal hierarchy. */
+  // abstract accesses are issued through data0 and command, never through internal hierarchy.
   task automatic reg_write(input logic [15:0] address, input logic [31:0] value);
     logic [31:0] unused_status;
     dw('h04, value); dw('h17, 32'h00230000 | {16'b0, address});
@@ -216,7 +216,7 @@ module cpu5_debug_system_tb;
     check(unused_status[12] == 0 && unused_status[10:8] == 0, "abstract write failed");
   endtask
 
-  /* register reads check actual Debug Module data after abstract completion. */
+  // register reads check actual Debug Module data after abstract completion.
   task automatic reg_read(input logic [15:0] address, input logic [31:0] expected_value);
     logic [31:0] result, unused_status;
     dw('h17, 32'h00220000 | {16'b0, address});
@@ -224,7 +224,7 @@ module cpu5_debug_system_tb;
     check(unused_status[12] == 0 && unused_status[10:8] == 0 && result == expected_value, "abstract read mismatch");
   endtask
 
-  /* a new isolated power-reset session may discard the old physical ledger explicitly. */
+  // a new isolated power-reset session may discard the old physical ledger explicitly.
   task automatic initialize(input int mode);
     cases++;
     power_reset_i = 1; isolated_i = 1; clk_i = 0; tck_i = 0; tms_i = 1; tdi_i = 0;
@@ -241,7 +241,7 @@ module cpu5_debug_system_tb;
     check(!fatal_o, "power reset failed to clear containment");
   endtask
 
-  /* wait for a true CPU halt rather than a DM request bit. */
+  // wait for a true CPU halt rather than a DM request bit.
   task automatic halt();
     int start;
     dw('h10, 'h80000001);
@@ -251,29 +251,29 @@ module cpu5_debug_system_tb;
     dw('h10, 1);
   endtask
 
-  /* SBA status is checked separately from the external physical-effect count. */
+  // SBA status is checked separately from the external physical-effect count.
   task automatic sba_status(input logic [2:0] expected_error);
     logic [31:0] unused_status;
     dmi(1, 'h38, 0, unused_status);
     check(!unused_status[21] && unused_status[14:12] == expected_error, "SBA completion status mismatch");
   endtask
 
-  /* clear both sticky SBA error fields while selecting word accesses. */
+  // clear both sticky SBA error fields while selecting word accesses.
   task automatic clear_sba();
     dw('h38, 'h00447000);
   endtask
 
-  /* launch a physical-address read through the advertised SBA register interface. */
+  // launch a physical-address read through the advertised SBA register interface.
   task automatic sba_read(input logic [31:0] address);
     dw('h38, 'h00140000); dw('h39, address);
   endtask
 
-  /* launch one physical-address write; all effects remain visible in the independent ledger. */
+  // launch one physical-address write; all effects remain visible in the independent ledger.
   task automatic sba_write(input logic [31:0] address, value);
     dw('h38, 'h00040000); dw('h39, address); dw('h3c, value);
   endtask
 
-  /* a short reset request must survive deassertion until every exposed owner finishes. */
+  // a short reset request must survive deassertion until every exposed owner finishes.
   task automatic reset_pulse();
     int prior_resets, start, prior_retires;
     prior_resets = resets;
@@ -282,14 +282,14 @@ module cpu5_debug_system_tb;
     while ((resets == prior_resets || system_reset_o) && cycles-start < 180) tick();
     check(resets == prior_resets+1 && !system_reset_o, "short ndmreset request lost");
     if (cycles-start > max_reset_wait) max_reset_wait = cycles-start;
-    /* subsequent boot traffic uses normal service after the old owners have drained. */
+    // subsequent boot traffic uses normal service after the old owners have drained.
     i_delay = 1; d_delay = 1; s_delay = 1;
     prior_retires = retires;
     repeat (40) tick();
     check(!halted_o && retires > prior_retires, "reset drain halt leaked into reset exit");
   endtask
 
-  /* exercise permission guards, reset ownership, resume synchronization and containment. */
+  // exercise permission guards, reset ownership, resume synchronization and containment.
   initial begin
     int before_effects, before_responses, before_retires, start;
     logic [31:0] unused_status;
@@ -298,7 +298,7 @@ module cpu5_debug_system_tb;
     random_q ^= random_q << 13; random_q ^= random_q >> 17; random_q ^= random_q << 5;
     initialize(0);
     halt();
-    /* ordinary RAM and MMIO accesses retain one effect and one reply each. */
+    // ordinary RAM and MMIO accesses retain one effect and one reply each.
     before_effects = s_effects;
     sba_write('h20000000, 'h12345678); sba_status(0);
     check(s_effects == before_effects+1, "RAM write was lost or duplicated");
@@ -362,13 +362,13 @@ module cpu5_debug_system_tb;
     repeat (20) tick();
     check(retires == before_retires, "halted system continued normal execution");
 
-    /* unowned and reserved-error replies cannot be mistaken for later successful requests. */
+    // unowned and reserved-error replies cannot be mistaken for later successful requests.
     for (int bad = 0; bad < 3; bad++) begin
       initialize(0);
       halt();
-      /* an unowned pulse has no descriptor to which it can belong. */
+      // an unowned pulse has no descriptor to which it can belong.
       if (bad == 0) begin rogue_response = 1; tick(); rogue_response = 0; end
-      /* reserved response codes invalidate an otherwise owned transaction. */
+      // reserved response codes invalidate an otherwise owned transaction.
       else begin s_error = 3'(bad+4); sba_read('h20000000); end
       repeat (3) tick();
       check(fatal_o, "invalid SBA response escaped containment");
@@ -376,7 +376,7 @@ module cpu5_debug_system_tb;
       check(fatal_o && halted_o, "DM reset or resume cleared fatal containment");
     end
 
-    /* timeout retains the exposed offer; DM reset cannot withdraw or replay it. */
+    // timeout retains the exposed offer; DM reset cannot withdraw or replay it.
     initialize(0);
     halt();
     s_accept_delay = 1000;
@@ -394,7 +394,7 @@ module cpu5_debug_system_tb;
     repeat (8) tick();
     check(s_effects == before_effects+1 && !s_owned && fatal_o,
           "late timeout response failed exact-once drainage");
-    /* deactivation completes only after the old owner drains; reactivate before querying status. */
+    // deactivation completes only after the old owner drains; reactivate before querying status.
     dw('h10, 1);
     dmi(1, 'h11, 0, unused_status);
     check(unused_status[12] && unused_status[13], "fatal hart was not reported unavailable");

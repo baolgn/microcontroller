@@ -1,4 +1,4 @@
-/* preserve asynchronous state before calling an ordinary ILP32 C handler. */
+// preserve asynchronous state before calling an ordinary ILP32 C handler.
 .attribute stack_align, 16
 .section .text.trap,"ax",@progbits
 .balign 4
@@ -37,7 +37,7 @@ trap_entry:
     sw t4, 116(sp)
     sw t5, 120(sp)
     sw t6, 124(sp)
-    /* retain the interrupted SP and machine trap state for dispatch and return. */
+    // retain the interrupted SP and machine trap state for dispatch and return.
     addi t0, sp, 160
     sw t0, 8(sp)
     csrr t0, mepc
@@ -48,7 +48,7 @@ trap_entry:
     sw t0, 136(sp)
     csrr t0, mtval
     sw t0, 140(sp)
-    /* the canary probe may replace gp; restore the ABI base for ordinary C. */
+    // the canary probe may replace gp; restore the ABI base for ordinary C.
     .option push
     .option norelax
     la gp, __global_pointer$
@@ -56,7 +56,7 @@ trap_entry:
     li tp, 0
     mv a0, sp
     call trap_dispatch
-    /* recovery changes only the saved PC; nesting remains disabled throughout. */
+    // recovery changes only the saved PC; nesting remains disabled throughout.
     lw t0, 128(sp)
     csrw mepc, t0
     lw t0, 132(sp)
@@ -64,7 +64,7 @@ trap_entry:
     lw ra, 4(sp)
     lw gp, 12(sp)
     lw tp, 16(sp)
-    /* the negative build omits one restore to test interrupt-context detection. */
+    // the negative build omits one restore to test interrupt-context detection.
 #ifndef NEG_DROP_T0_RESTORE
     lw t0, 20(sp)
 #endif

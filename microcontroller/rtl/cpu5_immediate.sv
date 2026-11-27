@@ -1,6 +1,6 @@
 `include "cpu5_datapath_defs.svh"
 
-/* reconstruct RV32I immediates; branch and jump offsets include bit zero. */
+// reconstruct RV32I immediates; branch and jump offsets include bit zero.
 module cpu5_immediate (
   input logic [31:0] instr_i,
   input logic [2:0] kind_i,
@@ -9,14 +9,14 @@ module cpu5_immediate (
 );
   logic [6:0] unused_opcode;
 
-  /* legality belongs to the decoder; opcode bits do not encode immediates. */
+  // legality belongs to the decoder; opcode bits do not encode immediates.
   assign unused_opcode = instr_i[6:0];
 
-  /* every selector has a defined result without stored state. */
+  // every selector has a defined result without stored state.
   always_comb begin
     value_o = 0;
     valid_o = 1;
-    /* sign extension uses the instruction sign bit, including SLTIU. */
+    // sign extension uses the instruction sign bit, including SLTIU.
     case (kind_i)
       `CPU5_IMM_NONE: value_o = 0;
       `CPU5_IMM_I: value_o = {{20{instr_i[31]}}, instr_i[31:20]};
@@ -27,7 +27,7 @@ module cpu5_immediate (
       `CPU5_IMM_J: value_o = {{11{instr_i[31]}}, instr_i[31], instr_i[19:12],
                              instr_i[20], instr_i[30:21], 1'b0};
       `CPU5_IMM_SHAMT: value_o = {27'b0, instr_i[24:20]};
-      /* invalid selectors cannot leave an old immediate on the output. */
+      // invalid selectors cannot leave an old immediate on the output.
       default: begin
         value_o = 0;
         valid_o = 0;

@@ -1,4 +1,4 @@
-/* expose production execution and retained interrupts to the ELF verification platform. */
+// expose production execution and retained interrupts to the ELF verification platform.
 module cpu5_arch_top #(
   parameter bit C_ENABLED = 1,
   parameter bit M_ENABLED = 1,
@@ -57,7 +57,7 @@ module cpu5_arch_top #(
   logic [2:0] unused_debug_reg_error;
   logic unused_observation;
 
-  /* accepted timer commands and test-only external injection have exactly one effect. */
+  // accepted timer commands and test-only external injection have exactly one effect.
   assign platform_command_o = d_req_valid_o && d_req_ready_i &&
       d_req_addr_o >= 32'h40001000 && d_req_addr_o < 32'h40002000;
   assign events = (d_req_valid_o && d_req_ready_i && d_req_write_o &&
@@ -73,7 +73,7 @@ module cpu5_arch_top #(
   assign fatal_o = core_fatal || fetch_fatal;
   assign irq_event_o = {irq_valid, irq_pc, irq_cause, mtvec};
 
-  /* execute permissions and obsolete-response ownership remain in the production frontend. */
+  // execute permissions and obsolete-response ownership remain in the production frontend.
   cpu5_frontend #(.C_ENABLED(C_ENABLED), .GEN_BITS(2), .MAX_WAIT_CYCLES(128)) frontend (
     .clk_i, .cold_reset_i(reset_i), .isolated_i(1'b1), .hart_reset_i(1'b0),
     .permit_i, .entry_pending_i(entry_pending), .core_fatal_i(core_fatal),
@@ -86,7 +86,7 @@ module cpu5_arch_top #(
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* architecture tests use raw machine instructions and the declared M-only configuration. */
+  // architecture tests use raw machine instructions and the declared M-only configuration.
   cpu5_control #(.C_ENABLED(C_ENABLED), .M_ENABLED(M_ENABLED), .IRQ_ENABLED(1), .TIMER_ENABLED(1),
       .ZIFENCEI_ENABLED(1), .IRAM_WRITE(1), .DIAGNOSTIC(DIAGNOSTIC), .FORWARDING(FORWARDING),
       .D_MAX_WAIT_CYCLES(128)) core (
@@ -111,7 +111,7 @@ module cpu5_arch_top #(
     .debug_reg_ready_o(unused_debug_reg_ready), .debug_reg_rdata_o(unused_debug_reg_rdata), .debug_reg_error_o(unused_debug_reg_error)
   );
 
-  /* unused diagnostics remain observational and cannot constrain the architectural test. */
+  // unused diagnostics remain observational and cannot constrain the architectural test.
   assign unused_observation = ^{stages, kills, stage_tokens[0], stage_tokens[1], stage_tokens[2],
       stage_tokens[3], stage_tokens[4], kill_uids[0], kill_uids[1], kill_uids[2], kill_uids[3], kill_uids[4],
       transfers, fetch_generation, packet_generation, fetch_discard, fetch_launch, fetch_accept, fetch_complete,

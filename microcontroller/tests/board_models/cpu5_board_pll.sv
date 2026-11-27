@@ -1,4 +1,4 @@
-/* model reset/lock sequencing only; no analog PLL or clock-frequency claim. */
+// model reset/lock sequencing only; no analog PLL or clock-frequency claim.
 module cpu5_board_pll (
   input logic clk25_i,
   output logic clk_cpu_o, locked_o

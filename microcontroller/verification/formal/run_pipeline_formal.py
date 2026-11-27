@@ -38,11 +38,11 @@ def main():
     for path in originals:
         shutil.copyfile(path, snapshot / path.name)
     original = (snapshot / 'cpu5_control.sv').read_text()
-    start = original.index('  /* a stalled offer survives hart reset')
+    start = original.index('  // a stalled offer survives hart reset')
     end = original.index('\nendmodule', start)
     removed = original[start:end]
     assert removed.count('assert property') == 1 and original.count('assert property') == 1
-    adapted = original[:start] + '  /* the harness checks the unsupported concurrent assertion equivalently. */\n' + original[end:]
+    adapted = original[:start] + '  // the harness checks the unsupported concurrent assertion equivalently.\n' + original[end:]
     (snapshot / 'unsupported-sva.txt').write_text(removed)
     (snapshot / 'cpu5_control_formal.sv').write_text(adapted)
     environment = os.environ.copy()
@@ -76,7 +76,7 @@ def main():
             core = core.replace('assign d_req_addr_o = owner_q.p.mem_addr;', 'assign d_req_addr_o = owner_q.p.mem_addr ^ in_packet_i.result;')
         # make a discarded instruction visibly change the register file.
         elif mutation == 'killed_write':
-            core = core.replace('    valid_q <= valid_d;', "    /* deliberately corrupt architectural state on discard. */\n    if (|kill) begin regs_q[1] <= 32'hbad; defined_q[1] <= 1; end\n    valid_q <= valid_d;")
+            core = core.replace('    valid_q <= valid_d;', "    // deliberately corrupt architectural state on discard.\n    if (|kill) begin regs_q[1] <= 32'hbad; defined_q[1] <= 1; end\n    valid_q <= valid_d;")
         # preserve ownership while preventing terminal progress.
         elif mutation == 'progress':
             core = core.replace('assign w_done = w_eligible && !debug_ebreak_candidate;', "assign w_done = w_eligible && !debug_ebreak_candidate && 1'b0;")

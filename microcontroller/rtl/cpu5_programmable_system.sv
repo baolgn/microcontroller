@@ -1,4 +1,4 @@
-/* validate persistent firmware before handing local instruction RAM to the CPU. */
+// validate persistent firmware before handing local instruction RAM to the CPU.
 module cpu5_programmable_system #(
   parameter integer CLOCK_HZ = 25000000,
   parameter ROM_FILE = "rom.hex",
@@ -38,7 +38,7 @@ module cpu5_programmable_system #(
   logic boot_write_valid, boot_write_ready, boot_write_error;
   logic [31:0] boot_write_addr, boot_write_data;
 
-  /* boot failure holds the hart in reset while configuration JTAG remains external to this logic. */
+  // boot failure holds the hart in reset while configuration JTAG remains external to this logic.
   assign cpu_reset_o = reset_i || !boot_done_o || boot_fault_o;
   cpu5_spi_boot #(.ROM_CRC32(ROM_CRC32)) loader (
     .clk_i, .reset_i, .force_a_i, .flash_miso_i,
@@ -49,10 +49,10 @@ module cpu5_programmable_system #(
     .valid_headers_o(boot_headers_o), .reason_o(boot_reason_o)
   );
 
-  /* the firmware fixture requests one retained source-two event; the recovery button is not an IRQ. */
+  // the firmware fixture requests one retained source-two event; the recovery button is not an IRQ.
   assign events = {29'b0, output_valid_o && output_data_o == 8'h52 && !diagnostic_sent_q, 1'b0};
 
-  /* source two loops back only the first diagnostic request per reset, independently of UART drain. */
+  // source two loops back only the first diagnostic request per reset, independently of UART drain.
   cpu5_boot_soc #(.ROM_FILE(ROM_FILE), .IRAM_FILE(""), .DRAM_FILE(DRAM_FILE),
       .FORWARDING(FORWARDING)) soc (
     .clk_i, .reset_i, .isolated_i(reset_i), .permit_i(!uart_overflow_o), .hold_i(5'b0),
@@ -73,23 +73,23 @@ module cpu5_programmable_system #(
     .ext_pending_o(ext_pending), .ext_enable_o(ext_enable)
   );
 
-  /* the twenty-byte self-test burst fits without assuming CPU polling or serial service. */
+  // the twenty-byte self-test burst fits without assuming CPU polling or serial service.
   cpu5_uart_tx #(.CLOCK_HZ(CLOCK_HZ)) uart (
     .clk_i, .reset_i, .valid_i(output_valid_o), .data_i(output_data_o),
     .tx_o(uart_tx_o), .busy_o(uart_busy_o), .overflow_o(uart_overflow_o), .queued_o(uart_queued_o)
   );
 
-  /* a fabric heartbeat continues during WFI, CPU stalls and all exception handling. */
+  // a fabric heartbeat continues during WFI, CPU stalls and all exception handling.
   always_ff @(posedge clk_i) begin
-    /* the synchronous board reset initializes control only, never ordinary CPU storage. */
+    // the synchronous board reset initializes control only, never ordinary CPU storage.
     if (reset_i) begin
       heartbeat_count_q <= 0;
       heartbeat_q <= 0;
       diagnostic_sent_q <= 0;
-    /* activity and output state remain clocked independently of CPU reset and WFI. */
+    // activity and output state remain clocked independently of CPU reset and WFI.
     end else begin
       if (output_valid_o && output_data_o == 8'h52) diagnostic_sent_q <= 1;
-      /* toggle at one hertz without gating the CPU or peripheral clocks. */
+      // toggle at one hertz without gating the CPU or peripheral clocks.
       if (heartbeat_count_q == HEARTBEAT - 1) begin
         heartbeat_count_q <= 0;
         heartbeat_q <= !heartbeat_q;
@@ -97,7 +97,7 @@ module cpu5_programmable_system #(
     end
   end
 
-  /* LEDs expose activity, verdict, containment and output congestion. */
+  // LEDs expose activity, verdict, containment and output congestion.
   assign led_o = {cpu_reset_o, boot_fault_o || uart_overflow_o, fatal_o, status_o == 3,
                   status_o == 1 && !cpu_reset_o && !fatal_o && !uart_overflow_o,
                   boot_done_o && boot_bank_o, boot_busy_o, heartbeat_q};

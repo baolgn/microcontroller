@@ -130,7 +130,7 @@ def main():
     for value in fields.values():
         value['lsb'] -= base
     bits = max(value['lsb'] + value['width'] for value in fields.values())
-    header = '/* packed offsets are generated from the retained terminal schema. */\n'
+    header = '// packed offsets are generated from the retained terminal schema.\n'
     # C++ only needs event framing; the complete packed terminal remains in the capture.
     for macro, name in [('VALID', 'valid'), ('TRAP', 'trap'), ('PC', 'packet.pc')]:
         header += f'#define TRACE_{macro}_LSB {fields[name]["lsb"]}\n'

@@ -1,4 +1,4 @@
-/* compare the bram RF storage candidate with explicit port semantics. */
+// compare the bram RF storage candidate with explicit port semantics.
 module cpu5_rf_bram (
   input logic clk_i, reset_i, write_valid_i,
   input logic [4:0] write_addr_i, read1_addr_i, read2_addr_i,
@@ -10,13 +10,13 @@ module cpu5_rf_bram (
   logic [31:0] defined_q;
   logic commit;
   assign commit = write_valid_i && !reset_i && write_addr_i != 0;
-  /* preserve data across reset and register write-through read results. */
+  // preserve data across reset and register write-through read results.
   always_ff @(posedge clk_i) begin
-    /* reset invalidates nonzero registers without clearing their data. */
+    // reset invalidates nonzero registers without clearing their data.
     if (reset_i) defined_q <= 32'b1;
-    /* a committed write defines its destination. */
+    // a committed write defines its destination.
     else if (commit) defined_q[write_addr_i] <= 1'b1;
-    /* commit only nonzero writes outside reset. */
+    // commit only nonzero writes outside reset.
     if (commit) words[write_addr_i] <= write_data_i;
     read1_data_o <= read1_addr_i == 0 ? 32'b0 :
         commit && read1_addr_i == write_addr_i ? write_data_i : words[read1_addr_i];

@@ -1,14 +1,14 @@
-/* verify control-flow disposition under flush, reset and serialized return events. */
+// verify control-flow disposition under flush, reset and serialized return events.
 module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
-  /* preserve the explicitly IRQ-disabled compatibility profile. */
+  // preserve the explicitly IRQ-disabled compatibility profile.
   logic unused_entry_pending, unused_idle, unused_irq_valid;
   logic [31:0] unused_irq_pc, unused_irq_cause;
-  /* all stimulus and ownership records are bounded independently of DUT counters. */
+  // all stimulus and ownership records are bounded independently of DUT counters.
   localparam integer CAPACITY = 128;
   logic clk_i = 0, cold_reset_i = 0, isolated_i = 1, hart_reset_i = 0;
   logic [4:0] hold_i = 0;
@@ -36,11 +36,11 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
   logic [31:0] inspect_value_o;
   logic inspect_defined_o;
   logic [31:0] mstatus_o, mtvec_o, mscratch_o, mepc_o, mcause_o, mtval_o;
-  /* this compatibility fixture leaves new interrupt levels disconnected. */
+  // this compatibility fixture leaves new interrupt levels disconnected.
   logic [31:0] unused_mie, unused_mip, unused_mcountinhibit;
   logic [63:0] unused_mcycle, unused_minstret;
 
-  /* expected packets come from explicit stimulus intent rather than observed decode. */
+  // expected packets come from explicit stimulus intent rather than observed decode.
   typedef struct packed {
     packet_t p;
     logic redirects;
@@ -72,7 +72,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
   int unsigned reset_cases = 0, return_cases = 0, csr_capture_cases = 0;
   bit mutation_applied = 0;
 
-  /* overlapping occupancy is essential to the issued-load and younger-jump cases. */
+  // overlapping occupancy is essential to the issued-load and younger-jump cases.
   cpu5_control #(.IRQ_ENABLED(0), .FORWARDING(0), .DIAGNOSTIC(0), .C_ENABLED(C_ENABLED), .TEST_REGIONS(1), .D_MAX_WAIT_CYCLES(256)) dut (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
     .debug_halted_o(unused_debug_halted), .debug_resumeack_o(unused_debug_resumeack), .debug_dpc_o(unused_debug_dpc), .debug_dcsr_o(unused_debug_dcsr), .debug_reg_valid_i(1'b0), .debug_reg_write_i(1'b0),
@@ -85,14 +85,14 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     .minstret_o(unused_minstret), .*
   );
 
-  /* stop at the first mismatch before another edge can corrupt the ownership ledger. */
+  // stop at the first mismatch before another edge can corrupt the ownership ledger.
   function automatic void check(input bit condition, input string message);
     checks++;
-    /* each failure names the exact scenario and independently selected PC. */
+    // each failure names the exact scenario and independently selected PC.
     if (!condition) $fatal(1, "case=%0d C=%0d cycle=%0d pc=%08x: %s", cases, C_ENABLED, cycles, arch_pc, message);
   endfunction
 
-  /* ordinary operations are synthetic packet stimulus rather than decoded ISA instructions. */
+  // ordinary operations are synthetic packet stimulus rather than decoded ISA instructions.
   function automatic packet_t packet(input logic [31:0] pc, input op_t op = OP_RESULT,
       input logic [4:0] rd = 0, input logic [31:0] value = 0);
     packet_t p;
@@ -110,7 +110,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return p;
   endfunction
 
-  /* produce a true JAL encoding while poisoning annotations that D must replace. */
+  // produce a true JAL encoding while poisoning annotations that D must replace.
   function automatic packet_t jal(input logic [31:0] pc, input logic [31:0] offset,
       input logic [4:0] rd = 2);
     packet_t p;
@@ -127,7 +127,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return p;
   endfunction
 
-  /* construct the expected JAL effect from its declared offset, not decoded DUT fields. */
+  // construct the expected JAL effect from its declared offset, not decoded DUT fields.
   function automatic expected_t jal_expected(input packet_t p, input logic [31:0] offset,
       input logic [4:0] rd = 2);
     expected_t q;
@@ -150,7 +150,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return q;
   endfunction
 
-  /* this fixture uses BEQ of the same independently supplied register on both ports. */
+  // this fixture uses BEQ of the same independently supplied register on both ports.
   function automatic packet_t equal_branch(input logic [31:0] pc, input logic [4:0] source);
     packet_t p;
     p = jal(pc, 8);
@@ -158,7 +158,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return p;
   endfunction
 
-  /* equal source operands make the declared BEQ target independently certain. */
+  // equal source operands make the declared BEQ target independently certain.
   function automatic expected_t branch_expected(input packet_t p, input logic [4:0] source,
       input logic [31:0] value);
     expected_t q;
@@ -173,7 +173,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return q;
   endfunction
 
-  /* CSR inputs remain explicit synthetic operations with real W storage semantics. */
+  // CSR inputs remain explicit synthetic operations with real W storage semantics.
   function automatic packet_t csr_write(input logic [31:0] pc, input logic [11:0] address,
       input logic [31:0] value, input logic read_old = 0, input logic [4:0] rd = 0);
     packet_t p;
@@ -186,14 +186,14 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     return p;
   endfunction
 
-  /* select reference CSR values without reading exposed DUT storage. */
+  // select reference CSR values without reading exposed DUT storage.
   function automatic logic [31:0] csr_value(input logic [11:0] address);
-    /* the fixture deliberately limits its synthetic CSR operation subset. */
+    // the fixture deliberately limits its synthetic CSR operation subset.
     case (address)
       'h300: return status_ref;
       'h305: return vector_ref;
       'h341: return epc_ref;
-      /* unsupported fixture addresses are test construction errors. */
+      // unsupported fixture addresses are test construction errors.
       default: begin
         check(0, "fixture used an unmodeled CSR");
         return 0;
@@ -201,22 +201,22 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     endcase
   endfunction
 
-  /* a completed data response updates only the immutable original load's expectation. */
+  // a completed data response updates only the immutable original load's expectation.
   function automatic expected_t disposition(input logic [6:0] id);
     expected_t q;
     q = expected[id];
-    /* no synthetic early load result is accepted before its planned response. */
+    // no synthetic early load result is accepted before its planned response.
     if (q.p.op == OP_LOAD && completed[id]) begin
       q.p.fault = failed[id];
       q.p.cause = failed[id] ? 5 : 0;
       q.p.mtval = failed[id] ? q.p.mem_addr : 0;
-      /* access faults preserve the original packet's result field. */
+      // access faults preserve the original packet's result field.
       if (!failed[id]) q.p.result = load_value[id];
     end
     return q;
   endfunction
 
-  /* compare and commit one independently eligible architectural terminal. */
+  // compare and commit one independently eligible architectural terminal.
   task automatic terminal(input trace_t actual, input packet_t p);
     logic [6:0] id;
     logic [31:0] old_csr, new_csr, write_value, continuation;
@@ -233,11 +233,11 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
           "terminal packet or fault differed from independent intent");
     old_csr = p.op == OP_CSR ? csr_value(p.csr_addr) : 0;
     new_csr = p.csr_source;
-    /* the tested WARL masks are defined independently of DUT readback. */
+    // the tested WARL masks are defined independently of DUT readback.
     if (p.csr_addr == 'h300) new_csr = 'h1800 | (new_csr & 'h88);
-    /* mtvec remains word aligned in both active configurations. */
+    // mtvec remains word aligned in both active configurations.
     if (p.csr_addr == 'h305) new_csr &= 32'hfffffffc;
-    /* mepc reflects IALIGN, preserving bit one only when C is enabled. */
+    // mepc reflects IALIGN, preserving bit one only when C is enabled.
     if (p.csr_addr == 'h341) new_csr &= C_ENABLED ? 32'hfffffffe : 32'hfffffffc;
     write_value = p.op == OP_CSR ? (p.csr_read ? old_csr : 0) : p.result;
     do_write = !p.fault && p.rd_write && p.rd != 0 &&
@@ -251,7 +251,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
           actual.csr_new == (!p.fault && p.op == OP_CSR && p.csr_write ? new_csr : 0), "CSR old/new trace value mismatch");
     continuation = p.op == OP_MRET ? epc_ref : p.next_pc;
     check(actual.next_pc == (p.fault ? vector_ref : continuation), "wrong terminal continuation");
-    /* trap disposition changes only trap state and consumes its original instruction. */
+    // trap disposition changes only trap state and consumes its original instruction.
     if (p.fault) begin
       epc_ref = p.pc & (C_ENABLED ? 32'hfffffffe : 32'hfffffffc);
       cause_ref = p.cause;
@@ -260,17 +260,17 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       arch_pc = vector_ref;
       traps++;
     end
-    /* all normal register and CSR effects happen on this one checked W edge. */
+    // all normal register and CSR effects happen on this one checked W edge.
     else begin
       arch_pc = continuation;
-      /* x0 cannot become a stored link or CSR destination. */
+      // x0 cannot become a stored link or CSR destination.
       if (do_write) begin
         regs_ref[p.rd] = write_value;
         defined_ref[p.rd] = 1;
       end
-      /* explicit synthetic CSR writes update the independent bank atomically. */
+      // explicit synthetic CSR writes update the independent bank atomically.
       if (actual.csr_write) begin
-        /* the fixture covers all CSR fields it can write. */
+        // the fixture covers all CSR fields it can write.
         case (p.csr_addr)
           'h300: status_ref = new_csr;
           'h305: vector_ref = new_csr;
@@ -278,7 +278,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
           default: check(0, "unmodeled CSR update");
         endcase
       end
-      /* MRET restores the independently stored previous interrupt enable. */
+      // MRET restores the independently stored previous interrupt enable.
       if (p.op == OP_MRET) status_ref = 'h1880 | (status_ref[7] ? 8 : 0);
     end
     live[id] = 0;
@@ -286,17 +286,17 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     next_order++;
   endtask
 
-  /* the oldest surviving accepted UID is independent of pipeline stage placement. */
+  // the oldest surviving accepted UID is independent of pipeline stage placement.
   function automatic logic [63:0] next_terminal_uid();
-    /* holes represent independently justified squash or reset dispositions. */
+    // holes represent independently justified squash or reset dispositions.
     for (int id = 0; id < CAPACITY; id++) begin
-      /* a live older owner cannot be skipped even if it has no architectural write. */
+      // a live older owner cannot be skipped even if it has no architectural write.
       if (live[id]) return 64'(id);
     end
     return '1;
   endfunction
 
-  /* one edge predicts all control events before sampling registered DUT witnesses. */
+  // one edge predicts all control events before sampling registered DUT witnesses.
   task automatic tick();
     logic [4:0] before_valid, wanted_kill, observed_kill, barriers;
     token_t before_token [0:4];
@@ -322,13 +322,13 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     before_transfer = transfer_o;
     owner_before = owner;
     barriers = 0;
-    /* immutable input operation classes determine the added serialization contract. */
+    // immutable input operation classes determine the added serialization contract.
     for (int stage = 0; stage < 5; stage++) begin
       barriers[stage] = before_valid[stage] && original[7'(before_token[stage].uid)].op inside {OP_CSR, OP_MRET};
-      /* even the terminal edge excludes younger input and stage departures. */
+      // even the terminal edge excludes younger input and stage departures.
       if (barriers[stage]) begin
         check(!in_ready_o, "serialized event admitted younger input");
-        /* older requests may drain while younger slots remain owned and stationary. */
+        // older requests may drain while younger slots remain owned and stationary.
         for (int younger = 0; younger < stage && younger < 4; younger++)
           check(!before_transfer[younger], "event transfer crossed a serial barrier");
       end
@@ -346,11 +346,11 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     w_done = before_valid[4] && !hold_i[4] && !reset_active && (!active_flush || protect_w) &&
         (!barriers[4] || (prepared[w_id] && !owner_before));
     wanted_kill = 0;
-    /* reset revokes instruction ownership while a physical data owner remains separately live. */
+    // reset revokes instruction ownership while a physical data owner remains separately live.
     if (reset_active) wanted_kill = before_valid;
-    /* precise W control wins over any requested external flush. */
+    // precise W control wins over any requested external flush.
     else if (w_done && (w.p.fault || w.redirects)) wanted_kill = before_valid & 5'b01111;
-    /* a flush preserves the issued token until its W disposition, even after bus response. */
+    // a flush preserves the issued token until its W disposition, even after bus response.
     else if (active_flush) begin
       wanted_kill = before_valid;
       wanted_kill[3] = before_valid[3] && !protect_m;
@@ -360,7 +360,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
                      (!protect_w || w_done) && !owner_before;
     wanted_redirect = flush_complete || (w_done && (w.p.fault || w.redirects));
     redirect_target = active_target;
-    /* a trap or normal return/control terminal supplies its own independently known target. */
+    // a trap or normal return/control terminal supplies its own independently known target.
     if (w_done && (w.p.fault || w.redirects)) redirect_target = w.p.fault ? vector_ref :
         (w.p.op == OP_MRET ? epc_ref : w.p.next_pc);
     wanted_abort = reset_active ? flush_pending : (w_done && w.p.fault && active_flush);
@@ -371,26 +371,26 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(mem_launch_o == launch_expected, "unexpected or missing first-valid memory grant");
     check(mem_busy_o == owner && d_req_valid_o == (owner && !owner_accepted),
           "physical request owner disappeared or appeared without permission");
-    /* first-valid request ownership makes the complete external descriptor immutable. */
+    // first-valid request ownership makes the complete external descriptor immutable.
     if (owner) check(d_req_tag_o == owner_tag && d_req_addr_o == owner_addr &&
         d_req_wdata_o == 0 && !d_req_write_o && d_req_size_o == 2 && d_req_wstrb_o == 0,
         "owned request descriptor changed");
     accepted_input = in_valid_i && in_ready_o;
     accept_request = d_req_valid_o && d_req_ready_i;
     accept_response = d_rsp_valid_i && d_rsp_ready_o;
-    /* the barrier now requires both CSR-derived operands to be captured after its commit. */
+    // the barrier now requires both CSR-derived operands to be captured after its commit.
     if (before_valid[1] && before_transfer[1] && expected[7'(before_token[1].uid)].p.rs1_used &&
         expected[7'(before_token[1].uid)].p.rs2_used &&
         expected[7'(before_token[1].uid)].p.rs1 == expected[7'(before_token[1].uid)].p.rs2 &&
         csr_destination[expected[7'(before_token[1].uid)].p.rs1]) dual_captures++;
-    /* preparation is granted only by an unheld W edge with the old manager already free. */
+    // preparation is granted only by an unheld W edge with the old manager already free.
     if (before_valid[4] && barriers[4] && !prepared[w_id] && !hold_i[4] &&
         !wanted_kill[4] && !reset_active && !owner_before) prepared[w_id] = 1;
     clk_i = 1;
     #2;
     cycles++;
     observed_kill = kill_valid_o;
-    /* a hidden extra killed instruction must fail the exact independently justified mask. */
+    // a hidden extra killed instruction must fail the exact independently justified mask.
     if ($test$plusargs("mutate_kill") && !mutation_applied && !reset_active && before_valid[4] && hold_i[4] &&
         !active_flush) begin
       observed_kill[4] = !observed_kill[4];
@@ -401,15 +401,15 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(redirect_valid_o == wanted_redirect && (!wanted_redirect || redirect_pc_o == redirect_target),
           "incorrect event redirect arbitration");
     observed_abort = flush_aborted_o;
-    /* a missing flush-abort pulse cannot hide behind a correct trap redirect. */
+    // a missing flush-abort pulse cannot hide behind a correct trap redirect.
     if ($test$plusargs("mutate_abort") && !mutation_applied && wanted_abort) begin
       mutation_applied = 1;
       observed_abort = !observed_abort;
     end
     check(observed_abort == wanted_abort, "missing or spurious flush abort");
-    /* consume only independently justified instruction kills. */
+    // consume only independently justified instruction kills.
     for (int stage = 0; stage < 5; stage++) begin
-      /* every reported kill must name the exact pre-edge stage owner. */
+      // every reported kill must name the exact pre-edge stage owner.
       if (wanted_kill[stage]) begin
         check(kill_uid_o[stage] == before_token[stage].uid &&
               live[7'(kill_uid_o[stage])], "kill changed or repeated an accepted identity");
@@ -417,15 +417,15 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
         killed++;
       end
     end
-    /* physical target acceptance has no authority to grant architectural retirement. */
+    // physical target acceptance has no authority to grant architectural retirement.
     if (accept_request) begin
       check(owner && !owner_accepted, "duplicate or ownerless target acceptance");
       owner_accepted = 1;
     end
-    /* response completion releases the physical owner but preserves its issued-token bit. */
+    // response completion releases the physical owner but preserves its issued-token bit.
     if (accept_response) begin
       check(owner && owner_accepted, "target response lacked an accepted request");
-      /* a reset-edge or earlier orphan response must not recreate an instruction result. */
+      // a reset-edge or earlier orphan response must not recreate an instruction result.
       if (!reset_active && !orphan) begin
         completed[owner_uid] = 1;
         failed[owner_uid] = planned_status == 1;
@@ -436,7 +436,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       orphan = 0;
       responses++;
     end
-    /* apply reset to architectural state while preserving hart-reset identity counters. */
+    // apply reset to architectural state while preserving hart-reset identity counters.
     if (reset_active) begin
       check(!cold_reset_i || !owner_before, "fixture attempted to fence an unresolved owner");
       recovery_ref = 1;
@@ -447,54 +447,54 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       cause_ref = 0;
       tval_ref = 0;
       arch_pc = 0;
-      /* only the architecturally hardwired zero register has a defined reset value. */
+      // only the architecturally hardwired zero register has a defined reset value.
       for (int reg_index = 0; reg_index < 32; reg_index++) begin
         defined_ref[reg_index] = reg_index == 0;
         regs_ref[reg_index] = 0;
         csr_destination[reg_index] = 0;
       end
-      /* cold reset restarts observation identities; hart reset never does. */
+      // cold reset restarts observation identities; hart reset never does.
       if (cold_reset_i) begin
         next_uid = 0;
         next_order = 0;
         last_tag = 0;
       end
-      /* a surviving request remains owed even after its instruction was reset-aborted. */
+      // a surviving request remains owed even after its instruction was reset-aborted.
       if (hart_reset_i && owner) orphan = 1;
       resets++;
     end
-    /* normal clocking resolves pending control events in their independent order. */
+    // normal clocking resolves pending control events in their independent order.
     else begin
-      /* recovery lasts through at least the edge observing no physical obligation. */
+      // recovery lasts through at least the edge observing no physical obligation.
       if (recovery_ref && !owner_before) recovery_ref = 0;
-      /* accept one external flush descriptor before any later fault can supersede it. */
+      // accept one external flush descriptor before any later fault can supersede it.
       if (flush_accept) begin
         flush_pending = 1;
         flush_target = flush_pc_i;
         flushes++;
       end
-      /* terminal comparison commits state before an independent external flush changes PC. */
+      // terminal comparison commits state before an independent external flush changes PC.
       if (w_done) begin
         observed_trace = trace_o;
-        /* a corrupt MRET return target must be rejected independently of its redirect witness. */
+        // a corrupt MRET return target must be rejected independently of its redirect witness.
         if ($test$plusargs("mutate_return") && !mutation_applied && w.p.op == OP_MRET) begin
           observed_trace.next_pc ^= 2;
           mutation_applied = 1;
         end
         terminal(observed_trace, w.p);
-        /* mark the independent final register producer only after successful disposition. */
+        // mark the independent final register producer only after successful disposition.
         if (!w.p.fault && w.p.rd_write && w.p.rd != 0 &&
             w.p.op inside {OP_RESULT, OP_LOAD, OP_CSR, OP_CONTROL})
           csr_destination[w.p.rd] = w.p.op == OP_CSR;
       end
-      /* a surviving external flush can complete on the successful protected load's W edge. */
+      // a surviving external flush can complete on the successful protected load's W edge.
       if (flush_complete && !(w_done && (w.p.fault || w.redirects))) begin
         arch_pc = active_target;
         flush_redirects++;
       end
-      /* neither a completed nor an aborted flush may reappear on a later edge. */
+      // neither a completed nor an aborted flush may reappear on a later edge.
       if (flush_complete || wanted_abort) flush_pending = 0;
-      /* allocate exact independent identities only for accepted external packets. */
+      // allocate exact independent identities only for accepted external packets.
       if (accepted_input) begin
         check(next_uid < 64'(CAPACITY), "input owner ledger exhausted");
         original[7'(next_uid)] = in_packet_i;
@@ -509,7 +509,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       end
     end
     aborts += int'(wanted_abort);
-    /* reserve the first-valid physical owner only for the independently permitted load. */
+    // reserve the first-valid physical owner only for the independently permitted load.
     if (launch_expected) begin
       check(!owner, "new memory grant overlapped an existing owner");
       owner = 1;
@@ -523,56 +523,56 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     end
     check(mem_busy_o == owner && d_req_valid_o == (owner && !owner_accepted),
           "first-valid external request did not match independent grant");
-    /* every live input has one physical pipeline slot, even when it has no visible effect. */
+    // every live input has one physical pipeline slot, even when it has no visible effect.
     for (int id = 0; id < CAPACITY; id++) begin
       count = 0;
-      /* multiplicity prevents one duplicate from concealing a different lost instruction. */
+      // multiplicity prevents one duplicate from concealing a different lost instruction.
       for (int stage = 0; stage < 5; stage++) begin
         count += int'(stage_valid_o[stage] && stage_token_o[stage].uid == 64'(id));
       end
       check(count == int'(live[id]), "accepted event instruction lost or duplicated");
     end
-    /* preparation remains attached to its independently tracked instruction identity. */
+    // preparation remains attached to its independently tracked instruction identity.
     for (int stage = 0; stage < 5; stage++) begin
       if (stage_valid_o[stage]) check(stage_token_o[stage].serial_ready == prepared[7'(stage_token_o[stage].uid)],
           "event serial preparation disagreed with independent ledger");
     end
-    /* all movement witnesses must preserve the unique accepted source owner. */
+    // all movement witnesses must preserve the unique accepted source owner.
     for (int stage = 0; stage < 4; stage++) begin
-      /* a transfer installs its old source in exactly the next stage. */
+      // a transfer installs its old source in exactly the next stage.
       if (before_transfer[stage]) check(before_valid[stage] && stage_valid_o[stage+1] &&
           stage_token_o[stage+1].uid == before_token[stage].uid, "event transfer changed identity");
     end
-    /* D captures real RF operands before X; supplied poison cannot become source authority. */
+    // D captures real RF operands before X; supplied poison cannot become source authority.
     if (before_transfer[1] && stage_valid_o[2] && stage_token_o[2].p.op == OP_CONTROL) begin
       x_packet = expected[7'(stage_token_o[2].uid)].p;
       x_packet.result = 0;
       x_packet.next_pc = 0;
-      /* a taken-target alignment failure belongs to X, not D capture. */
+      // a taken-target alignment failure belongs to X, not D capture.
       if (x_packet.fault && x_packet.cause == 0) begin
         x_packet.fault = 0;
         x_packet.mtval = 0;
       end
       check(stage_token_o[2].p == x_packet, "control D capture ignored independent operand intent");
     end
-    /* a protected held W fault must remain bit-for-bit stable until it can trap. */
+    // a protected held W fault must remain bit-for-bit stable until it can trap.
     if (before_valid[4] && hold_i[4] && !wanted_kill[4]) check(stage_valid_o[4] &&
         stage_token_o[4] == before_token[4], "held protected W token changed");
     check(mstatus_o == status_ref && mtvec_o == vector_ref && mscratch_o == 0 &&
           mepc_o == epc_ref && mcause_o == cause_ref && mtval_o == tval_ref,
           "event CSR state differs from independent committed bank");
-    /* inspect the full GPR bank to detect speculative or killed link writes. */
+    // inspect the full GPR bank to detect speculative or killed link writes.
     for (int reg_index = 0; reg_index < 32; reg_index++) begin
       inspect_reg_i = 5'(reg_index);
       #1;
       check(inspect_defined_o == defined_ref[reg_index], "early or killed GPR definedness change");
-      /* reset leaves nonzero stored bits unspecified until a real commit defines them. */
+      // reset leaves nonzero stored bits unspecified until a real commit defines them.
       if (defined_ref[reg_index]) check(inspect_value_o == regs_ref[reg_index], "event GPR storage mismatch");
     end
     clk_i = 0;
   endtask
 
-  /* start a scenario only after every old instruction and physical obligation is resolved. */
+  // start a scenario only after every old instruction and physical obligation is resolved.
   task automatic begin_case();
     check(!owner && stage_valid_o == 0 && !flush_pending, "new case abandoned an owner or flush");
     in_valid_i = 0;
@@ -589,7 +589,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     cases++;
   endtask
 
-  /* hold one packet and its independently constructed intent until input acceptance. */
+  // hold one packet and its independently constructed intent until input acceptance.
   task automatic send(input packet_t p, input expected_t q);
     logic [63:0] initial_uid;
     integer clocks;
@@ -598,7 +598,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     offered_expectation = q;
     in_valid_i = 1;
     clocks = 0;
-    /* bounded input readiness is required while this fixture has not held an older stage. */
+    // bounded input readiness is required while this fixture has not held an older stage.
     while (next_uid == initial_uid && clocks < 50) begin
       tick();
       clocks++;
@@ -607,7 +607,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(next_uid == initial_uid + 1, "event packet input acceptance did not progress");
   endtask
 
-  /* ordinary precomputed operations retain their original complete packet as expectation. */
+  // ordinary precomputed operations retain their original complete packet as expectation.
   task automatic send_plain(input packet_t p);
     expected_t q;
     q.p = p;
@@ -615,11 +615,11 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     send(p, q);
   endtask
 
-  /* wait for a named stage only to place an event, never to determine expected effects. */
+  // wait for a named stage only to place an event, never to determine expected effects.
   task automatic reach(input logic [2:0] stage, input logic [31:0] pc);
     integer clocks;
     clocks = 0;
-    /* a missing or duplicated instruction must also violate this independent finite bound. */
+    // a missing or duplicated instruction must also violate this independent finite bound.
     while (!(stage_valid_o[stage] && stage_token_o[stage].p.pc == pc) && clocks < 50) begin
       tick();
       clocks++;
@@ -627,21 +627,21 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(clocks < 50, "target instruction did not reach requested event boundary");
   endtask
 
-  /* consume every normal terminal and completed external flush without using reset as cleanup. */
+  // consume every normal terminal and completed external flush without using reset as cleanup.
   task automatic drain();
     integer clocks;
     clocks = 0;
-    /* response permission and holds are explicitly controlled by each scenario. */
+    // response permission and holds are explicitly controlled by each scenario.
     while ((stage_valid_o != 0 || owner || flush_pending) && clocks < 80) begin
       tick();
       clocks++;
     end
     check(clocks < 80 && !owner && !flush_pending && stage_valid_o == 0, "event drainage bound expired");
-    /* two quiet edges reject repeated redirect, terminal, abort or request activity. */
+    // two quiet edges reject repeated redirect, terminal, abort or request activity.
     repeat (2) tick();
   endtask
 
-  /* accept one explicit flush request and retain its target through all protected work. */
+  // accept one explicit flush request and retain its target through all protected work.
   task automatic request_flush(input logic [31:0] target = 'h300);
     int unsigned before_count;
     before_count = flushes;
@@ -652,13 +652,13 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(flushes == before_count + 1, "directed external flush was not accepted");
   endtask
 
-  /* run explicit races with positive coverage assertions in both alignment configurations. */
+  // run explicit races with positive coverage assertions in both alignment configurations.
   initial begin : regression
     packet_t p;
     expected_t q;
     int unsigned before_terminals, before_kills, before_aborts, before_redirects, before_captures;
     logic [31:0] masked_return;
-    /* initialize only reference ledgers, not architectural nonzero GPR definedness. */
+    // initialize only reference ledgers, not architectural nonzero GPR definedness.
     for (int id = 0; id < CAPACITY; id++) begin
       original[id] = '0;
       expected[id] = '0;
@@ -668,7 +668,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       failed[id] = 0;
       load_value[id] = 0;
     end
-    /* establish qualified reset before observing any potentially unspecified power-up slot bits. */
+    // establish qualified reset before observing any potentially unspecified power-up slot bits.
     cold_reset_i = 1;
     clk_i = 0;
     #2;
@@ -678,7 +678,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     cold_reset_i = 0;
     cycles++;
     resets++;
-    /* a held normal JAL and held taken branch are both reversible before W retirement. */
+    // a held normal JAL and held taken branch are both reversible before W retirement.
     for (int branch = 0; branch < 2; branch++) begin
       begin_case();
       hold_i[4] = 1;
@@ -700,14 +700,14 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
       drain();
       normal_w_cases++;
     end
-    /* a held ordered W fault survives a newly accepted flush until its trap can win. */
+    // a held ordered W fault survives a newly accepted flush until its trap can win.
     begin_case();
     send_plain(csr_write('h100, 'h305, 'h403));
     drain();
     hold_i[4] = 1;
     p = jal('h104, 2);
     q = jal_expected(p, 2);
-    /* C permits every even target, so use a real illegal branch encoding in that configuration. */
+    // C permits every even target, so use a real illegal branch encoding in that configuration.
     if (C_ENABLED) begin
       p.raw = 'h00002063;
       q.p = p;
@@ -734,7 +734,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     request_flush();
     check(flush_pending && stage_valid_o[4] && terminals == before_terminals,
           "held W fault did not preserve an accepted pending flush");
-    /* repeated held clocks must preserve the fault without prematurely aborting the flush. */
+    // repeated held clocks must preserve the fault without prematurely aborting the flush.
     repeat (3) tick();
     hold_i[4] = 0;
     drain();
@@ -744,9 +744,9 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     send_plain(packet('h400, OP_RESULT, 3, 'h44));
     drain();
     fault_w_cases++;
-    /* flush must preserve a first-valid or accepted load while killing the younger X jump. */
+    // flush must preserve a first-valid or accepted load while killing the younger X jump.
     for (int accepted_phase = 0; accepted_phase < 2; accepted_phase++) begin
-      /* both a normal data response and an access rejection require precise W disposition. */
+      // both a normal data response and an access rejection require precise W disposition.
       for (int fail = 0; fail < 2; fail++) begin
         begin_case();
         send_plain(csr_write('h100, 'h305, 'h400));
@@ -760,7 +760,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
         tick();
         check(owner && !owner_accepted && stage_valid_o[3] && stage_token_o[3].p.pc == 'h104,
               "directed flush failed to overlap younger X with the first load offer");
-        /* the accepted variant advances the same immutable owner before flush. */
+        // the accepted variant advances the same immutable owner before flush.
         if (accepted_phase != 0) begin
           d_req_ready_i = 1;
           tick();
@@ -773,7 +773,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
         request_flush();
         check(owner && issued[owner_uid] && flush_pending && killed == before_kills + 1,
               "flush discarded the data obligation or preserved its younger jump");
-        /* even an unaccepted first-valid offer must survive while the consumer stalls. */
+        // even an unaccepted first-valid offer must survive while the consumer stalls.
         repeat (2) tick();
         d_req_ready_i = 1;
         planned_status = 2'(fail);
@@ -789,7 +789,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
         load_flush_cases++;
       end
     end
-    /* hart reset cancels a held normal jump without reusing observation identities. */
+    // hart reset cancels a held normal jump without reusing observation identities.
     begin_case();
     hold_i[4] = 1;
     p = jal('h100, 8);
@@ -809,7 +809,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     send_plain(packet(0, OP_RESULT, 3, 'h66));
     drain();
     reset_cases++;
-    /* mepc write/readback and MRET use the same independently selected IALIGN mask. */
+    // mepc write/readback and MRET use the same independently selected IALIGN mask.
     begin_case();
     masked_return = C_ENABLED ? 'h202 : 'h200;
     send_plain(csr_write('h100, 'h300, 'h80));
@@ -829,7 +829,7 @@ module cpu5_control_events_tb #(parameter bit C_ENABLED = 0);
     check(regs_ref[5] == masked_return + 4 && arch_pc == masked_return + 8,
           "control instruction did not execute from the masked return PC");
     return_cases++;
-    /* both equal source ports consume the same committed CSR value after the barrier, including read suppression. */
+    // both equal source ports consume the same committed CSR value after the barrier, including read suppression.
     for (int suppressed = 0; suppressed < 2; suppressed++) begin
       begin_case();
       send_plain(csr_write('h100, 'h305, 'h800));

@@ -1,4 +1,4 @@
-/* queue diagnostic bytes and serialize 8N1 without stalling CPU memory effects. */
+// queue diagnostic bytes and serialize 8N1 without stalling CPU memory effects.
 module cpu5_uart_tx #(
   parameter integer CLOCK_HZ = 80000000,
   parameter integer BAUD = 115200
@@ -18,21 +18,21 @@ module cpu5_uart_tx #(
   logic [COUNT_BITS-1:0] divider_q;
   logic active_q, push, pop;
 
-  /* a simultaneous dequeue frees one slot even when the FIFO starts full. */
+  // a simultaneous dequeue frees one slot even when the FIFO starts full.
   assign pop = !active_q && count_q != 0;
   assign push = valid_i && (count_q < 64 || pop);
   assign tx_o = active_q ? shift_q[0] : 1'b1;
   assign busy_o = active_q || count_q != 0;
   assign queued_o = count_q;
 
-  /* queued storage needs no reset; pointers determine which bytes are owned. */
+  // queued storage needs no reset; pointers determine which bytes are owned.
   always_ff @(posedge clk_i) begin
     if (!reset_i && push) fifo[write_q] <= data_i;
   end
 
-  /* overflow is sticky until board reset and never silently reports successful output. */
+  // overflow is sticky until board reset and never silently reports successful output.
   always_ff @(posedge clk_i) begin
-    /* reset discards queued diagnostics and restores an idle serial line. */
+    // reset discards queued diagnostics and restores an idle serial line.
     if (reset_i) begin
       read_q <= 0;
       write_q <= 0;
@@ -42,7 +42,7 @@ module cpu5_uart_tx #(
       divider_q <= 0;
       active_q <= 0;
       overflow_o <= 0;
-    /* preserve byte ownership until its complete stop bit has elapsed. */
+    // preserve byte ownership until its complete stop bit has elapsed.
     end else begin
       if (valid_i && !push) overflow_o <= 1;
       if (push) write_q <= write_q + 1'b1;
@@ -52,15 +52,15 @@ module cpu5_uart_tx #(
         2'b01: count_q <= count_q - 1'b1;
         default: count_q <= count_q;
       endcase
-      /* load one start bit, eight least-significant-first data bits and one stop bit. */
+      // load one start bit, eight least-significant-first data bits and one stop bit.
       if (pop) begin
         shift_q <= {1'b1, fifo[read_q], 1'b0};
         bits_q <= 10;
         divider_q <= COUNT_BITS'(DIVISOR - 1);
         active_q <= 1;
-      /* advance only after a complete bit period. */
+      // advance only after a complete bit period.
       end else if (active_q) begin
-        /* each byte retains all ten bit periods, including the final stop bit. */
+        // each byte retains all ten bit periods, including the final stop bit.
         if (divider_q == 0) begin
           divider_q <= COUNT_BITS'(DIVISOR - 1);
           shift_q <= {1'b1, shift_q[9:1]};

@@ -1,4 +1,4 @@
-/* observe settled architectural events without changing CPU execution or storing a trace buffer. */
+// observe settled architectural events without changing CPU execution or storing a trace buffer.
 module cpu5_observe #(
   parameter integer SEQUENCE_BITS = 64,
   parameter integer EPOCH_BITS = 64,
@@ -51,19 +51,19 @@ module cpu5_observe #(
   logic active_q, reset_active_q, current_retirement, retirement_overflow;
   logic unused_stage_payload;
 
-  /* reduced widths exercise observation exhaustion without wrapping architectural counters. */
+  // reduced widths exercise observation exhaustion without wrapping architectural counters.
   initial begin
     assert (SEQUENCE_BITS >= 1 && SEQUENCE_BITS <= 64 && EPOCH_BITS >= 1 && EPOCH_BITS <= 64 &&
         RETIRED_BITS >= 1 && RETIRED_BITS <= 64) else $fatal(1, "invalid observation widths");
   end
 
-  /* these stage payloads remain available through accepted and terminal packets. */
+  // these stage payloads remain available through accepted and terminal packets.
   assign unused_stage_payload = ^{stage_token_i[0], stage_token_i[1], stage_token_i[2],
                                   stage_token_i[3], stage_token_i[4]};
   assign current_retirement = trace_i.valid && !trace_i.trap;
   assign retirement_overflow = active_q && (&retired_q) && current_retirement;
 
-  /* after the edge, registered core outputs pair with this edge's captured pre-state. */
+  // after the edge, registered core outputs pair with this edge's captured pre-state.
   always_comb begin
     record_o = sampled_q;
     record_o.overflow = overflow_q | {retirement_overflow, 2'b0};
@@ -78,7 +78,7 @@ module cpu5_observe #(
     record_o.terminal = trace_i;
     record_o.stages_after = stage_valid_i;
     record_o.kill_valid = kill_valid_i;
-    /* UID lanes use stage order F, D, X, M, W from least significant to most. */
+    // UID lanes use stage order F, D, X, M, W from least significant to most.
     for (int stage = 0; stage < 5; stage++) begin
       record_o.kill_uid[64*stage +: 64] = kill_uid_i[stage];
       record_o.stage_uid[64*stage +: 64] = stage_token_i[stage].uid;
@@ -97,7 +97,7 @@ module cpu5_observe #(
     record_o.i_fatal_reason = i_fatal_reason_i;
   end
 
-  /* capture only pre-edge inputs; no core output is sampled a clock late into the record. */
+  // capture only pre-edge inputs; no core output is sampled a clock late into the record.
   always_ff @(posedge clk_i) begin
     sampled_q <= '0;
     sampled_q.cold_reset <= cold_reset_i;
@@ -107,7 +107,7 @@ module cpu5_observe #(
     sampled_q.debug_ebreak_entry <= debug_ebreak_entry_i;
     sampled_q.hold <= hold_i;
     sampled_q.stages_before <= stage_valid_i;
-    /* preserve admission ownership across an interrupt-selection edge. */
+    // preserve admission ownership across an interrupt-selection edge.
     for (int stage = 0; stage < 5; stage++) sampled_q.admitted_before[stage] <= stage_token_i[stage].admitted;
     sampled_q.transfers <= transfer_i;
     sampled_q.input_accept <= in_valid_i && in_ready_i;
@@ -145,7 +145,7 @@ module cpu5_observe #(
     sampled_q.i_status <= i_rsp_status_i;
     sampled_q.i_drop <= i_drop_i;
     reset_active_q <= cold_reset_i || hart_reset_i;
-    /* rearming declares a new capture and requires a positively isolated CPU reset. */
+    // rearming declares a new capture and requires a positively isolated CPU reset.
     if (capture_reset_i) begin
       assert (cold_reset_i && isolated_i) else $fatal(1, "observation rearm requires isolated cold reset");
       sequence_q <= 0;
@@ -154,21 +154,21 @@ module cpu5_observe #(
       overflow_q <= 0;
       active_q <= 0;
     end
-    /* an invalid capture stays invalid until the explicit new-session handshake. */
+    // an invalid capture stays invalid until the explicit new-session handshake.
     else begin
       active_q <= 1;
       overflow_q <= record_o.overflow;
-      /* sequence exhaustion reports loss without wrapping identity or stalling the CPU. */
+      // sequence exhaustion reports loss without wrapping identity or stalling the CPU.
       if (!(|record_o.overflow)) begin
-        /* the next observed edge must have a distinct sequence number. */
+        // the next observed edge must have a distinct sequence number.
         if (&sequence_q) overflow_q[0] <= 1;
         else sequence_q <= sequence_q + 1'b1;
-        /* one epoch covers an entire asserted CPU-reset episode. */
+        // one epoch covers an entire asserted CPU-reset episode.
         if ((cold_reset_i || hart_reset_i) && !reset_active_q) begin
           if (&epoch_q) overflow_q[1] <= 1;
           else epoch_q <= epoch_q + 1'b1;
         end
-        /* accumulate the preceding settled terminal before presenting this edge's record. */
+        // accumulate the preceding settled terminal before presenting this edge's record.
         if (active_q && current_retirement) retired_q <= retired_q + 1'b1;
       end
     end

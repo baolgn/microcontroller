@@ -1,4 +1,4 @@
-/* run compiled M-only firmware entirely from initialized local storage. */
+// run compiled M-only firmware entirely from initialized local storage.
 module cpu5_soc #(
   parameter ROM_FILE = "",
   parameter IRAM_FILE = "",
@@ -61,7 +61,7 @@ module cpu5_soc #(
   logic [2:0] unused_debug_reg_error;
   logic unused_observation;
 
-  /* local storage and peripherals remain clocked while useful CPU issue is paused. */
+  // local storage and peripherals remain clocked while useful CPU issue is paused.
   cpu5_local_fabric #(.ROM_FILE(ROM_FILE), .IRAM_FILE(IRAM_FILE), .DRAM_FILE(DRAM_FILE)) fabric (
     .clk_i, .reset_i, .isolated_i, .i_accept_delay_i, .i_response_delay_i, .d_accept_delay_i, .d_response_delay_i,
     .i_req_valid_i(i_req_valid_o), .i_req_ready_o, .i_req_addr_i(i_req_addr_o), .i_req_tag_i(i_req_tag_o),
@@ -76,12 +76,12 @@ module cpu5_soc #(
   );
   assign busy_o = fetch_busy || mem_busy || fabric_busy;
   assign fatal_o = core_fatal || fetch_fatal;
-  /* expose sticky failure provenance without changing containment or transaction ownership. */
+  // expose sticky failure provenance without changing containment or transaction ownership.
   assign fetch_fatal_reason_o = fetch_reason;
   assign core_fatal_record_o = fatal_record;
   assign irq_event_o = {irq_valid, irq_pc, irq_cause, mtvec};
 
-  /* execute permissions and obsolete-response ownership remain in the production frontend. */
+  // execute permissions and obsolete-response ownership remain in the production frontend.
   cpu5_frontend #(.C_ENABLED(C_ENABLED), .GEN_BITS(2), .MAX_WAIT_CYCLES(128)) frontend (
     .clk_i, .cold_reset_i(reset_i), .isolated_i, .hart_reset_i(1'b0),
     .permit_i, .entry_pending_i(entry_pending), .core_fatal_i(core_fatal),
@@ -94,7 +94,7 @@ module cpu5_soc #(
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* the local prototype executes raw instructions with IRQ, timer and instruction synchronization. */
+  // the local prototype executes raw instructions with IRQ, timer and instruction synchronization.
   cpu5_control #(.C_ENABLED(C_ENABLED), .M_ENABLED(M_ENABLED), .IRQ_ENABLED(1), .TIMER_ENABLED(1),
       .ZIFENCEI_ENABLED(1), .IRAM_WRITE(1), .DIAGNOSTIC(DIAGNOSTIC), .FORWARDING(FORWARDING),
       .D_MAX_WAIT_CYCLES(128)) core (
@@ -119,7 +119,7 @@ module cpu5_soc #(
     .debug_reg_ready_o(unused_debug_reg_ready), .debug_reg_rdata_o(unused_debug_reg_rdata), .debug_reg_error_o(unused_debug_reg_error)
   );
 
-  /* unused diagnostics remain observational and cannot constrain the architectural test. */
+  // unused diagnostics remain observational and cannot constrain the architectural test.
   assign unused_observation = ^{stages, kills, stage_tokens[0], stage_tokens[1], stage_tokens[2],
       stage_tokens[3], stage_tokens[4], kill_uids[0], kill_uids[1], kill_uids[2], kill_uids[3], kill_uids[4],
       transfers, fetch_generation, packet_generation, fetch_discard, fetch_launch, fetch_accept, fetch_complete,

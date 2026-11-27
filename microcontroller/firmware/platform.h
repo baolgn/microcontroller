@@ -1,4 +1,4 @@
-/* describe the local machine platform and its complete trap frame. */
+// describe the local machine platform and its complete trap frame.
 #ifndef CPU5_PLATFORM_H
 #define CPU5_PLATFORM_H
 #include <stdint.h>
@@ -14,7 +14,7 @@
 #define MIE_MTIE 128u
 #define MIE_MEIE 2048u
 
-/* offsets match trap.S; the final padding retains 16-byte stack alignment. */
+// offsets match trap.S; the final padding retains 16-byte stack alignment.
 struct trap_frame {
     uint32_t gpr[32];
     uint32_t mepc, mstatus, mcause, mtval;
@@ -42,20 +42,20 @@ uint32_t __umodsi3(uint32_t dividend, uint32_t divisor);
 uint32_t __mulsi3(uint32_t left, uint32_t right);
 int irq_register_probe(void);
 
-/* each CSR operation uses the implemented machine profile and explicit ordering. */
+// each CSR operation uses the implemented machine profile and explicit ordering.
 static inline void irq_disable(void) {
     __asm__ volatile ("csrci mstatus, 8" ::: "memory");
 }
 
-/* enable pending interrupts only after their handlers and state are ready. */
+// enable pending interrupts only after their handlers and state are ready.
 static inline void irq_enable(void) {
     __asm__ volatile ("csrsi mstatus, 8" ::: "memory");
 }
 
-/* read a rollover-safe timer value without a hardware snapshot latch. */
+// read a rollover-safe timer value without a hardware snapshot latch.
 static inline uint64_t timer_now(void) {
     uint32_t high, low, again;
-    /* retry when the low half rolled over between the high-half reads. */
+    // retry when the low half rolled over between the high-half reads.
     do {
         high = MMIO32(TIMER_BASE + 4);
         low = MMIO32(TIMER_BASE);
@@ -64,7 +64,7 @@ static inline uint64_t timer_now(void) {
     return ((uint64_t)high << 32) | low;
 }
 
-/* prevent a transient early match while updating the split comparator. */
+// prevent a transient early match while updating the split comparator.
 static inline void timer_compare(uint64_t value) {
     MMIO32(TIMER_BASE + 8) = 0xffffffffu;
     MMIO32(TIMER_BASE + 12) = (uint32_t)(value >> 32);

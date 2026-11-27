@@ -1,6 +1,6 @@
-/* verify isolated combinational blocks without claiming CPU conformance. */
+// verify isolated combinational blocks without claiming CPU conformance.
 module cpu5_datapath_tb;
-  /* compare the complete public decode record, including benign defaults. */
+  // compare the complete public decode record, including benign defaults.
   typedef struct packed {
     logic legal;
     logic [3:0] kind;
@@ -14,14 +14,14 @@ module cpu5_datapath_tb;
     logic load_signed;
   } decode_t;
 
-  /* describe ISA encodings through independent masks and operation metadata. */
+  // describe ISA encodings through independent masks and operation metadata.
   typedef struct packed {
     logic [31:0] mask, match;
     logic [3:0] kind, alu_op;
     logic [2:0] imm_kind;
   } encoding_t;
 
-  /* this independent mask table lists the forty RV32I instruction encodings. */
+  // this independent mask table lists the forty RV32I instruction encodings.
   localparam encoding_t ENCODINGS [0:39] = '{
     '{32'h0000007f, 32'h00000037, 3, 10, 4},
     '{32'h0000007f, 32'h00000017, 4, 0, 4},
@@ -65,7 +65,7 @@ module cpu5_datapath_tb;
     '{32'hffffffff, 32'h00100073, 12, 0, 0}
   };
 
-  /* cover sign changes, carries, shift boundaries and alternating bit patterns. */
+  // cover sign changes, carries, shift boundaries and alternating bit patterns.
   localparam logic [31:0] BOUNDARIES [0:11] = '{
     0, 1, 2, 31, 32, 33, 32'h7fffffff, 32'h80000000,
     32'hffffffff, 32'hfffffffe, 32'h55555555, 32'haaaaaaaa
@@ -92,7 +92,7 @@ module cpu5_datapath_tb;
   int unsigned legal_checks = 0, illegal_checks = 0;
   bit mutation_applied = 0;
 
-  /* exercise each public block independently, including the ALU shifter instance. */
+  // exercise each public block independently, including the ALU shifter instance.
   cpu5_decoder decoder (.*);
   cpu5_immediate immediate_decoder (
     .instr_i(instr_i), .kind_i(immediate_kind), .value_o(immediate_value), .valid_o(immediate_valid)
@@ -109,9 +109,9 @@ module cpu5_datapath_tb;
       rs1_used_o, rs2_used_o, rd_write_o, rs1_o, rs2_o, rd_o,
       a_pc_o, b_imm_o, branch_cond_o, mem_size_o, load_signed_o};
 
-  /* identify the exact reproducible stimulus at the first mismatch. */
+  // identify the exact reproducible stimulus at the first mismatch.
   function automatic void check(input bit condition, input string message);
-    /* a failed comparator terminates instead of corrupting later evidence. */
+    // a failed comparator terminates instead of corrupting later evidence.
     if (!condition) begin
       $fatal(1, {"seed=%0d decode=%0d immediate=%0d alu=%0d shift=%0d instr=%08x ",
                  "imm_kind=%0d alu_a=%08x alu_b=%08x alu_op=%0d ",
@@ -121,13 +121,13 @@ module cpu5_datapath_tb;
     end
   endfunction
 
-  /* this specified modulo-2^32 generator accepts zero as a normal seed. */
+  // this specified modulo-2^32 generator accepts zero as a normal seed.
   function automatic logic [31:0] next_random();
     random_state = random_state * 32'd1664525 + 32'd1013904223;
     return random_state;
   endfunction
 
-  /* recognize masked specification rows independently of the opcode-case RTL. */
+  // recognize masked specification rows independently of the opcode-case RTL.
   function automatic decode_t decode_reference(input logic [31:0] word);
     decode_t expected;
     bit has_destination;
@@ -135,9 +135,9 @@ module cpu5_datapath_tb;
     expected = '0;
     hit_count = 0;
     has_destination = 0;
-    /* each legal word must match exactly one instruction family row. */
+    // each legal word must match exactly one instruction family row.
     for (int i = 0; i < 40; i++) begin
-      /* reserved operand fields are excluded only where the ISA permits them. */
+      // reserved operand fields are excluded only where the ISA permits them.
       if ((word & ENCODINGS[i].mask) == ENCODINGS[i].match) begin
         expected.legal = 1;
         expected.kind = ENCODINGS[i].kind;
@@ -147,38 +147,38 @@ module cpu5_datapath_tb;
       end
     end
     check(hit_count <= 1, "independent encoding table overlapped");
-    /* operation classes determine use masks rather than register index values. */
+    // operation classes determine use masks rather than register index values.
     case (expected.kind)
-      /* register arithmetic retains both source uses even for HINTs. */
+      // register arithmetic retains both source uses even for HINTs.
       1: begin
         expected.rs1_used = 1;
         expected.rs2_used = 1;
         has_destination = 1;
       end
-      /* immediate arithmetic and JALR use one source and one immediate. */
+      // immediate arithmetic and JALR use one source and one immediate.
       2, 6: begin
         expected.rs1_used = 1;
         expected.b_imm = 1;
         has_destination = 1;
       end
-      /* LUI takes only its upper immediate. */
+      // LUI takes only its upper immediate.
       3: begin
         expected.b_imm = 1;
         has_destination = 1;
       end
-      /* AUIPC and JAL use the instruction PC plus their immediate. */
+      // AUIPC and JAL use the instruction PC plus their immediate.
       4, 5: begin
         expected.a_pc = 1;
         expected.b_imm = 1;
         has_destination = 1;
       end
-      /* conditional branches compare both sources and retain their condition. */
+      // conditional branches compare both sources and retain their condition.
       7: begin
         expected.rs1_used = 1;
         expected.rs2_used = 1;
         expected.branch_cond = word[14:12];
       end
-      /* loads retain their memory operation even with an x0 destination. */
+      // loads retain their memory operation even with an x0 destination.
       8: begin
         expected.rs1_used = 1;
         expected.b_imm = 1;
@@ -186,14 +186,14 @@ module cpu5_datapath_tb;
         expected.load_signed = !word[14];
         has_destination = 1;
       end
-      /* store data remains a source while its address uses an immediate. */
+      // store data remains a source while its address uses an immediate.
       9: begin
         expected.rs1_used = 1;
         expected.rs2_used = 1;
         expected.b_imm = 1;
         expected.mem_size = word[13:12];
       end
-      /* fence, environment and illegal records retain zero execution metadata. */
+      // fence, environment and illegal records retain zero execution metadata.
       default: begin end
     endcase
     expected.rs1 = expected.rs1_used ? word[19:15] : 0;
@@ -203,16 +203,16 @@ module cpu5_datapath_tb;
     return expected;
   endfunction
 
-  /* route each output bit separately rather than copying RTL concatenations. */
+  // route each output bit separately rather than copying RTL concatenations.
   function automatic logic [31:0] immediate_reference(input logic [31:7] word,
                                                       input logic [2:0] format);
     logic [31:0] value;
     int source_bit;
     value = 0;
-    /* a negative source index denotes a fixed zero bit. */
+    // a negative source index denotes a fixed zero bit.
     for (int bit_number = 0; bit_number < 32; bit_number++) begin
       source_bit = -1;
-      /* each format is a mapping from destination positions to source positions. */
+      // each format is a mapping from destination positions to source positions.
       case (format)
         1: source_bit = bit_number < 12 ? bit_number + 20 : 31;
         2: source_bit = bit_number < 5 ? bit_number + 7 :
@@ -228,7 +228,7 @@ module cpu5_datapath_tb;
         6: source_bit = bit_number < 5 ? bit_number + 20 : -1;
         default: source_bit = -1;
       endcase
-      /* fixed-zero fields do not read any instruction position. */
+      // fixed-zero fields do not read any instruction position.
       if (source_bit >= 7) begin
         value[bit_number] = word[source_bit];
       end
@@ -236,23 +236,23 @@ module cpu5_datapath_tb;
     return value;
   endfunction
 
-  /* reconstruct shifts by source-bit indexing rather than shift operators. */
+  // reconstruct shifts by source-bit indexing rather than shift operators.
   function automatic logic [31:0] shift_reference(input logic [31:0] value,
                                                  input logic [4:0] amount,
                                                  input logic [1:0] operation);
     logic [31:0] result;
     int source_bit;
     result = 0;
-    /* an invalid operation always produces the benign zero result. */
+    // an invalid operation always produces the benign zero result.
     if (operation < 3) begin
-      /* each output bit independently selects a source or fill bit. */
+      // each output bit independently selects a source or fill bit.
       for (int bit_number = 0; bit_number < 32; bit_number++) begin
         source_bit = operation == 0 ? bit_number - int'(amount) : bit_number + int'(amount);
-        /* in-range positions copy their original bit. */
+        // in-range positions copy their original bit.
         if (source_bit >= 0 && source_bit < 32) begin
           result[bit_number] = value[source_bit];
         end
-        /* only an arithmetic right shift extends the original sign. */
+        // only an arithmetic right shift extends the original sign.
         else if (operation == 2) begin
           result[bit_number] = value[31];
         end
@@ -261,18 +261,18 @@ module cpu5_datapath_tb;
     return result;
   endfunction
 
-  /* signed comparison first separates signs, then compares magnitudes. */
+  // signed comparison first separates signs, then compares magnitudes.
   function automatic bit signed_less(input logic [31:0] a, input logic [31:0] b);
     return a[31] != b[31] ? a[31] : a < b;
   endfunction
 
-  /* independently model wrapping arithmetic, comparisons and shifts. */
+  // independently model wrapping arithmetic, comparisons and shifts.
   function automatic logic [31:0] alu_reference(input logic [31:0] a,
                                                input logic [31:0] b,
                                                input logic [3:0] operation);
     logic [63:0] wide;
     wide = 0;
-    /* subtraction is modeled through complement and carry in a wider domain. */
+    // subtraction is modeled through complement and carry in a wider domain.
     case (operation)
       0: wide = {32'b0, a} + {32'b0, b};
       1: wide = {32'b0, a} + {32'b0, ~b} + 64'd1;
@@ -291,19 +291,19 @@ module cpu5_datapath_tb;
     return 32'(wide);
   endfunction
 
-  /* compare every decode output, including normalized illegal metadata. */
+  // compare every decode output, including normalized illegal metadata.
   task automatic test_decode(input logic [31:0] word);
     decode_t expected, observed;
     instr_i = word;
     expected = decode_reference(word);
     #1;
     observed = actual_decode;
-    /* activate a plausible legal-instruction loss to qualify the comparator. */
+    // activate a plausible legal-instruction loss to qualify the comparator.
     if ($test$plusargs("mutate_decode") && !mutation_applied && expected.legal) begin
       observed.legal = 0;
       mutation_applied = 1;
     end
-    /* an illegal record must not enable a side effect even with legal still low. */
+    // an illegal record must not enable a side effect even with legal still low.
     if ($test$plusargs("mutate_illegal") && !mutation_applied && !expected.legal) begin
       observed.rd_write = 1;
       mutation_applied = 1;
@@ -314,7 +314,7 @@ module cpu5_datapath_tb;
     check(observed == expected, "decoder reference mismatch");
   endtask
 
-  /* verify standalone immediate modes without depending on decode selection. */
+  // verify standalone immediate modes without depending on decode selection.
   task automatic test_immediate(input logic [31:0] word, input logic [2:0] format);
     logic [31:0] expected, observed;
     instr_i = word;
@@ -322,7 +322,7 @@ module cpu5_datapath_tb;
     expected = immediate_reference(word[31:7], format);
     #1;
     observed = immediate_value;
-    /* a changed low bit must fail the independent immediate mapping. */
+    // a changed low bit must fail the independent immediate mapping.
     if ($test$plusargs("mutate_immediate") && !mutation_applied && format != 7) begin
       observed ^= 1;
       mutation_applied = 1;
@@ -332,7 +332,7 @@ module cpu5_datapath_tb;
           "immediate reference mismatch");
   endtask
 
-  /* check all arithmetic outputs even when the operation itself is invalid. */
+  // check all arithmetic outputs even when the operation itself is invalid.
   task automatic test_alu(input logic [31:0] a, input logic [31:0] b,
                           input logic [3:0] operation);
     logic [31:0] expected, observed;
@@ -344,12 +344,12 @@ module cpu5_datapath_tb;
     #1;
     observed = alu_result;
     observed_eq = alu_eq;
-    /* corrupt a valid arithmetic result rather than accepting a vacuous run. */
+    // corrupt a valid arithmetic result rather than accepting a vacuous run.
     if ($test$plusargs("mutate_alu") && !mutation_applied && operation <= 10) begin
       observed ^= 1;
       mutation_applied = 1;
     end
-    /* comparisons remain checked during an explicitly unsupported ALU operation. */
+    // comparisons remain checked during an explicitly unsupported ALU operation.
     if ($test$plusargs("mutate_compare") && !mutation_applied && operation == 15) begin
       observed_eq = !observed_eq;
       mutation_applied = 1;
@@ -361,7 +361,7 @@ module cpu5_datapath_tb;
           alu_lt_unsigned == (a < b), "ALU comparison mismatch");
   endtask
 
-  /* high amount bits must never alter the RV32 shift result. */
+  // high amount bits must never alter the RV32 shift result.
   task automatic test_shift(input logic [31:0] value, input logic [31:0] amount,
                             input logic [1:0] operation);
     logic [31:0] expected, observed;
@@ -371,7 +371,7 @@ module cpu5_datapath_tb;
     expected = shift_reference(value, amount[4:0], operation);
     #1;
     observed = shift_result;
-    /* the shifter comparator must detect a changed computed bit. */
+    // the shifter comparator must detect a changed computed bit.
     if ($test$plusargs("mutate_shift") && !mutation_applied && operation < 3) begin
       observed ^= 1;
       mutation_applied = 1;
@@ -381,7 +381,7 @@ module cpu5_datapath_tb;
           "shifter reference mismatch");
   endtask
 
-  /* combine exhaustive structural cases with explicit reproducible operands. */
+  // combine exhaustive structural cases with explicit reproducible operands.
   initial begin : regression
     logic [31:0] word, a, b;
     bit seed_supplied;
@@ -389,16 +389,16 @@ module cpu5_datapath_tb;
     random_state = seed;
     $display("datapath seed=%0d explicit=%0d generator=lcg32:1664525:1013904223",
              seed, seed_supplied);
-    /* both source/destination extremes expose incorrect x0 and HINT filtering. */
+    // both source/destination extremes expose incorrect x0 and HINT filtering.
     for (int registers = 0; registers < 2; registers++) begin
-      /* enumerate every seven-bit opcode including unsupported instruction lengths. */
+      // enumerate every seven-bit opcode including unsupported instruction lengths.
       for (int opcode = 0; opcode < 128; opcode++) begin
-        /* every funct3 is considered even when the opcode treats it as immediate data. */
+        // every funct3 is considered even when the opcode treats it as immediate data.
         for (int function3 = 0; function3 < 8; function3++) begin
-          /* every funct7 exposes reserved arithmetic and shift encodings. */
+          // every funct7 exposes reserved arithmetic and shift encodings.
           for (int function7 = 0; function7 < 128; function7++) begin
             word = (32'(function7) << 25) | (32'(function3) << 12) | 32'(opcode);
-            /* nonzero register fields must not accidentally validate SYSTEM encodings. */
+            // nonzero register fields must not accidentally validate SYSTEM encodings.
             if (registers != 0) begin
               word |= (32'd31 << 20) | (32'd31 << 15) | (32'd31 << 7);
             end
@@ -407,25 +407,25 @@ module cpu5_datapath_tb;
         end
       end
     end
-    /* each canonical instruction and every register index receive direct checks. */
+    // each canonical instruction and every register index receive direct checks.
     for (int instruction = 0; instruction < 40; instruction++) begin
       test_decode(ENCODINGS[instruction].match);
-      /* independently change each index without assuming it is an operand field. */
+      // independently change each index without assuming it is an operand field.
       for (int reg_index = 0; reg_index < 32; reg_index++) begin
         test_decode((ENCODINGS[instruction].match & ~32'h00000f80) | (32'(reg_index) << 7));
         test_decode((ENCODINGS[instruction].match & ~32'h000f8000) | (32'(reg_index) << 15));
         test_decode((ENCODINGS[instruction].match & ~32'h01f00000) | (32'(reg_index) << 20));
       end
     end
-    /* exhaust all SYSTEM immediate values with the required zero register fields. */
+    // exhaust all SYSTEM immediate values with the required zero register fields.
     for (int immediate = 0; immediate < 4096; immediate++) begin
       test_decode((32'(immediate) << 20) | 32'h73);
     end
-    /* all FENCE fm, predecessor and successor fields remain compatible. */
+    // all FENCE fm, predecessor and successor fields remain compatible.
     for (int fields = 0; fields < 4096; fields++) begin
       test_decode((32'(fields) << 20) | 32'h000f8f8f);
     end
-    /* exhaustive compact immediates test every source-bit combination and sign. */
+    // exhaustive compact immediates test every source-bit combination and sign.
     for (int payload = 0; payload < 4096; payload++) begin
       test_immediate(32'(payload) << 20, 1);
       word = ((32'(payload) & 32'hfe0) << 20) | ((32'(payload) & 31) << 7);
@@ -434,31 +434,31 @@ module cpu5_datapath_tb;
              ((32'(payload) & 32'h3f0) << 21) | ((32'(payload) & 15) << 8);
       test_immediate(word, 3);
     end
-    /* walking source bits cover every mapping, fixed zero and sign replication. */
+    // walking source bits cover every mapping, fixed zero and sign replication.
     for (int format = 0; format < 8; format++) begin
       test_immediate(0, 3'(format));
       test_immediate('1, 3'(format));
-      /* both polarities make sign-extension and ignored-bit failures visible. */
+      // both polarities make sign-extension and ignored-bit failures visible.
       for (int bit_number = 0; bit_number < 32; bit_number++) begin
         test_immediate(32'b1 << bit_number, 3'(format));
         test_immediate(~(32'b1 << bit_number), 3'(format));
       end
     end
-    /* every ALU operation sees all pairs of signed and unsigned boundary values. */
+    // every ALU operation sees all pairs of signed and unsigned boundary values.
     for (int operation = 0; operation < 16; operation++) begin
-      /* compare each first operand against every boundary second operand. */
+      // compare each first operand against every boundary second operand.
       for (int lhs = 0; lhs < 12; lhs++) begin
-        /* pairs include equality, overflow, underflow and opposite signs. */
+        // pairs include equality, overflow, underflow and opposite signs.
         for (int rhs = 0; rhs < 12; rhs++) begin
           test_alu(BOUNDARIES[lhs], BOUNDARIES[rhs], 4'(operation));
         end
       end
     end
-    /* enumerate every low-five-bit shift count, including all invalid operations. */
+    // enumerate every low-five-bit shift count, including all invalid operations.
     for (int operation = 0; operation < 4; operation++) begin
-      /* high bits are independently varied without changing the expected count. */
+      // high bits are independently varied without changing the expected count.
       for (int amount = 0; amount < 32; amount++) begin
-        /* boundary values expose every fill-bit and direction rule. */
+        // boundary values expose every fill-bit and direction rule.
         for (int value = 0; value < 12; value++) begin
           test_shift(BOUNDARIES[value], 32'(amount), 2'(operation));
           test_shift(BOUNDARIES[value], 32'hffffffe0 | 32'(amount), 2'(operation));
@@ -466,7 +466,7 @@ module cpu5_datapath_tb;
         end
       end
     end
-    /* random bit patterns supplement structural cases without replacing them. */
+    // random bit patterns supplement structural cases without replacing them.
     for (int sample = 0; sample < 20000; sample++) begin
       word = next_random();
       a = next_random();

@@ -1,4 +1,4 @@
-/* check the RF ports against independent storage and edge-capture models. */
+// check the RF ports against independent storage and edge-capture models.
 module cpu5_regfile_tb;
   logic clk_i, reset_i, write_valid_i;
   logic [4:0] write_addr_i, read1_addr_i, read2_addr_i;
@@ -23,55 +23,55 @@ module cpu5_regfile_tb;
     .read1_addr_i, .read2_addr_i, .read1_data_o(data1[3]), .read2_data_o(data2[3]),
     .read1_defined_o(defined1[3]), .read2_defined_o(defined2[3]));
 
-  /* report a concrete failed property rather than accepting a process exit. */
+  // report a concrete failed property rather than accepting a process exit.
   task automatic require(input bit condition, input string message);
     checks++;
-    /* enforce this independently predicted condition. */
+    // enforce this independently predicted condition.
     if (!condition) $fatal(1, "RF_CHECK_FAILED %s edge=%0d", message, edges);
   endtask
 
-  /* derive each read from the independent register contents and write intent. */
+  // derive each read from the independent register contents and write intent.
   task automatic predict(input logic [4:0] addr, output logic [31:0] value,
                          output logic valid);
     value = expected[addr];
     valid = known[addr] && !reset_i;
-    /* x0 overrides storage and pending writes. */
+    // x0 overrides storage and pending writes.
     if (addr == 0) begin
       value = 0;
       valid = 1;
     end
-    /* pending nonzero writes bypass storage before the committing edge. */
+    // pending nonzero writes bypass storage before the committing edge.
     else if (write_valid_i && !reset_i && addr == write_addr_i) begin
       value = write_data_i;
       valid = 1;
     end
   endtask
 
-  /* asynchronous candidates must follow changed addresses without a clock. */
+  // asynchronous candidates must follow changed addresses without a clock.
   task automatic check_async;
     logic [31:0] value1, value2, observed;
     logic valid1, valid2;
     predict(read1_addr_i, value1, valid1);
     predict(read2_addr_i, value2, valid2);
-    /* visit every independently checked address or implementation. */
+    // visit every independently checked address or implementation.
     for (int i = 0; i < 4; i++) begin
-      /* check the synchronous candidate at its capture edge instead. */
+      // check the synchronous candidate at its capture edge instead.
       if (i == 2) continue;
       require(defined1[i] == valid1 && defined2[i] == valid2, "async definedness");
       observed = data1[i];
-      /* inject only the selected detector-control observation. */
+      // inject only the selected detector-control observation.
       if ($test$plusargs("mutate_x0") && read1_addr_i == 0) observed ^= 1;
-      /* inject only the selected detector-control observation. */
+      // inject only the selected detector-control observation.
       if ($test$plusargs("mutate_bypass") && write_valid_i && !reset_i &&
           write_addr_i != 0 && read1_addr_i == write_addr_i) observed ^= 1;
-      /* compare data only when the architectural value is defined. */
+      // compare data only when the architectural value is defined.
       if (valid1) require(observed == value1, "async read1 value or bypass");
-      /* compare data only when the architectural value is defined. */
+      // compare data only when the architectural value is defined.
       if (valid2) require(data2[i] == value2, "async read2 value or bypass");
     end
   endtask
 
-  /* sample synchronous reads from pre-edge state and update storage once. */
+  // sample synchronous reads from pre-edge state and update storage once.
   task automatic tick;
     logic [31:0] value1, value2;
     logic valid1, valid2;
@@ -80,9 +80,9 @@ module cpu5_regfile_tb;
     check_async();
     predict(read1_addr_i, value1, valid1);
     predict(read2_addr_i, value2, valid2);
-    /* apply reset before any write can commit. */
+    // apply reset before any write can commit.
     if (reset_i) known = 32'b1;
-    /* compare data only when the architectural value is defined. */
+    // compare data only when the architectural value is defined.
     else if (write_valid_i && write_addr_i != 0) begin
       expected[write_addr_i] = write_data_i;
       known[write_addr_i] = 1;
@@ -91,16 +91,16 @@ module cpu5_regfile_tb;
     #2;
     edges++;
     require(defined1[2] == valid1 && defined2[2] == valid2, "BRAM captured definedness");
-    /* compare data only when the architectural value is defined. */
+    // compare data only when the architectural value is defined.
     if (valid1) require(data1[2] == value1, "BRAM captured read1");
-    /* compare data only when the architectural value is defined. */
+    // compare data only when the architectural value is defined.
     if (valid2) require(data2[2] == value2, "BRAM captured read2");
     check_async();
     clk_i = 0;
     #1;
   endtask
 
-  /* exercise reset, all read pairs, collisions, canceled writes and random traffic. */
+  // exercise reset, all read pairs, collisions, canceled writes and random traffic.
   initial begin
     logic [31:0] held1, held2;
     checks = 0;
@@ -114,11 +114,11 @@ module cpu5_regfile_tb;
     read2_addr_i = 0;
     known = 1;
     random_q = 32'h3a59c7e1;
-    /* visit every independently checked address or implementation. */
+    // visit every independently checked address or implementation.
     for (int i = 0; i < 32; i++) expected[i] = 0;
     tick();
     reset_i = 0;
-    /* initialize every architectural register while testing dual-port bypass. */
+    // initialize every architectural register while testing dual-port bypass.
     for (int i = 1; i < 32; i++) begin
       write_valid_i = 1;
       write_addr_i = 5'(i);
@@ -128,12 +128,12 @@ module cpu5_regfile_tb;
       tick();
     end
     write_valid_i = 0;
-    /* traverse every pair without clocking; the BRAM outputs must remain held. */
+    // traverse every pair without clocking; the BRAM outputs must remain held.
     held1 = data1[2];
     held2 = data2[2];
-    /* visit every independently checked address or implementation. */
+    // visit every independently checked address or implementation.
     for (int i = 0; i < 32; i++) begin
-      /* visit every independently checked address or implementation. */
+      // visit every independently checked address or implementation.
       for (int j = 0; j < 32; j++) begin
         read1_addr_i = 5'(i);
         read2_addr_i = 5'(j);
@@ -142,7 +142,7 @@ module cpu5_regfile_tb;
         require(data1[2] == held1 && data2[2] == held2, "BRAM changed without an edge");
       end
     end
-    /* a canceled pending write changes bypass but cannot change storage. */
+    // a canceled pending write changes bypass but cannot change storage.
     read1_addr_i = 7;
     read2_addr_i = 7;
     write_addr_i = 7;
@@ -154,14 +154,14 @@ module cpu5_regfile_tb;
     #1;
     check_async();
     require(data1[0] == expected[7] && data1[1] == expected[7], "canceled write committed");
-    /* x0 ignores writes and stays defined through reset. */
+    // x0 ignores writes and stays defined through reset.
     write_valid_i = 1;
     write_addr_i = 0;
     write_data_i = 32'hffffffff;
     read1_addr_i = 0;
     read2_addr_i = 0;
     tick();
-    /* reset wins a pending write; raw stored data itself is not reset. */
+    // reset wins a pending write; raw stored data itself is not reset.
     write_addr_i = 7;
     read1_addr_i = 7;
     read2_addr_i = 7;
@@ -171,7 +171,7 @@ module cpu5_regfile_tb;
     reset_i = 0;
     write_valid_i = 0;
     tick();
-    /* an undefined destination becomes temporarily defined through bypass only. */
+    // an undefined destination becomes temporarily defined through bypass only.
     write_addr_i = 9;
     read1_addr_i = 9;
     read2_addr_i = 9;
@@ -182,7 +182,7 @@ module cpu5_regfile_tb;
     #1;
     check_async();
     require(!defined1[0] && !defined1[1], "canceled write retained definedness");
-    /* generate deterministic address changes and reset/write collisions. */
+    // generate deterministic address changes and reset/write collisions.
     for (int i = 0; i < 2000; i++) begin
       random_q = random_q ^ (random_q << 13);
       random_q = random_q ^ (random_q >> 17);

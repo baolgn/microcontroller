@@ -1,4 +1,4 @@
-/* check the physical wrapper's early stages with a controlled lock model. */
+// check the physical wrapper's early stages with a controlled lock model.
 module cpu5_board_diagnostics_tb;
   timeunit 1ns;
   timeprecision 1ps;
@@ -16,31 +16,31 @@ module cpu5_board_diagnostics_tb;
     .led_o(led1), .uart_tx_o(uart1)
   );
 
-  /* the model uses a 25 MHz clock without a generated physical PLL. */
+  // the model uses a 25 MHz clock without a generated physical PLL.
   always #20 clk = !clk;
 
-  /* observe after the active edge and all nonblocking updates. */
+  // observe after the active edge and all nonblocking updates.
   task automatic tick;
     @(negedge clk);
   endtask
 
-  /* each requirement records a named failure rather than only a process exit. */
+  // each requirement records a named failure rather than only a process exit.
   task automatic check(input logic condition, input string reason);
     checks++;
     assert (condition) else $fatal(1, "BOARD_DIAGNOSTIC_CHECK %s", reason);
   endtask
 
-  /* both wrappers share the same external lock event. */
+  // both wrappers share the same external lock event.
   task automatic set_lock(input logic value);
     stage0.pll.lock_enabled = value;
     stage1.pll.lock_enabled = value;
   endtask
 
-  /* success or fault must finish within 768 diagnostic clocks plus release margin. */
+  // success or fault must finish within 768 diagnostic clocks plus release margin.
   task automatic await_diagnostic;
     integer elapsed;
     elapsed = 0;
-    /* bounded progress rejects a hung RAM state machine. */
+    // bounded progress rejects a hung RAM state machine.
     while (!led1[3] && !led1[5] && elapsed < 800) begin
       tick();
       elapsed++;
@@ -48,7 +48,7 @@ module cpu5_board_diagnostics_tb;
     check(elapsed < 800, "RAM diagnostic progress");
   endtask
 
-  /* reset, RAM results and deliberate corruption are checked independently of LEDs. */
+  // reset, RAM results and deliberate corruption are checked independently of LEDs.
   initial begin
     clk = 0;
     repeat (3) tick();
@@ -62,7 +62,7 @@ module cpu5_board_diagnostics_tb;
     await_diagnostic();
     check(led1[3] && !led1[5], "RAM success LED3");
     check(stage1.diagnostic.state_q == 3, "RAM terminal state");
-    /* all words are written with distinct address-dependent values before readback. */
+    // all words are written with distinct address-dependent values before readback.
     for (integer index = 0; index < 256; index++) begin
       check(stage1.diagnostic.ram[index] == (32'ha55a0000 | 32'(index)), "RAM pattern");
     end
@@ -73,7 +73,7 @@ module cpu5_board_diagnostics_tb;
     event_btn = 0;
     check(led1[3] && !led1[5], "unused event cannot reset diagnostic");
 
-    /* an asynchronous button assertion is visible before the next clock edge. */
+    // an asynchronous button assertion is visible before the next clock edge.
     #1 reset_btn = 1;
     #1;
     check(led0[7] && led1[7], "asynchronous button reset assertion");
@@ -91,7 +91,7 @@ module cpu5_board_diagnostics_tb;
     await_diagnostic();
     check(led1[5] && !led1[3], "corrupted last RAM word rejects pass");
 
-    /* loss of lock also asserts immediately and restarts the complete RAM test. */
+    // loss of lock also asserts immediately and restarts the complete RAM test.
     #1 set_lock(0);
     #1;
     check(led0[7] && led1[7], "asynchronous lock-loss reset assertion");
@@ -108,7 +108,7 @@ module cpu5_board_diagnostics_tb;
     $finish;
   end
 
-  /* a stopped test cannot masquerade as a successful finite diagnostic. */
+  // a stopped test cannot masquerade as a successful finite diagnostic.
   initial begin
     #200000;
     $fatal(1, "BOARD_DIAGNOSTIC_CHECK test timeout");

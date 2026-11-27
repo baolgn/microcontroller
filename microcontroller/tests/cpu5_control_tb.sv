@@ -1,13 +1,13 @@
-/* check the packet control prototype without claiming ISA conformance. */
+// check the packet control prototype without claiming ISA conformance.
 module cpu5_control_tb #(
   parameter bit DIAGNOSTIC = 1'b1
 );
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
-  /* preserve the explicitly IRQ-disabled compatibility profile. */
+  // preserve the explicitly IRQ-disabled compatibility profile.
   logic unused_entry_pending, unused_idle, unused_irq_valid;
   logic [31:0] unused_irq_pc, unused_irq_cause;
   localparam int CAPACITY = 512;
@@ -38,7 +38,7 @@ module cpu5_control_tb #(
   logic [31:0] inspect_value_o;
   logic inspect_defined_o;
   logic [31:0] mstatus_o, mtvec_o, mscratch_o, mepc_o, mcause_o, mtval_o;
-  /* this compatibility fixture leaves new interrupt levels disconnected. */
+  // this compatibility fixture leaves new interrupt levels disconnected.
   logic [31:0] unused_mie, unused_mip, unused_mcountinhibit;
   logic [63:0] unused_mcycle, unused_minstret;
   packet_t expected [0:CAPACITY-1];
@@ -79,15 +79,15 @@ module cpu5_control_tb #(
     .minstret_o(unused_minstret), .*
   );
 
-  /* stop at the first mismatch with a replayable logical cycle. */
+  // stop at the first mismatch with a replayable logical cycle.
   task automatic check(input bit condition, input string message);
-    /* report failures instead of continuing with a corrupted scoreboard. */
+    // report failures instead of continuing with a corrupted scoreboard.
     if (!condition) begin
       $fatal(1, "cycle %0d diagnostic=%0d: %s", cycles, DIAGNOSTIC, message);
     end
   endtask
 
-  /* create known stimulus independently of every DUT observation. */
+  // create known stimulus independently of every DUT observation.
   function automatic packet_t packet(input logic [31:0] pc,
                                       input op_t op = OP_RESULT,
                                       input logic [4:0] rd = 0,
@@ -107,7 +107,7 @@ module cpu5_control_tb #(
     return p;
   endfunction
 
-  /* calculate byte enables from the expected request rather than the bus. */
+  // calculate byte enables from the expected request rather than the bus.
   function automatic logic [3:0] expected_lanes(input logic [1:0] size,
                                               input logic [1:0] offset);
     int unsigned width_bytes;
@@ -115,27 +115,27 @@ module cpu5_control_tb #(
     return 4'(((1 << width_bytes) - 1) << offset);
   endfunction
 
-  /* canonical responses contain only requested successful load lanes. */
+  // canonical responses contain only requested successful load lanes.
   function automatic logic [31:0] canonical_response(input logic [31:0] value,
       input logic [1:0] status, input op_t op, input logic [1:0] size, offset);
     logic [31:0] result;
     logic [3:0] lanes;
     result = 0;
     lanes = expected_lanes(size, offset);
-    /* stores and every error status have a zero payload. */
+    // stores and every error status have a zero payload.
     if (status == 0 && op == OP_LOAD) begin
-      /* preserve original lane positions without reading any unrequested byte. */
+      // preserve original lane positions without reading any unrequested byte.
       for (int lane = 0; lane < 4; lane++) begin
-        /* the target supplies only bytes owned by this request. */
+        // the target supplies only bytes owned by this request.
         if (lanes[lane]) result[8*lane +: 8] = value[8*lane +: 8];
       end
     end
     return result;
   endfunction
 
-  /* read the independent implemented CSR subset. */
+  // read the independent implemented CSR subset.
   function automatic logic [31:0] csr_read_ref(input logic [11:0] address);
-    /* keep model selection independent of the DUT mux. */
+    // keep model selection independent of the DUT mux.
     case (address)
       'h300: return status_ref;
       'h305: return vector_ref;
@@ -147,10 +147,10 @@ module cpu5_control_tb #(
     endcase
   endfunction
 
-  /* apply a validated expected CSR write only on its terminal edge. */
+  // apply a validated expected CSR write only on its terminal edge.
   task automatic csr_write_ref(input logic [11:0] address,
                                input logic [31:0] value);
-    /* update the expected bank without reading architectural DUT outputs. */
+    // update the expected bank without reading architectural DUT outputs.
     case (address)
       'h300: status_ref = value;
       'h305: vector_ref = value;
@@ -162,7 +162,7 @@ module cpu5_control_tb #(
     endcase
   endtask
 
-  /* predict one terminal attempt from its original accepted stimulus. */
+  // predict one terminal attempt from its original accepted stimulus.
   task automatic terminal(input trace_t actual);
     packet_t p;
     packet_t expected_trace_packet;
@@ -172,7 +172,7 @@ module cpu5_control_tb #(
     id = int'(actual.uid);
     check(actual.valid, "terminal checker received an invalid record");
     check(actual.uid < 64'(CAPACITY) && live[id], "terminal has no live input owner");
-    /* an older surviving packet may never be bypassed by this terminal. */
+    // an older surviving packet may never be bypassed by this terminal.
     for (int i = 0; i < id; i++) begin
       check(!live[i], "terminal bypassed an older live instruction");
     end
@@ -187,24 +187,24 @@ module cpu5_control_tb #(
     csr_known = p.csr_addr inside {'h300, 'h305, 'h340, 'h341, 'h342, 'h343};
     misaligned = (p.mem_size == 1 && p.mem_addr[0]) ||
                  (p.mem_size == 2 && p.mem_addr[1:0] != 0);
-    /* earlier supplied faults dominate all subsequent operation checks. */
+    // earlier supplied faults dominate all subsequent operation checks.
     if (!fault) begin
-      /* malformed packets are illegal before their memory operation. */
+      // malformed packets are illegal before their memory operation.
       if (p.length != 4 || p.raw_valid != 15 || p.op > OP_REDIRECT ||
           (p.op == OP_CSR && !csr_known)) begin
         fault = 1;
         fault_cause = 2;
         fault_value = 0;
       end
-      /* model memory alignment and the externally planned response. */
+      // model memory alignment and the externally planned response.
       else if (p.op == OP_LOAD || p.op == OP_STORE) begin
-        /* local failures require no response or target effect. */
+        // local failures require no response or target effect.
         if (misaligned || p.mem_size == 3) begin
           fault = 1;
           fault_cause = p.op == OP_LOAD ? (misaligned ? 4 : 5) : (misaligned ? 6 : 7);
           fault_value = p.mem_addr;
         end
-        /* normal memory instructions cannot terminate before their response. */
+        // normal memory instructions cannot terminate before their response.
         else begin
           check(response_seen[id], "memory terminal preceded its response");
           fault = response_error[id];
@@ -213,42 +213,42 @@ module cpu5_control_tb #(
           value = response_value[id];
         end
       end
-      /* system operations have explicit trap or redirect expectations. */
+      // system operations have explicit trap or redirect expectations.
       else if (p.op == OP_ECALL || p.op == OP_EBREAK) begin
         fault = 1;
         fault_cause = p.op == OP_ECALL ? 11 : 3;
         fault_value = p.op == OP_ECALL ? 0 : p.pc;
       end
-      /* check branch alignment independently of the retired target. */
+      // check branch alignment independently of the retired target.
       else if (p.op == OP_REDIRECT && p.next_pc[1:0] != 0) begin
         fault = 1;
         fault_cause = 0;
         fault_value = p.next_pc;
       end
     end
-    /* compute the CSR operation from pre-edge expected state. */
+    // compute the CSR operation from pre-edge expected state.
     if (p.op == OP_CSR) begin
       value = p.csr_read ? old_csr : 0;
-      /* the command operand is stimulus, not a DUT-computed value. */
+      // the command operand is stimulus, not a DUT-computed value.
       case (p.csr_op)
         CSR_WRITE: new_csr = p.csr_source;
         CSR_SET: new_csr = old_csr | p.csr_source;
         CSR_CLEAR: new_csr = old_csr & ~p.csr_source;
         default: new_csr = old_csr;
       endcase
-      /* legalize the prototype's writable trap-state fields. */
+      // legalize the prototype's writable trap-state fields.
       if (p.csr_addr == 'h300) begin
         new_csr = 'h1800 | (new_csr & 'h88);
       end
-      /* this skeleton has fixed four-byte instruction alignment. */
+      // this skeleton has fixed four-byte instruction alignment.
       if (p.csr_addr == 'h305 || p.csr_addr == 'h341) begin
         new_csr &= 32'hfffffffc;
       end
-      /* unsupported software cause encodings preserve the previous legal value. */
+      // unsupported software cause encodings preserve the previous legal value.
       if (p.csr_addr == 'h342 && !(new_csr <= 7 || new_csr == 11 ||
           new_csr inside {32'h80000003, 32'h80000007, 32'h8000000b})) new_csr = old_csr;
     end
-    /* MRET reads the independently maintained return address. */
+    // MRET reads the independently maintained return address.
     if (p.op == OP_MRET) begin
       target = epc_ref;
     end
@@ -260,7 +260,7 @@ module cpu5_control_tb #(
     expected_trace_packet.fault = fault;
     expected_trace_packet.cause = fault ? fault_cause : 0;
     expected_trace_packet.mtval = fault ? fault_value : 0;
-    /* only a completed load replaces the supplied diagnostic result field. */
+    // only a completed load replaces the supplied diagnostic result field.
     if (p.op == OP_LOAD && response_seen[id] && !response_error[id]) begin
       expected_trace_packet.result = response_value[id];
     end
@@ -269,10 +269,10 @@ module cpu5_control_tb #(
     check(actual.rd_write == writes_rd && actual.rd == (writes_rd ? p.rd : 0) &&
           actual.value == (writes_rd ? value : 0), "wrong GPR commit trace");
     check(actual.csr_read == reads_csr && actual.csr_write == writes_csr, "wrong CSR commit enable");
-    /* trace read suppression is independent of the explicit write result. */
+    // trace read suppression is independent of the explicit write result.
     check(actual.csr_old == (reads_csr ? old_csr : 0) &&
           actual.csr_new == (writes_csr ? new_csr : 0), "wrong CSR trace values");
-    /* a precise fault commits only trap state. */
+    // a precise fault commits only trap state.
     if (fault) begin
       check(actual.packet.cause == fault_cause && actual.packet.mtval == fault_value,
             "wrong precise exception metadata");
@@ -285,24 +285,24 @@ module cpu5_control_tb #(
       flush_pending = 0;
       traps++;
     end
-    /* normal results update architectural state only here. */
+    // normal results update architectural state only here.
     else begin
       check(actual.next_pc == target, "wrong normal continuation");
       check(actual.packet.cause == 0 && actual.packet.mtval == 0, "normal trace retained fault data");
-      /* x0 and suppressed destinations have no architectural write. */
+      // x0 and suppressed destinations have no architectural write.
       if (writes_rd) begin
         expected_regs[p.rd] = value;
         expected_defined[p.rd] = 1;
       end
-      /* explicit CSR state changes share this same retirement. */
+      // explicit CSR state changes share this same retirement.
       if (writes_csr) begin
         csr_write_ref(p.csr_addr, new_csr);
       end
-      /* return updates only the specified interrupt stack fields. */
+      // return updates only the specified interrupt stack fields.
       if (p.op == OP_MRET) begin
         status_ref = 'h1880 | ((status_ref & 'h80) != 0 ? 8 : 0);
       end
-      /* supplied branch and return targets redirect at W. */
+      // supplied branch and return targets redirect at W.
       if (p.op == OP_MRET || p.op == OP_REDIRECT) begin
         check(redirect_valid_o && redirect_pc_o == target, "missing branch or return redirect");
       end
@@ -312,9 +312,9 @@ module cpu5_control_tb #(
     next_order++;
   endtask
 
-  /* reset only architecturally defined expected state. */
+  // reset only architecturally defined expected state.
   task automatic reset_reference;
-    /* undefined reset registers are deliberately not compared as zeros. */
+    // undefined reset registers are deliberately not compared as zeros.
     for (int i = 0; i < 32; i++) begin
       expected_defined[i] = i == 0;
       expected_regs[i] = 0;
@@ -328,7 +328,7 @@ module cpu5_control_tb #(
     flush_pending = 0;
   endtask
 
-  /* sample handshakes before the edge and check storage after settling. */
+  // sample handshakes before the edge and check storage after settling.
   task automatic tick;
     logic [4:0] before_valid;
     token_t before_token [0:4];
@@ -356,13 +356,13 @@ module cpu5_control_tb #(
     flush_accept = flush_valid_i && flush_ready_o;
     bus_was_owned = bus_owned;
     barriers = 0;
-    /* original operation classes define barriers without trusting token readiness. */
+    // original operation classes define barriers without trusting token readiness.
     for (int stage = 0; stage < 5; stage++) begin
       barriers[stage] = before_valid[stage] && expected[9'(before_token[stage].uid)].op inside {OP_CSR, OP_MRET};
-      /* a live barrier blocks every younger transfer through its terminal edge. */
+      // a live barrier blocks every younger transfer through its terminal edge.
       if (barriers[stage]) begin
         check(!in_ready_o, "serialized operation admitted younger input");
-        /* the older instruction may drain while its younger slots remain blocked. */
+        // the older instruction may drain while its younger slots remain blocked.
         for (int younger = 0; younger < stage && younger < 4; younger++)
           check(!before_transfer[younger], "younger transfer crossed a serialized operation");
       end
@@ -370,7 +370,7 @@ module cpu5_control_tb #(
     bad_response = response_accept &&
         (!bus_owned || (!bus_accepted && !request_accept) || d_rsp_tag_i != bus_tag ||
          d_rsp_status_i[1]);
-    /* an owned offer retains all externally visible descriptor fields. */
+    // an owned offer retains all externally visible descriptor fields.
     if (bus_owned && !bus_accepted && !cold_reset_i) begin
       check(bus_packet == expected[bus_uid], "retained bus intent changed across a stall or reset");
       check(d_req_valid_o && d_req_addr_o == bus_packet.mem_addr &&
@@ -381,38 +381,38 @@ module cpu5_control_tb #(
               expected_lanes(bus_packet.mem_size, bus_packet.mem_addr[1:0]) : 0),
             "owned request changed or disappeared");
     end
-    /* every physical acceptance must belong to one previously offered command. */
+    // every physical acceptance must belong to one previously offered command.
     if (request_accept) begin
       check(bus_owned && !bus_accepted, "duplicate or ownerless physical acceptance");
       bus_accepted = 1;
       acceptances++;
     end
-    /* model response data from the test's plan rather than DUT trace values. */
+    // model response data from the test's plan rather than DUT trace values.
     if (response_accept && !bad_response && !fatal_ref) begin
       check(d_rsp_status_i == planned_status && d_rsp_rdata_i == canonical_response(planned_read, planned_status,
             bus_packet.op, bus_packet.mem_size, bus_packet.mem_addr[1:0]),
             "test driver violated the planned response");
-      /* a hart reset leaves the bus obligation but removes its instruction. */
+      // a hart reset leaves the bus obligation but removes its instruction.
       if (!hart_reset_i && !bus_orphan && live[bus_uid]) begin
         response_seen[bus_uid] = 1;
         response_error[bus_uid] = planned_status == 1;
         loaded = planned_read >> (8 * bus_packet.mem_addr[1:0]);
-        /* independent sign extension follows the original packet size. */
+        // independent sign extension follows the original packet size.
         if (bus_packet.mem_size == 0) begin
           loaded = bus_packet.mem_signed ? 32'(signed'(loaded[7:0])) : {24'b0, loaded[7:0]};
         end
-        /* halfword lanes have the same independent extension rule. */
+        // halfword lanes have the same independent extension rule.
         else if (bus_packet.mem_size == 1) begin
           loaded = bus_packet.mem_signed ? 32'(signed'(loaded[15:0])) : {16'b0, loaded[15:0]};
         end
         response_value[bus_uid] = bus_packet.op == OP_LOAD ? loaded : bus_packet.result;
-        /* the live packet receives only independently predicted completion fields. */
+        // the live packet receives only independently predicted completion fields.
         if (planned_status == 1) begin
           expected_stage[bus_uid].fault = 1;
           expected_stage[bus_uid].cause = bus_packet.op == OP_LOAD ? 5 : 7;
           expected_stage[bus_uid].mtval = bus_packet.mem_addr;
         end
-        /* a successful load replaces its provisional diagnostic value. */
+        // a successful load replaces its provisional diagnostic value.
         else if (bus_packet.op == OP_LOAD) begin
           expected_stage[bus_uid].result = loaded;
         end
@@ -422,10 +422,10 @@ module cpu5_control_tb #(
       bus_orphan = 0;
       completions++;
     end
-    /* fatal response classification must suppress same-edge architectural work. */
+    // fatal response classification must suppress same-edge architectural work.
     if (bad_response) begin
       fatal_ref = 1;
-      /* recovery retains the owner until the explicit isolated cold reset. */
+      // recovery retains the owner until the explicit isolated cold reset.
     end
     w_id = 9'(before_token[4].uid);
     expected_w_fault = before_valid[4] &&
@@ -442,17 +442,17 @@ module cpu5_control_tb #(
         (!barriers[4] || (prepared[w_id] && !bus_was_owned)) &&
         (!(flush_pending || flush_accept) || memory_issued[w_id] || expected_w_fault);
     expected_kill = 0;
-    /* architectural reset is the only unconditional all-stage abort. */
+    // architectural reset is the only unconditional all-stage abort.
     if (cold_reset_i || hart_reset_i) begin
       expected_kill = before_valid;
     end
-    /* a fatal event freezes instruction owners until qualified reset. */
+    // a fatal event freezes instruction owners until qualified reset.
     else if (!fatal_ref) begin
-      /* independently predicted W control events kill every younger owner. */
+      // independently predicted W control events kill every younger owner.
       if (expected_w_done && (expected_w_fault || expected_w_redirect)) begin
         expected_kill = before_valid & 5'b01111;
       end
-      /* external flush cannot abandon issued memory or an ordered W fault. */
+      // external flush cannot abandon issued memory or an ordered W fault.
       else if (flush_pending || flush_accept) begin
         expected_kill = before_valid;
         expected_kill[3] = before_valid[3] && !memory_issued[int'(before_token[3].uid)];
@@ -473,14 +473,14 @@ module cpu5_control_tb #(
     expected_launch = m_eligible && !m_bad_encoding && !m_bad_alignment &&
         expected[m_id].mem_size != 3 && !bus_was_owned && !recovery_ref;
     check(launched == expected_launch, "memory launch witness violated independent grant");
-    /* local faults change only their current M packet and never launch an offer. */
+    // local faults change only their current M packet and never launch an offer.
     if (m_eligible && (m_bad_encoding || m_bad_alignment || expected[m_id].mem_size == 3)) begin
       expected_stage[m_id].fault = 1;
       expected_stage[m_id].cause = m_bad_encoding ? 2 :
           (expected[m_id].op == OP_LOAD ? (m_bad_alignment ? 4 : 5) : (m_bad_alignment ? 6 : 7));
       expected_stage[m_id].mtval = m_bad_encoding ? 0 : expected[m_id].mem_addr;
     end
-    /* preparation is a separate eligible W edge with no surviving bus obligation. */
+    // preparation is a separate eligible W edge with no surviving bus obligation.
     if (before_valid[4] && barriers[4] && !prepared[w_id] && !hold_i[4] &&
         !expected_kill[4] && !cold_reset_i && !hart_reset_i && !fatal_ref && !bus_was_owned)
       prepared[w_id] = 1;
@@ -488,7 +488,7 @@ module cpu5_control_tb #(
     #2;
     cycles++;
     observed_kill = kill_valid_o;
-    /* this negative control fabricates a plausible but unauthorized NOP kill. */
+    // this negative control fabricates a plausible but unauthorized NOP kill.
     if ($test$plusargs("mutate_kill") && !mutation_applied && before_valid[0] &&
         expected_kill == 0 && !cold_reset_i && !hart_reset_i) begin
       observed_kill[0] = 1;
@@ -497,9 +497,9 @@ module cpu5_control_tb #(
     check(observed_kill == expected_kill, "unjustified or missing instruction kill");
     check(trace_o.valid == expected_w_done, "terminal did not match eligible W disposition");
     check(flush_aborted_o == expected_abort, "missing or spurious flush abort");
-    /* consume explicit killed identities, never infer kills from UID gaps. */
+    // consume explicit killed identities, never infer kills from UID gaps.
     for (int i = 0; i < 5; i++) begin
-      /* a kill must name the pre-edge owner of that exact slot. */
+      // a kill must name the pre-edge owner of that exact slot.
       if (kill_valid_o[i]) begin
         id = int'(kill_uid_o[i]);
         check(before_valid[i] && before_token[i].uid == kill_uid_o[i] &&
@@ -508,12 +508,12 @@ module cpu5_control_tb #(
         kills++;
       end
     end
-    /* reset suppresses disposition while preserving any surviving manager. */
+    // reset suppresses disposition while preserving any surviving manager.
     if (cold_reset_i || hart_reset_i) begin
       check(!trace_o.valid && !redirect_valid_o, "reset allowed a terminal or redirect");
       reset_reference();
       recovery_ref = 1;
-      /* a cold reset starts a new isolated observation epoch. */
+      // a cold reset starts a new isolated observation epoch.
       if (cold_reset_i) begin
         next_uid = 0;
         next_order = 0;
@@ -523,34 +523,34 @@ module cpu5_control_tb #(
         bus_orphan = 0;
         fatal_ref = 0;
       end
-      /* hart reset retains its previous transaction intent. */
+      // hart reset retains its previous transaction intent.
       else if (bus_owned) begin
         bus_orphan = 1;
       end
     end
-    /* non-reset state can retire once and accept one independent input. */
+    // non-reset state can retire once and accept one independent input.
     else begin
-      /* recovery releases only after a pre-edge empty, healthy manager. */
+      // recovery releases only after a pre-edge empty, healthy manager.
       if (recovery_ref && !bus_was_owned && !fatal_ref) begin
         recovery_ref = 0;
       end
-      /* a newly accepted flush is independently tracked until its redirect. */
+      // a newly accepted flush is independently tracked until its redirect.
       if (flush_accept) begin
         flush_pending = 1;
         pending_flush_pc = flush_pc_i;
       end
-      /* terminal prediction consumes only original input state. */
+      // terminal prediction consumes only original input state.
       if (trace_o.valid) begin
         check(!fatal_ref, "fatal response allowed retirement");
         observed_trace = trace_o;
-        /* a plausible corrupted result must fail the architectural comparator. */
+        // a plausible corrupted result must fail the architectural comparator.
         if ($test$plusargs("mutate_result") && !mutation_applied && trace_o.rd_write) begin
           observed_trace.value ^= 1;
           mutation_applied = 1;
         end
         terminal(observed_trace);
       end
-      /* assign identities from the observed input count, not DUT trace IDs. */
+      // assign identities from the observed input count, not DUT trace IDs.
       if (input_accept) begin
         check(next_uid < CAPACITY, "test exhausted its fixed input ledger");
         expected[next_uid] = in_packet_i;
@@ -564,12 +564,12 @@ module cpu5_control_tb #(
         next_uid++;
         accepted_inputs++;
       end
-      /* a launch must name the independently oldest live memory instruction. */
+      // a launch must name the independently oldest live memory instruction.
       if (expected_launch) begin
         id = int'(before_token[3].uid);
         check(!bus_owned && live[id] && !flush_accept && !fatal_ref,
               "unpermitted or duplicate memory launch");
-        /* older successful retirement may make this same edge eligible. */
+        // older successful retirement may make this same edge eligible.
         for (int j = 0; j < id; j++) begin
           check(!live[j], "memory launch preceded older retirement");
         end
@@ -587,12 +587,12 @@ module cpu5_control_tb #(
         bus_orphan = 0;
         launches++;
       end
-      /* an ordinary flush must finish only after its protected work drains. */
+      // an ordinary flush must finish only after its protected work drains.
       if (redirect_valid_o && !(trace_o.valid &&
           (trace_o.trap || trace_o.packet.op == OP_REDIRECT || trace_o.packet.op == OP_MRET))) begin
         check(flush_pending && redirect_pc_o == pending_flush_pc && !bus_owned,
               "unexpected or early flush redirect");
-        /* a captured response does not end its protected instruction lifetime. */
+        // a captured response does not end its protected instruction lifetime.
         for (int j = 0; j < CAPACITY; j++) begin
           check(!(live[j] && memory_issued[j]), "flush redirected before protected W disposition");
         end
@@ -604,7 +604,7 @@ module cpu5_control_tb #(
           "fatal snapshot validity disagreed with containment");
     check(mem_busy_o == bus_owned, "manager busy does not match retained ownership");
     observed_request = d_req_valid_o;
-    /* this negative control exposes an ownerless first-valid while ready is low. */
+    // this negative control exposes an ownerless first-valid while ready is low.
     if ($test$plusargs("mutate_orphan_offer") && !mutation_applied && !bus_owned &&
         !cold_reset_i && !hart_reset_i) begin
       observed_request = 1;
@@ -613,9 +613,9 @@ module cpu5_control_tb #(
     check(observed_request == (bus_owned && !bus_accepted), "ownerless or missing request valid");
     stage_count = 0;
     owner_count = 0;
-    /* compare physical live slots against the independent allocation ledger. */
+    // compare physical live slots against the independent allocation ledger.
     for (int i = 0; i < 5; i++) begin
-      /* a live slot preserves input identity and advances at most one stage. */
+      // a live slot preserves input identity and advances at most one stage.
       if (stage_valid_o[i]) begin
         id = int'(stage_token_o[i].uid);
         check(id < CAPACITY && live[id], "physical slot lacks a live expected owner");
@@ -625,48 +625,48 @@ module cpu5_control_tb #(
         check(stage_token_o[i].serial_ready == prepared[id], "stage forged serial preparation");
         stage_count++;
         predecessor_found = 0;
-        /* compare every old owner against this new slot position. */
+        // compare every old owner against this new slot position.
         for (int j = 0; j < 5; j++) begin
-          /* matching identities may hold or cross exactly one boundary. */
+          // matching identities may hold or cross exactly one boundary.
           if (before_valid[j] && before_token[j].uid == stage_token_o[i].uid) begin
             predecessor_found = 1;
             check(i == j || i == j + 1, "token skipped a stage or moved backward");
-            /* every actual movement has a matching boundary transfer witness. */
+            // every actual movement has a matching boundary transfer witness.
             if (i != j) begin
               check(j < 4 && before_transfer[j], "stage moved without a transfer witness");
             end
-            /* a documented stage hold prevents that token's transfer. */
+            // a documented stage hold prevents that token's transfer.
             if (hold_i[j]) begin
               check(i == j, "held stage transferred its token");
               coverage_stalls[j]++;
             end
           end
         end
-        /* only a newly accepted input may appear without a pre-edge owner. */
+        // only a newly accepted input may appear without a pre-edge owner.
         if (!predecessor_found) begin
           check(input_accept && i == 0 && stage_token_o[i].uid == 64'(next_uid - 1),
                 "new instruction bypassed F or lacked an input acceptance");
         end
       end
     end
-    /* transfer witnesses must describe exactly the observed one-stage movements. */
+    // transfer witnesses must describe exactly the observed one-stage movements.
     for (int i = 0; i < 4; i++) begin
       expected_transfer = before_valid[i] && stage_valid_o[i + 1] &&
           before_token[i].uid == stage_token_o[i + 1].uid;
       check(before_transfer[i] == expected_transfer, "missing or spurious stage transfer");
     end
-    /* conservation catches a vanished NOP even when final registers agree. */
+    // conservation catches a vanished NOP even when final registers agree.
     for (int i = 0; i < CAPACITY; i++) begin
       owner_count += int'(live[i]);
       occurrences = 0;
-      /* exact multiplicity also catches one duplication paired with one loss. */
+      // exact multiplicity also catches one duplication paired with one loss.
       for (int j = 0; j < 5; j++) begin
         occurrences += int'(stage_valid_o[j] && stage_token_o[j].uid == 64'(i));
       end
       check(occurrences == int'(live[i]), "instruction identity lost or duplicated");
     end
     check(owner_count == stage_count, "token conservation failed");
-    /* retain evidence that overlap mode actually filled every stage. */
+    // retain evidence that overlap mode actually filled every stage.
     if (stage_count > max_occupancy) begin
       max_occupancy = stage_count;
     end
@@ -674,12 +674,12 @@ module cpu5_control_tb #(
     check(mstatus_o == status_ref && mtvec_o == vector_ref && mscratch_o == scratch_ref &&
           mepc_o == epc_ref && mcause_o == cause_ref && mtval_o == tval_ref,
           "architectural CSR storage changed outside expected W disposition");
-    /* inspect every register so an early or hidden write cannot escape trace checking. */
+    // inspect every register so an early or hidden write cannot escape trace checking.
     for (int i = 0; i < 32; i++) begin
       inspect_reg_i = 5'(i);
       #1;
       check(inspect_defined_o == expected_defined[i], "unexpected GPR definedness change");
-      /* undefined reset values are intentionally unconstrained. */
+      // undefined reset values are intentionally unconstrained.
       if (expected_defined[i]) begin
         check(inspect_value_o == expected_regs[i], "architectural GPR storage mismatch");
       end
@@ -687,16 +687,16 @@ module cpu5_control_tb #(
     clk_i = 0;
   endtask
 
-  /* wait for input backpressure without changing an offered packet. */
+  // wait for input backpressure without changing an offered packet.
   task automatic submit(input packet_t p);
     int unsigned old_count;
     old_count = accepted_inputs;
     in_packet_i = p;
     in_valid_i = 1;
-    /* every submitted packet has a finite acceptance watchdog. */
+    // every submitted packet has a finite acceptance watchdog.
     for (int i = 0; i < 100; i++) begin
       tick();
-      /* stop after the observed input handshake, not a guessed stage delay. */
+      // stop after the observed input handshake, not a guessed stage delay.
       if (accepted_inputs != old_count) begin
         in_valid_i = 0;
         return;
@@ -705,11 +705,11 @@ module cpu5_control_tb #(
     check(0, "input acceptance timed out");
   endtask
 
-  /* wait for a selected stage while preserving all independent checks. */
+  // wait for a selected stage while preserving all independent checks.
   task automatic reach(input logic [2:0] index);
-    /* stage arrival has a bounded diagnostic watchdog. */
+    // stage arrival has a bounded diagnostic watchdog.
     for (int i = 0; i < 80; i++) begin
-      /* inspect arrival before accidentally allowing another transfer. */
+      // inspect arrival before accidentally allowing another transfer.
       if (stage_valid_o[index]) begin
         return;
       end
@@ -718,12 +718,12 @@ module cpu5_control_tb #(
     check(0, "stage arrival timed out");
   endtask
 
-  /* finish only after every instruction and physical request has been accounted. */
+  // finish only after every instruction and physical request has been accounted.
   task automatic drain;
-    /* no progress timeout is treated as a successful program ending. */
+    // no progress timeout is treated as a successful program ending.
     for (int i = 0; i < 150; i++) begin
       tick();
-      /* all independently observed owners must actually be gone. */
+      // all independently observed owners must actually be gone.
       if (stage_valid_o == 0 && !bus_owned && !flush_pending) begin
         return;
       end
@@ -731,7 +731,7 @@ module cpu5_control_tb #(
     check(0, "drain timed out");
   endtask
 
-  /* reset the isolated fixture while keeping cumulative coverage statistics. */
+  // reset the isolated fixture while keeping cumulative coverage statistics.
   task automatic cold_reset;
     in_valid_i = 0;
     flush_valid_i = 0;
@@ -747,22 +747,22 @@ module cpu5_control_tb #(
     tick();
   endtask
 
-  /* present a fixed planned response after independently chosen bus delays. */
+  // present a fixed planned response after independently chosen bus delays.
   task automatic service(input int acceptance_delay, input int response_delay,
                           input logic [31:0] value, input logic [1:0] status = 0);
     planned_read = value;
     planned_status = status;
-    /* wait for a real registered offer with a finite watchdog. */
+    // wait for a real registered offer with a finite watchdog.
     for (int i = 0; i < 100 && !d_req_valid_o; i++) begin
       tick();
     end
     check(d_req_valid_o, "data request never appeared");
-    /* hold ready low without changing the saved request descriptor. */
+    // hold ready low without changing the saved request descriptor.
     repeat (acceptance_delay) begin
       tick();
     end
     d_req_ready_i = 1;
-    /* zero delay exercises acceptance and response on the same edge. */
+    // zero delay exercises acceptance and response on the same edge.
     if (response_delay == 0) begin
       d_rsp_valid_i = 1;
       d_rsp_tag_i = bus_tag;
@@ -771,9 +771,9 @@ module cpu5_control_tb #(
     end
     tick();
     d_req_ready_i = 0;
-    /* delayed response keeps the accepted request manager occupied. */
+    // delayed response keeps the accepted request manager occupied.
     if (response_delay != 0) begin
-      /* leave the target response pending for the selected interval. */
+      // leave the target response pending for the selected interval.
       repeat (response_delay - 1) begin
         tick();
       end
@@ -789,25 +789,25 @@ module cpu5_control_tb #(
     planned_status = 0;
   endtask
 
-  /* stop any unbounded test-driver wait without reporting a false pass. */
+  // stop any unbounded test-driver wait without reporting a false pass.
   initial begin : watchdog
     #2000000;
     $fatal(1, "global regression watchdog expired");
   end
 
-  /* exercise directed collisions and a reproducible varied-stall stream. */
+  // exercise directed collisions and a reproducible varied-stall stream.
   initial begin : regression
     packet_t p;
     int unsigned launch_before, trap_before;
     reset_reference();
     cold_reset();
-    /* independently stop each pipeline boundary and check exact W write timing. */
+    // independently stop each pipeline boundary and check exact W write timing.
     for (int stage = 0; stage < 5; stage++) begin
       p = packet(32'h100 + 32'(stage * 4), OP_RESULT, 5'(stage + 1), 32'h1000 + 32'(stage));
       hold_i[stage] = 1;
       submit(p);
       reach(3'(stage));
-      /* preserve the selected stage throughout three sampled stalls. */
+      // preserve the selected stage throughout three sampled stalls.
       repeat (3) begin
         tick();
       end
@@ -818,7 +818,7 @@ module cpu5_control_tb #(
     p.rd_write = 1;
     submit(p);
     drain();
-    /* reset at each stage must suppress every same-edge normal write. */
+    // reset at each stage must suppress every same-edge normal write.
     for (int stage = 0; stage < 5; stage++) begin
       p = packet('h180 + 32'(stage * 4), OP_RESULT, 22, 'hcafef00d);
       hold_i[stage] = 1;
@@ -830,7 +830,7 @@ module cpu5_control_tb #(
       hart_reset_i = 0;
       drain();
     end
-    /* kill reversible work at every stage before a normal architectural write. */
+    // kill reversible work at every stage before a normal architectural write.
     for (int stage = 0; stage < 5; stage++) begin
       p = packet(32'h200 + 32'(stage * 4), OP_RESULT, 10, 'hbad00000 + 32'(stage));
       hold_i[stage] = 1;
@@ -843,7 +843,7 @@ module cpu5_control_tb #(
       hold_i = 0;
       drain();
     end
-    /* write a CSR and its old-value destination on one unheld W edge. */
+    // write a CSR and its old-value destination on one unheld W edge.
     p = packet('h300, OP_CSR, 11);
     p.csr_addr = 'h340;
     p.csr_op = CSR_WRITE;
@@ -853,7 +853,7 @@ module cpu5_control_tb #(
     hold_i[4] = 1;
     submit(p);
     reach(4);
-    /* withhold W permission and check that neither CSR nor GPR changes. */
+    // withhold W permission and check that neither CSR nor GPR changes.
     repeat (4) begin
       tick();
     end
@@ -874,7 +874,7 @@ module cpu5_control_tb #(
     p.csr_op = CSR_READ;
     submit(p);
     drain();
-    /* configure an independent trap vector and exercise trap priority. */
+    // configure an independent trap vector and exercise trap priority.
     p = packet('h310, OP_CSR);
     p.csr_addr = 'h305;
     p.csr_write = 1;
@@ -899,7 +899,7 @@ module cpu5_control_tb #(
     tick();
     flush_valid_i = 0;
     check(traps == trap_before, "held W fault trapped before release");
-    /* retain the fault and pending flush while W remains held. */
+    // retain the fault and pending flush while W remains held.
     repeat (2) begin
       tick();
     end
@@ -909,7 +909,7 @@ module cpu5_control_tb #(
     tick();
     check(traps == trap_before + 1, "flush suppressed an ordered W fault");
     drain();
-    /* verify illegal CSR, system traps and aligned/misaligned branches. */
+    // verify illegal CSR, system traps and aligned/misaligned branches.
     p = packet('h318, OP_CSR, 13);
     p.csr_addr = 'h777;
     submit(p);
@@ -928,9 +928,9 @@ module cpu5_control_tb #(
     drain();
     submit(packet('h32c, OP_MRET));
     drain();
-    /* cover the full independent acceptance/response grid and byte lanes. */
+    // cover the full independent acceptance/response grid and byte lanes.
     for (int a = 0; a < 2; a++) begin
-      /* response delay does not share a draw or gate with acceptance delay. */
+      // response delay does not share a draw or gate with acceptance delay.
       for (int r = 0; r < 3; r++) begin
         p = packet('h400 + 32'(a * 12 + r * 4), OP_LOAD, 15);
         p.mem_addr = 'h20000000 + 32'(r);
@@ -955,14 +955,14 @@ module cpu5_control_tb #(
     submit(p);
     service(3, 2, 0);
     drain();
-    /* an x0 load still owns and completes a real physical request. */
+    // an x0 load still owns and completes a real physical request.
     p = packet('h448, OP_LOAD, 0);
     p.rd_write = 1;
     p.mem_addr = 'h40000000;
     submit(p);
     service(1, 2, 'habcdef01);
     drain();
-    /* local alignment and encoding failures must never launch a data request. */
+    // local alignment and encoding failures must never launch a data request.
     launch_before = launches;
     p = packet('h44c, OP_LOAD, 17);
     p.mem_addr = 'h20000001;
@@ -974,7 +974,7 @@ module cpu5_control_tb #(
     submit(p);
     drain();
     check(launches == launch_before, "local fault launched a transaction");
-    /* a same-edge external flush vetoes a memory attempt before first valid. */
+    // a same-edge external flush vetoes a memory attempt before first valid.
     p = packet('h480, OP_STORE);
     p.mem_addr = 'h20000000;
     p.mem_wdata = 'h12345678;
@@ -988,17 +988,17 @@ module cpu5_control_tb #(
     flush_valid_i = 0;
     drain();
     check(launches == launch_before, "flush lost the before-launch arbitration");
-    /* a target rejection faults once without changing its destination. */
+    // a target rejection faults once without changing its destination.
     p = packet('h454, OP_LOAD, 18);
     p.mem_addr = 'h50001000;
     submit(p);
     service(2, 2, 0, 1);
     drain();
-    /* flush after first valid preserves the owned request and its retirement. */
+    // flush after first valid preserves the owned request and its retirement.
     p = packet('h458, OP_LOAD, 19);
     p.mem_addr = 'h20000000;
     submit(p);
-    /* stop at the first registered offer before any physical acceptance. */
+    // stop at the first registered offer before any physical acceptance.
     while (!d_req_valid_o) begin
       tick();
     end
@@ -1008,10 +1008,10 @@ module cpu5_control_tb #(
     flush_valid_i = 0;
     service(2, 3, 'h76543210);
     drain();
-    /* a protected failing memory operation chooses its trap over pending flush. */
+    // a protected failing memory operation chooses its trap over pending flush.
     p.pc = 'h45c;
     submit(p);
-    /* wait for the nonwithdrawable offer before requesting the flush. */
+    // wait for the nonwithdrawable offer before requesting the flush.
     while (!d_req_valid_o) begin
       tick();
     end
@@ -1020,15 +1020,15 @@ module cpu5_control_tb #(
     flush_valid_i = 0;
     service(1, 1, 0, 1);
     drain();
-    /* hart reset aborts the token but retains the unaccepted bus descriptor. */
+    // hart reset aborts the token but retains the unaccepted bus descriptor.
     p = packet('h460, OP_LOAD, 20);
     p.mem_addr = 'h20000000;
     submit(p);
-    /* reset only after the manager owns an unaccepted offer. */
+    // reset only after the manager owns an unaccepted offer.
     while (!d_req_valid_o) begin
       tick();
     end
-    /* this negative control requires the DUT to reject unsafe cold reset. */
+    // this negative control requires the DUT to reject unsafe cold reset.
     if ($test$plusargs("negative_cold_live")) begin
       isolated_i = 0;
       cold_reset_i = 1;
@@ -1040,11 +1040,11 @@ module cpu5_control_tb #(
     hart_reset_i = 0;
     service(2, 2, 'hfeedface);
     drain();
-    /* reset must preserve acceptance accounting with delayed or immediate completion. */
+    // reset must preserve acceptance accounting with delayed or immediate completion.
     for (int immediate = 0; immediate < 2; immediate++) begin
       p.pc = 'h464 + 32'(immediate * 4);
       submit(p);
-      /* establish first valid before colliding acceptance with hart reset. */
+      // establish first valid before colliding acceptance with hart reset.
       while (!d_req_valid_o) begin
         tick();
       end
@@ -1059,7 +1059,7 @@ module cpu5_control_tb #(
       hart_reset_i = 0;
       d_req_ready_i = 0;
       d_rsp_valid_i = 0;
-      /* a delayed response drains the accepted orphan after reset. */
+      // a delayed response drains the accepted orphan after reset.
       if (immediate == 0) begin
         tick();
         d_rsp_valid_i = 1;
@@ -1068,9 +1068,9 @@ module cpu5_control_tb #(
       end
       drain();
     end
-    /* reset at the response edge accounts the bus without architectural delivery. */
+    // reset at the response edge accounts the bus without architectural delivery.
     submit(p);
-    /* capture the offer before accepting it on the next edge. */
+    // capture the offer before accepting it on the next edge.
     while (!d_req_valid_o) begin
       tick();
     end
@@ -1087,9 +1087,9 @@ module cpu5_control_tb #(
     hart_reset_i = 0;
     d_rsp_valid_i = 0;
     drain();
-    /* a reset during accepted response wait must not deliver to a replacement token. */
+    // a reset during accepted response wait must not deliver to a replacement token.
     submit(p);
-    /* capture the offer before entering the accepted response wait. */
+    // capture the offer before entering the accepted response wait.
     while (!d_req_valid_o) begin
       tick();
     end
@@ -1099,7 +1099,7 @@ module cpu5_control_tb #(
     hart_reset_i = 1;
     tick();
     hart_reset_i = 0;
-    /* retain the orphan through additional response latency. */
+    // retain the orphan through additional response latency.
     repeat (2) begin
       tick();
     end
@@ -1110,13 +1110,13 @@ module cpu5_control_tb #(
     tick();
     d_rsp_valid_i = 0;
     drain();
-    /* exercise overlapping occupancy when diagnostic serialization is disabled. */
+    // exercise overlapping occupancy when diagnostic serialization is disabled.
     for (int n = 0; n < 40; n++) begin
       p = packet('h1000 + 32'(n * 4), OP_RESULT, 5'(1 + n % 30), 32'h55000000 + 32'(n));
       submit(p);
     end
     drain();
-    /* overlap mode must prevent a younger M effect behind an older W fault. */
+    // overlap mode must prevent a younger M effect behind an older W fault.
     if (!DIAGNOSTIC) begin
       hold_i[4] = 1;
       submit(packet('h1800, OP_ECALL));
@@ -1134,22 +1134,22 @@ module cpu5_control_tb #(
             "younger memory escaped an older W fault");
       drain();
     end
-    /* a matching uncertain response cannot create a normal terminal. */
+    // a matching uncertain response cannot create a normal terminal.
     p = packet('h2000, OP_LOAD, 21);
     p.mem_addr = 'h50002000;
     submit(p);
     service(1, 2, 0, 2);
-    /* verify that uncertainty preserves the frozen owner over time. */
+    // verify that uncertainty preserves the frozen owner over time.
     repeat (3) begin
       tick();
     end
     check(fatal_o && stage_valid_o != 0, "uncertainty failed to freeze its instruction");
     cold_reset();
-    /* a bad tag followed by a matching reply still retains the fatal owner. */
+    // a bad tag followed by a matching reply still retains the fatal owner.
     p = packet('h2100, OP_LOAD, 23);
     p.mem_addr = 'h20000000;
     submit(p);
-    /* wait for the surviving owner before injecting a wrong-tag response. */
+    // wait for the surviving owner before injecting a wrong-tag response.
     while (!d_req_valid_o) begin
       tick();
     end
@@ -1170,14 +1170,14 @@ module cpu5_control_tb #(
     tick();
     check(fatal_o && mem_busy_o, "hart reset released a fatal owner");
     cold_reset();
-    /* reject a response for an unknown owner without delivering it elsewhere. */
+    // reject a response for an unknown owner without delivering it elsewhere.
     d_rsp_valid_i = 1;
     d_rsp_tag_i = 'hbad;
     d_rsp_rdata_i = 0;
     tick();
     d_rsp_valid_i = 0;
     check(fatal_o, "unknown response did not cause containment");
-    /* fatal state requires isolation even when the manager has no live request. */
+    // fatal state requires isolation even when the manager has no live request.
     if ($test$plusargs("negative_cold_fatal_free")) begin
       isolated_i = 0;
       cold_reset_i = 1;
@@ -1186,7 +1186,7 @@ module cpu5_control_tb #(
     end
     cold_reset();
     drain();
-    /* require each independently stalled boundary to have been exercised. */
+    // require each independently stalled boundary to have been exercised.
     for (int i = 0; i < 5; i++) begin
       check(coverage_stalls[i] != 0, "missing stage-stall coverage");
     end

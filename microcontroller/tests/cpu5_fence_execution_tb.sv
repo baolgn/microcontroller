@@ -1,9 +1,9 @@
-/* compare instruction synchronization against independent executable images and bus effects. */
+// compare instruction synchronization against independent executable images and bus effects.
 module cpu5_fence_execution_tb #(
   parameter bit C_ENABLED = 1, M_ENABLED = 0, ZIFENCEI_ENABLED = 1, DIAGNOSTIC = 0, FORWARDING = 1
 );
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
@@ -12,7 +12,7 @@ module cpu5_fence_execution_tb #(
       SLL=8, SRL=9, SRA=10, ANDI=11, LOAD=12, STORE=13, JUMP=14, JREG=15,
       BEQ=16, BNE=17, TRAP=18, MISA=19, MUL_OP=20, EPC_READ=21, EPC_WRITE=22,
       VECTOR_WRITE=23, RETURN=24, MIE_WRITE=25, STATUS_WRITE=26, WAIT_IRQ=27, DIV_OP=28, FENCE_OP=29, FENCEI_OP=30;
-  /* original program metadata supplies semantics independently of RTL decompression. */
+  // original program metadata supplies semantics independently of RTL decompression.
   typedef struct packed {
     logic present;
     logic [31:0] raw;
@@ -63,13 +63,13 @@ module cpu5_fence_execution_tb #(
       mstatus_o, mtvec_o, mscratch_o, mie_o, mip_o, mcountinhibit_o, mcycle_o, minstret_o,
       flush_ready_o, flush_aborted_o, irq_pc_o, irq_cause_o};
   logic frontend_valid;
-  /* calibration removes the real frontend synchronization while retaining the CPU trace. */
+  // calibration removes the real frontend synchronization while retaining the CPU trace.
   wire frontend_redirect=redirect_valid_o && !($test$plusargs("mutate_redirect") &&
       trace_o.valid && trace_o.packet.op==OP_FENCE_I);
   assign in_valid_i = frontend_valid && run_enable;
   assign frontend_ready = in_ready_o && run_enable;
 
-  /* use the production fetch/packet adapter with a finite stress deadline. */
+  // use the production fetch/packet adapter with a finite stress deadline.
   cpu5_frontend #(.C_ENABLED(C_ENABLED), .GEN_BITS(2), .MAX_WAIT_CYCLES(128), .TEST_REGIONS(1)) frontend (
     .clk_i(clk_i), .cold_reset_i(cold_reset_i), .isolated_i(1'b1), .hart_reset_i(hart_reset_i),
     .permit_i(run_enable), .entry_pending_i(entry_pending_o), .core_fatal_i(fatal_o),
@@ -82,7 +82,7 @@ module cpu5_fence_execution_tb #(
     .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* exercise the same raw machine decoder with independent ISA and occupancy choices. */
+  // exercise the same raw machine decoder with independent ISA and occupancy choices.
   cpu5_control #(.C_ENABLED(C_ENABLED), .M_ENABLED(M_ENABLED), .DIAGNOSTIC(DIAGNOSTIC),
       .FORWARDING(FORWARDING), .ZIFENCEI_ENABLED(ZIFENCEI_ENABLED), .IRAM_WRITE(1), .IRQ_ENABLED(1), .TEST_REGIONS(1), .D_MAX_WAIT_CYCLES(128)) dut (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
@@ -139,47 +139,47 @@ module cpu5_fence_execution_tb #(
   logic [31:0] history_pc [0:31], history_raw [0:31];
   logic [4:0] history_valid [0:31];
 
-  /* a local LCG fixes every randomized service and instruction choice. */
+  // a local LCG fixes every randomized service and instruction choice.
   function automatic int unsigned random_word;
     rng = int'(32'(rng) * 32'd1664525 + 32'd1013904223);
     return unsigned'(rng);
   endfunction
 
-  /* program data have a separate seed stream so execution timing cannot change the test image. */
+  // program data have a separate seed stream so execution timing cannot change the test image.
   function automatic int unsigned program_random_word;
     program_rng=int'(32'(program_rng)*32'd1664525+32'd1013904223);
     return unsigned'(program_rng);
   endfunction
 
-  /* every failed check prints recent original instruction and owner state. */
+  // every failed check prints recent original instruction and owner state.
   task automatic check(input bit condition, input string label_text);
     checks++;
-    /* the exact named comparator must fire for each detector calibration. */
+    // the exact named comparator must fire for each detector calibration.
     if (!condition) begin
       $display("FENCE_EXEC_FAILURE label=%s seed=%0d case=%0d edge=%0d arch_pc=%08x I=%b/%b/%08x D=%b/%b/%08x",
           label_text, seed, cases, edges, arch_pc, i_owned, i_accepted, i_address, d_owned, d_accepted, d_address);
-      /* the ring preserves enough instruction context to reproduce the first divergence. */
+      // the ring preserves enough instruction context to reproduce the first divergence.
       for (int n=0; n<32; n++) $display("FENCE_HISTORY age=%0d pc=%08x raw=%08x stages=%b", n,
           history_pc[(edges+n)%32], history_raw[(edges+n)%32], history_valid[(edges+n)%32]);
       $fatal(1, "FENCE_EXEC_CHECK_FAILED %s", label_text);
     end
   endtask
 
-  /* map safe executable overlays to disjoint fixture storage without peripheral aliases. */
+  // map safe executable overlays to disjoint fixture storage without peripheral aliases.
   function automatic int image_index(input logic [31:0] unused_address);
     return unused_address[31:16] == 16'h0001 ? 4096+int'(unused_address[12:1]) : int'(unused_address[12:1]);
   endfunction
 
-  /* the selected instruction parcel may share a word with the preceding wide fence. */
+  // the selected instruction parcel may share a word with the preceding wide fence.
   function automatic bit target_match;
     return victim_pc!=0 && i_address==targeted_address && (i_parcels & (victim_pc[1]?2'b10:2'b01))!=0;
   endfunction
 
-  /* target ready and response signals depend only on retained target ownership. */
+  // target ready and response signals depend only on retained target ownership.
   always_comb begin
     i_req_ready_i = i_owned && !i_accepted && i_age >= i_accept_delay && !cold_reset_i;
     i_rsp_valid_i = i_owned && i_accepted && i_response_age >= i_response_delay && !cold_reset_i;
-    /* the directed coincidence case presents its retained error on the redirect edge. */
+    // the directed coincidence case presents its retained error on the redirect edge.
     if (targeted_mode==3 && target_match() && i_image_epoch<required_epoch)
       i_rsp_valid_i=i_owned && i_accepted && redirect_valid_o && !cold_reset_i;
     i_rsp_tag_i = i_tag; i_rsp_data_i = i_data; i_rsp_parcels_i = i_parcels;
@@ -189,17 +189,17 @@ module cpu5_fence_execution_tb #(
     d_rsp_tag_i = d_tag; d_rsp_rdata_i = d_status != 0 || d_write ? 0 : d_reply; d_rsp_status_i = d_status;
   end
 
-  /* construct standard 32-bit encodings independently of production decoder helpers. */
+  // construct standard 32-bit encodings independently of production decoder helpers.
   function automatic logic [31:0] enc_i(input int unused_opcode, unused_rd, unused_rs1, unused_funct3, input logic [31:0] unused_imm);
     return {unused_imm[11:0],5'(unused_rs1),3'(unused_funct3),5'(unused_rd),7'(unused_opcode)};
   endfunction
-  /* direct J-field placement gives the independent program builder its target. */
+  // direct J-field placement gives the independent program builder its target.
   function automatic logic [31:0] enc_j(input int unused_rd, input logic [31:0] unused_imm);
     return {unused_imm[20],unused_imm[10:1],unused_imm[11],unused_imm[19:12],5'(unused_rd),7'h6f};
   endfunction
-  /* direct C-format placement is checked separately by exhaustive classification tests. */
+  // direct C-format placement is checked separately by exhaustive classification tests.
   function automatic logic [15:0] enc_c(input int kind, rd, rs1, rs2, input logic [31:0] unused_imm);
-    /* each format uses architectural operands, never an expanded DUT instruction. */
+    // each format uses architectural operands, never an expanded DUT instruction.
     case (kind)
       0: return {3'b000,unused_imm[5:4],unused_imm[9:6],unused_imm[2],unused_imm[3],3'(rd-8),2'b00};
       1: return {3'b010,unused_imm[5:3],3'(rs1-8),unused_imm[2],unused_imm[6],3'(rd-8),2'b00};
@@ -220,7 +220,7 @@ module cpu5_fence_execution_tb #(
     endcase
   endfunction
 
-  /* pair each emitted raw encoding with independently supplied architectural semantics. */
+  // pair each emitted raw encoding with independently supplied architectural semantics.
   task automatic emit(input logic [31:0] raw, input int length, operation, rd, rs1, rs2,
       input logic [31:0] imm);
     int unused_index;
@@ -228,83 +228,83 @@ module cpu5_fence_execution_tb #(
     program_ref[unused_index]='{present:1,raw:raw,raw_valid:4'(length==2?3:15),length:3'(length),
         operation:operation,rd:rd,rs1:rs1,rs2:rs2,imm:imm,cause:0,tval:0,size:2};
     image[unused_index]=raw[15:0];
-    /* wide encodings retain their high parcel even across a fetched-word boundary. */
+    // wide encodings retain their high parcel even across a fetched-word boundary.
     if (length==4) image[image_index(32'(builder_pc)+2)]=raw[31:16];
     program_digest=(program_digest^{32'(builder_pc),raw})*64'h100000001b3;
     builder_pc+=length;
   endtask
 
-  /* select the independent instruction meaning while reusing only encoding construction. */
+  // select the independent instruction meaning while reusing only encoding construction.
   task automatic emit_c(input int kind, rd, rs1, rs2, input logic [31:0] imm);
     int operation, destination, source;
     operation=NOP; destination=rd; source=rs1;
-    /* semantics are selected from the requested operation, not decoded from the encoded word. */
+    // semantics are selected from the requested operation, not decoded from the encoded word.
     case (kind)
-      /* add the compact stack offset. */
+      // add the compact stack offset.
       0: begin operation=ADDI; source=2; end
-      /* select the compact load base. */
+      // select the compact load base.
       1,19: begin operation=LOAD; source=kind==19?2:rs1; end
-      /* select the compact store base. */
+      // select the compact store base.
       2,25: begin operation=STORE; source=kind==25?2:rs1; end
-      /* select the immediate arithmetic source. */
+      // select the immediate arithmetic source.
       3,6: begin operation=ADDI; source=kind==6?2:rd; end
-      /* select the jump link destination. */
+      // select the jump link destination.
       4,15: begin operation=JUMP; destination=kind==4?1:0; end
-      /* load a signed immediate. */
+      // load a signed immediate.
       5: begin operation=ADDI; source=0; end
       7: operation=LUI;
-      /* select logical right shift. */
+      // select logical right shift.
       8: begin operation=SRL; source=rd; end
-      /* select arithmetic right shift. */
+      // select arithmetic right shift.
       9: begin operation=SRA; source=rd; end
-      /* select immediate bitwise AND. */
+      // select immediate bitwise AND.
       10: begin operation=ANDI; source=rd; end
-      /* select subtraction. */
+      // select subtraction.
       11: begin operation=SUB; source=rd; end
-      /* select bitwise XOR. */
+      // select bitwise XOR.
       12: begin operation=XOR_OP; source=rd; end
-      /* select bitwise OR. */
+      // select bitwise OR.
       13: begin operation=OR_OP; source=rd; end
-      /* select bitwise AND. */
+      // select bitwise AND.
       14: begin operation=AND_OP; source=rd; end
       16: operation=BEQ;
       17: operation=BNE;
-      /* select logical left shift. */
+      // select logical left shift.
       18: begin operation=SLL; source=rd; end
-      /* read the old jump-register source. */
+      // read the old jump-register source.
       20,23: begin operation=JREG; source=rd; destination=kind==23?1:0; end
-      /* move the second source. */
+      // move the second source.
       21: begin operation=ADD; source=0; end
-      /* add both register sources. */
+      // add both register sources.
       24: begin operation=ADD; source=rd; end
       22: operation=TRAP;
       default: operation=NOP;
     endcase
     emit({16'b0,enc_c(kind,rd,rs1,rs2,imm)},2,operation,destination,source,rs2,imm);
-    /* C.EBREAK remains a synchronous exception, including its original two-byte identity. */
+    // C.EBREAK remains a synchronous exception, including its original two-byte identity.
     if (kind==22) begin
       program_ref[image_index(32'(builder_pc-2))].cause=3;
       program_ref[image_index(32'(builder_pc-2))].tval=32'(builder_pc-2);
     end
   endtask
 
-  /* an explicit terminal prevents speculative zeros from selecting the case outcome. */
+  // an explicit terminal prevents speculative zeros from selecting the case outcome.
   task automatic finish_program;
     emit(32'h00100073,4,TRAP,0,0,0,0);
     program_ref[image_index(32'(builder_pc-4))].cause=3;
     program_ref[image_index(32'(builder_pc-4))].tval=32'(builder_pc-4);
   endtask
 
-  /* keep the stack and compact memory base defined while other operands start from encoded writes. */
+  // keep the stack and compact memory base defined while other operands start from encoded writes.
   task automatic initialize_program;
-    /* initialization deliberately writes every readable register instead of assuming reset zeros. */
+    // initialization deliberately writes every readable register instead of assuming reset zeros.
     for (int r=1;r<32;r++) emit(enc_i('h13,r,0,0,32'(r*7)),4,ADDI,r,0,0,32'(r*7));
     emit(32'h20000137,4,LUI,2,0,0,32'h20000000);
     emit(enc_i('h13,2,2,0,'h100),4,ADDI,2,2,0,'h100);
     emit(32'h20000437,4,LUI,8,0,0,32'h20000000);
   endtask
 
-  /* one scoreboard samples old handshakes and then checks registered ownership changes. */
+  // one scoreboard samples old handshakes and then checks registered ownership changes.
   initial forever begin : scoreboard
     bit input_fire, i_accept_fire, i_complete_fire, d_accept_fire, d_complete_fire, pre_redirect;
     bit pre_i_request, pre_d_request, pre_i_drop, pre_fatal, pre_idle, pre_pending;
@@ -331,103 +331,103 @@ module cpu5_fence_execution_tb #(
     previous=stage_token_o; previous_valid=stage_valid_o;
     pre_fatal=fetch_fatal || fetch_reason!=0 || fatal_o || fatal_record_o.valid;
     pre_idle=idle_o; pre_pending=entry_pending_o;
-    /* observe actual handshake outputs independently of responder state updates. */
+    // observe actual handshake outputs independently of responder state updates.
     if (!cold_reset_i) begin
       check(fetch_accept==i_accept_fire && fetch_complete==i_complete_fire,"I handshake observation");
       check(!fetch_launch || (!pre_redirect && !pre_pending),"redirect or asynchronous entry blocks new I launch");
     end
     #1;
     edges++; case_steps++;
-    /* optional owner timing traces explain directed snapshot schedules. */
+    // optional owner timing traces explain directed snapshot schedules.
     if ($test$plusargs("debug_owners") && (i_accept_fire || i_complete_fire || d_complete_fire || pre_redirect ||
         (pre_i_request && !i_owned))) $display("OWNER case=%0d step=%0d arch=%08x I=%08x parcels=%b accept=%b reply=%b drop=%b epoch=%0d snapshot_epoch=%0d Ddone=%b redirect=%b target=%08x required=%0d",
         cases,case_steps,arch_pc,pre_i_addr,pre_i_parcels,i_accept_fire,i_complete_fire,pre_i_drop,image_epoch,i_image_epoch,
         d_complete_fire,pre_redirect,victim_pc,required_epoch);
     history_pc[edges%32]=in_packet_i.pc; history_raw[edges%32]=in_packet_i.raw;
     history_valid[edges%32]=stage_valid_o;
-    /* isolated reset destroys both fixture and CPU epochs before identity reuse. */
+    // isolated reset destroys both fixture and CPU epochs before identity reuse.
     if (cold_reset_i) begin
       i_owned=0; i_accepted=0; i_stale=0; d_owned=0; d_accepted=0;
       next_uid=0; next_order=0; arch_pc=0; vector_ref=0; epc_ref=0; unused_enable_ref=0; global_enable=0; terminal=0; mmio_ref=0; mmio_effects=0;
       case_reads=0; case_writes=0; retired_reads=0; retired_writes=0;
-      /* architectural reset defines only x0; programs explicitly initialize every used register. */
+      // architectural reset defines only x0; programs explicitly initialize every used register.
       for (int r=0;r<32;r++) begin regs_ref[r]=0; defined_ref[r]=r==0; end
-      /* no live identity or historical token may survive positive isolation. */
+      // no live identity or historical token may survive positive isolation.
       for (int n=0;n<CAPACITY;n++) begin live[n]=0; originals[n]='0; end
     end
-    /* all nonreset edges preserve one instruction owner and one bus owner. */
+    // all nonreset edges preserve one instruction owner and one bus owner.
     else begin
       check(!pre_fatal,"unexpected fatal containment");
       check(wake_on_idle || (!irq_valid_o && !idle_o),"unexpected asynchronous event");
-      /* buffered bytes remain old until the architecturally ordered instruction synchronization. */
+      // buffered bytes remain old until the architecturally ordered instruction synchronization.
       if (frontend_valid && in_packet_i.pc==victim_pc && victim_pc!=0 && image_epoch==0) begin
         buffered_old++; case_buffered_old++;
       end
       idle_edges+=int'(pre_idle); pending_edges+=int'(pre_pending);
-      /* an unfinished M producer must delay a younger compact consumer in the overlapping build. */
+      // an unfinished M producer must delay a younger compact consumer in the overlapping build.
       if (previous_valid[2] && previous[2].md_decoded && !previous[2].md_done &&
           previous_valid[1] && previous[1].p.length==2) late_c_wait++;
-      /* a stream redirect makes the target-side old response permanently stale. */
+      // a stream redirect makes the target-side old response permanently stale.
       if (pre_redirect && i_owned) begin
         i_stale=1;
-        /* record stale ownership before and after target acceptance separately. */
+        // record stale ownership before and after target acceptance separately.
         if (target_match() && i_image_epoch<required_epoch) begin
           if (i_accepted) old_accepted++;
           else old_offers++;
         end
       end
-      /* launched requests retain their descriptor through acceptance. */
+      // launched requests retain their descriptor through acceptance.
       if (i_owned && !i_accepted) check(pre_i_request && pre_i_addr==i_address &&
           pre_i_tag==i_tag && pre_i_parcels==i_parcels,"stable unaccepted I request");
-      /* accepted requests never launch a second physical access. */
+      // accepted requests never launch a second physical access.
       if (i_owned && i_accepted) check(!pre_i_request,"duplicate accepted I request");
-      /* a late response is consumed once without restoring a revoked generation. */
+      // a late response is consumed once without restoring a revoked generation.
       if (i_complete_fire) begin
         check(i_owned && i_accepted,"I response has exactly one owner");
-        /* calibration corrupts disposition without changing target ownership. */
+        // calibration corrupts disposition without changing target ownership.
         if ($test$plusargs("mutate_stale") && i_stale && target_match() && !mutation_applied) begin
           pre_i_drop=!pre_i_drop; mutation_applied=1;
         end
         check(pre_i_drop==i_stale,"stale I response disposition");
-        /* faulted stale parcels cannot leak into trap state. */
+        // faulted stale parcels cannot leak into trap state.
         if (i_stale) begin
           stale_replies++; case_stale++;
-          /* count only the selected pre-synchronization instruction owner. */
+          // count only the selected pre-synchronization instruction owner.
           if (target_match() && i_image_epoch<required_epoch) case_target_stale++;
-          /* a stale access error must never enter architectural trap state. */
+          // a stale access error must never enter architectural trap state.
           if (i_fault!=0) old_errors++;
         end
-        /* count a genuinely simultaneous redirect and faulted response handshake. */
+        // count a genuinely simultaneous redirect and faulted response handshake.
         if (pre_redirect && i_fault!=0) begin simultaneous_discard++; same_edge_drops++; end
         i_owned=0; i_accepted=0; i_replies++;
       end
-      /* independently delayed acceptance samples instruction bytes exactly once. */
+      // independently delayed acceptance samples instruction bytes exactly once.
       else if (i_accept_fire) begin
         check(i_owned && !i_accepted,"I single acceptance");
         i_accepted=1; i_accepts++; i_response_age=0; i_data=0; i_fault=0;
-        /* unused and faulted parcel lanes carry canonical zero data. */
+        // unused and faulted parcel lanes carry canonical zero data.
         for (int parcel=0;parcel<2;parcel++) begin
-          /* each requested halfword has independent access-error attribution. */
+          // each requested halfword has independent access-error attribution.
           if (i_parcels[parcel]) begin
             unused_index=image_index(i_address+32'(parcel*2));
             i_fault[parcel]=image_fault[unused_index];
             i_data[parcel*16+:16]=image_fault[unused_index]?16'b0:image[unused_index];
-            /* delayed error cases fault only their old stream snapshot. */
+            // delayed error cases fault only their old stream snapshot.
             if (target_match() && i_image_epoch<required_epoch && targeted_mode inside {3,4}) begin
               i_fault[parcel]=1; i_data[parcel*16+:16]=0;
             end
           end
         end
-        /* snapshots taken before code completion expose stale instruction reuse. */
+        // snapshots taken before code completion expose stale instruction reuse.
         if (target_match() && image_epoch<required_epoch) begin old_snapshots++; case_old_snapshots++; end
       end
-      /* response latency advances only after acceptance. */
+      // response latency advances only after acceptance.
       else if (i_owned && i_accepted) i_response_age++;
-      /* request acceptance latency advances independently from response timing. */
+      // request acceptance latency advances independently from response timing.
       else if (i_owned) begin
         i_age++; max_i_wait=i_age>max_i_wait?i_age:max_i_wait;
       end
-      /* first request-valid creates the target's immutable descriptor. */
+      // first request-valid creates the target's immutable descriptor.
       else if (pre_i_request) begin
         check(pre_i_addr[1:0]==0 && pre_i_parcels!=0,"I aligned parcel descriptor");
         check(pre_i_addr<8192 || pre_i_addr inside {[32'h10000:32'h11ffc]},"I peripheral region prohibited");
@@ -435,24 +435,24 @@ module cpu5_fence_execution_tb #(
         i_tag=pre_i_tag; i_parcels=pre_i_parcels; i_age=0; i_offers++; i_image_epoch=image_epoch;
         i_accept_delay=fixed_service?acceptance_limit:int'(random_word()%32'(acceptance_limit+1));
         i_response_delay=fixed_service?response_limit:1+int'(random_word()%32'(response_limit));
-        /* held branches arrange redirects during both offered and accepted requests. */
+        // held branches arrange redirects during both offered and accepted requests.
         if (target_match() && targeted_mode!=0 && i_image_epoch<required_epoch) begin
           i_accept_delay=targeted_mode==1?70:0;
           i_response_delay=targeted_mode inside {2,4}?(required_epoch==2?100:70):1;
         end
       end
-      /* data offers have independent stable ownership and full-word lane checks. */
+      // data offers have independent stable ownership and full-word lane checks.
       if (d_owned && !d_accepted) check(pre_d_request && pre_d_addr==d_address &&
           pre_d_tag==d_tag && pre_d_data==d_data && pre_d_write==d_write &&
           pre_d_size==d_size && pre_d_strobes==d_strobes,"stable unaccepted D request");
-      /* an accepted data descriptor cannot be offered for a second physical acceptance. */
+      // an accepted data descriptor cannot be offered for a second physical acceptance.
       if (d_owned && d_accepted) check(!pre_d_request,"duplicate accepted D request");
-      /* a completed response cannot authorize replay of the accepted physical effect. */
+      // a completed response cannot authorize replay of the accepted physical effect.
       if (d_complete_fire) begin
         check(d_owned && d_accepted,"D response has exactly one owner");
-        /* executable writes become globally visible only with successful completion. */
+        // executable writes become globally visible only with successful completion.
         if (d_write && d_address[31:16]==16'h0001 && d_status==0) begin
-          /* byte enables select independently updated instruction storage lanes. */
+          // byte enables select independently updated instruction storage lanes.
           for (int lane=0;lane<4;lane++) begin
             if (d_strobes[lane]) image[image_index((d_address&32'hfffffffc)+32'(lane))][(lane%2)*8+:8]=d_data[lane*8+:8];
           end
@@ -460,38 +460,38 @@ module cpu5_fence_execution_tb #(
         end
         d_owned=0; d_accepted=0; d_replies++;
       end
-      /* physical reads and writes occur once at acceptance, independently from retirement. */
+      // physical reads and writes occur once at acceptance, independently from retirement.
       else if (d_accept_fire) begin
         check(d_owned && !d_accepted,"D single acceptance");
         d_accepted=1; d_accepts++; d_response_age=0; d_reply=0;
-        /* proven rejection causes no physical target effect. */
+        // proven rejection causes no physical target effect.
         if (d_status==0) begin
-          /* the MMIO read counter exposes duplicate reads even when rd is x0. */
+          // the MMIO read counter exposes duplicate reads even when rd is x0.
           if (d_address[31:12]==20'h40000) begin
             d_reply=d_address==32'h40000010 ? 32'(dma_done):32'(mmio_effects); mmio_effects++;
             load_value_ref=d_reply;
-            /* the completion register is a separate agent's published acknowledgment. */
+            // the completion register is a separate agent's published acknowledgment.
             if (d_address==32'h40000010 && !d_write) dma_reads++;
-            /* an injected duplicate effect must reach the ordinary physical-effect comparator. */
+            // an injected duplicate effect must reach the ordinary physical-effect comparator.
             if ($test$plusargs("mutate_effect") && d_write && !mutation_applied) begin mmio_effects++; mutation_applied=1; end
           end
-          /* ordinary RAM supplies independent stored values and write effects. */
+          // ordinary RAM supplies independent stored values and write effects.
           else if (d_write && d_address[31:16]!=16'h0001) physical_ram[d_address[9:2]]=d_data;
-          /* reads sample memory only once at physical acceptance. */
+          // reads sample memory only once at physical acceptance.
           else d_reply=physical_ram[d_address[9:2]];
           effect_digest=(effect_digest^{d_address,d_write?d_data:d_reply})*64'h100000001b3;
           effect_digest=(effect_digest^{63'b0,d_write})*64'h100000001b3;
-          /* separate read/write counts detect duplicate effects beyond retirement comparison. */
+          // separate read/write counts detect duplicate effects beyond retirement comparison.
           if (d_write) begin writes++; case_writes++; end
-          /* side-effectful reads are tracked as rigorously as writes. */
+          // side-effectful reads are tracked as rigorously as writes.
           else begin reads++; case_reads++; end
         end
       end
-      /* the response timer cannot count time spent waiting for acceptance. */
+      // the response timer cannot count time spent waiting for acceptance.
       else if (d_owned && d_accepted) d_response_age++;
-      /* an offered transaction remains exposed while the target stalls acceptance. */
+      // an offered transaction remains exposed while the target stalls acceptance.
       else if (d_owned) begin d_age++; max_d_wait=d_age>max_d_wait?d_age:max_d_wait; end
-      /* first data request is checked against the oldest independent architectural instruction. */
+      // first data request is checked against the oldest independent architectural instruction.
       else if (pre_d_request) begin
         expected=program_ref[image_index(arch_pc)];
         check(expected.present && (expected.operation inside {LOAD,STORE} || (expected.operation==TRAP && expected.cause inside {5,7})),"unexpected architectural D access");
@@ -500,7 +500,7 @@ module cpu5_fence_execution_tb #(
             pre_d_size==expected.size && pre_d_strobes==(pre_d_write?(expected.size==2?4'hf:4'h3<<address[1:0]):0),"D semantic address and lanes");
         check(!pre_d_write || pre_d_data==(expected.size==2?regs_ref[expected.rs2]:
             {16'b0,regs_ref[expected.rs2][15:0]}<<{address[1:0],3'b0}),"D store source dependency");
-        /* no younger access may escape the ordered synchronization boundary. */
+        // no younger access may escape the ordered synchronization boundary.
         check(!expect_fence || address==victim_pc || address==victim_pc+2 || arch_pc<fence_pc || case_fencei!=0,
             "younger memory waits for synchronization");
         d_owned=1; d_accepted=0; d_address=pre_d_addr; d_tag=pre_d_tag;
@@ -508,9 +508,9 @@ module cpu5_fence_execution_tb #(
         d_accept_delay=d_accept_setting; d_response_delay=d_response_setting;
         d_status=d_address==d_fault_address?2'd1:2'd0;
       end
-      /* registered kills must identify existing live stage owners. */
+      // registered kills must identify existing live stage owners.
       for (int stage=0;stage<5;stage++) begin
-        /* cancellation cannot name a token from another stage or epoch. */
+        // cancellation cannot name a token from another stage or epoch.
         if (kill_valid_o[stage]) begin
           id=int'(kill_uid_o[stage]);
           check(previous_valid[stage] && id<CAPACITY && live[id] && previous[stage].uid==kill_uid_o[stage],
@@ -518,7 +518,7 @@ module cpu5_fence_execution_tb #(
           live[id]=0; killed++;
         end
       end
-      /* an IRQ redirects only at the independently maintained retired instruction boundary. */
+      // an IRQ redirects only at the independently maintained retired instruction boundary.
       if (irq_valid_o) begin
         check(wake_on_idle && !trace_o.valid && arch_pc==38 && global_enable && unused_enable_ref[11] && manual_levels[11],
             "IRQ eligibility and halfword boundary");
@@ -527,13 +527,13 @@ module cpu5_fence_execution_tb #(
             "IRQ preserves halfword continuation PC");
         epc_ref=arch_pc; arch_pc=vector_ref; global_enable=0; interrupts++;
       end
-      /* retirement is compared against program semantics and independently maintained registers. */
+      // retirement is compared against program semantics and independently maintained registers.
       if (trace_o.valid) begin
         id=int'(trace_o.uid); expected=program_ref[image_index(arch_pc)];
         check(id<CAPACITY && live[id] && trace_o.order==64'(next_order),"single ordered retirement owner");
         check(expected.present && trace_o.packet.pc==arch_pc,"instruction start PC sequence");
         observed_raw=trace_o.packet.raw; observed_value=trace_o.value;
-        /* this detector changes observed bytes without changing the independent program image. */
+        // this detector changes observed bytes without changing the independent program image.
         if ($test$plusargs("mutate_raw") && trace_o.packet.pc==victim_pc && victim_pc!=0 && !mutation_applied) begin
           observed_raw^=32'h10; mutation_applied=1;
         end
@@ -545,97 +545,97 @@ module cpu5_fence_execution_tb #(
         next_pc=arch_pc+{29'b0,expected.length}; value=0; write_reg=0; taken=0;
         check(defined_ref[expected.rs1] && defined_ref[expected.rs2],"program reads initialized operands");
         lhs=regs_ref[expected.rs1]; rhs=regs_ref[expected.rs2];
-        /* each operation follows its requested semantics without reading expanded RTL metadata. */
+        // each operation follows its requested semantics without reading expanded RTL metadata.
         case (expected.operation)
-          /* add with 32-bit wraparound. */
+          // add with 32-bit wraparound.
           ADDI: begin value=lhs+expected.imm; write_reg=expected.rd!=0; end
-          /* write the upper immediate. */
+          // write the upper immediate.
           LUI: begin value=expected.imm; write_reg=expected.rd!=0; end
-          /* add both register values. */
+          // add both register values.
           ADD: begin value=lhs+rhs; write_reg=expected.rd!=0; end
-          /* subtract with 32-bit wraparound. */
+          // subtract with 32-bit wraparound.
           SUB: begin value=lhs-rhs; write_reg=expected.rd!=0; end
-          /* compare bitwise XOR. */
+          // compare bitwise XOR.
           XOR_OP: begin value=lhs^rhs; write_reg=expected.rd!=0; end
-          /* compare bitwise OR. */
+          // compare bitwise OR.
           OR_OP: begin value=lhs|rhs; write_reg=expected.rd!=0; end
-          /* compare bitwise AND. */
+          // compare bitwise AND.
           AND_OP: begin value=lhs&rhs; write_reg=expected.rd!=0; end
-          /* mask the source with the signed immediate. */
+          // mask the source with the signed immediate.
           ANDI: begin value=lhs&expected.imm; write_reg=expected.rd!=0; end
-          /* shift left using five amount bits. */
+          // shift left using five amount bits.
           SLL: begin value=lhs<<expected.imm[4:0]; write_reg=expected.rd!=0; end
-          /* shift right without sign extension. */
+          // shift right without sign extension.
           SRL: begin value=lhs>>expected.imm[4:0]; write_reg=expected.rd!=0; end
-          /* shift right with sign extension. */
+          // shift right with sign extension.
           SRA: begin value=32'($signed(lhs)>>>expected.imm[4:0]); write_reg=expected.rd!=0; end
-          /* compare exact build extension identity. */
+          // compare exact build extension identity.
           MISA: begin value=32'h40000100|(M_ENABLED?32'h1000:0)|(C_ENABLED?4:0); write_reg=1; end
-          /* compare low-half multiplication. */
+          // compare low-half multiplication.
           MUL_OP: begin value=lhs*rhs; write_reg=expected.rd!=0; end
-          /* guarded signed quotient arithmetic supplies an independent late-producer result. */
+          // guarded signed quotient arithmetic supplies an independent late-producer result.
           DIV_OP: begin
             value=rhs==0 ? 32'hffffffff : lhs==32'h80000000 && rhs==32'hffffffff ? lhs : 32'($signed(lhs)/$signed(rhs));
             write_reg=expected.rd!=0;
           end
-          /* CSR reads compare the independently recorded original trap PC. */
+          // CSR reads compare the independently recorded original trap PC.
           EPC_READ: begin value=epc_ref; write_reg=1; end
-          /* mepc writes clear bit zero while preserving halfword target alignment. */
+          // mepc writes clear bit zero while preserving halfword target alignment.
           EPC_WRITE: epc_ref=lhs&32'hfffffffe;
-          /* the test uses only direct, naturally aligned trap vectors. */
+          // the test uses only direct, naturally aligned trap vectors.
           VECTOR_WRITE: vector_ref=lhs&32'hfffffffc;
-          /* MRET transfers to the independently modeled WARL mepc value. */
+          // MRET transfers to the independently modeled WARL mepc value.
           RETURN: begin next_pc=epc_ref; taken=1; global_enable=1; end
-          /* CSR writes change interrupt eligibility only at their architectural boundary. */
+          // CSR writes change interrupt eligibility only at their architectural boundary.
           MIE_WRITE: unused_enable_ref=lhs&32'h888;
-          /* the fixture uses only the MIE field of mstatus. */
+          // the fixture uses only the MIE field of mstatus.
           STATUS_WRITE: global_enable=lhs[3];
-          /* WFI itself retires before the retained event arrives. */
+          // WFI itself retires before the retained event arrives.
           WAIT_IRQ: begin end
-          /* compute the target and original-length link. */
+          // compute the target and original-length link.
           JUMP: begin value=next_pc; write_reg=expected.rd!=0; next_pc=arch_pc+expected.imm; taken=1; links++; end
-          /* clear target bit zero after reading the old source. */
+          // clear target bit zero after reading the old source.
           JREG: begin value=next_pc; write_reg=expected.rd!=0; next_pc=(lhs+expected.imm)&32'hfffffffe; taken=1; links++; end
-          /* compare equal operands. */
+          // compare equal operands.
           BEQ: begin taken=lhs==rhs; next_pc=taken?arch_pc+expected.imm:next_pc; branches++; end
-          /* compare unequal operands. */
+          // compare unequal operands.
           BNE: begin taken=lhs!=rhs; next_pc=taken?arch_pc+expected.imm:next_pc; branches++; end
-          /* loads compare separately maintained RAM or MMIO state. */
+          // loads compare separately maintained RAM or MMIO state.
           LOAD: begin
             address=lhs+expected.imm;
             value=address==32'h40000010 ? load_value_ref:address[31:12]==20'h40000 ? 32'(mmio_ref):architectural_ram[address[9:2]];
             write_reg=expected.rd!=0; retired_reads++;
-            /* side effects occur even when the destination is x0. */
+            // side effects occur even when the destination is x0.
             if (address[31:12]==20'h40000) mmio_ref++;
           end
-          /* committed stores update reference memory after their independently checked bus effect. */
+          // committed stores update reference memory after their independently checked bus effect.
           STORE: begin
             address=lhs+expected.imm; retired_writes++;
-            /* ordinary and effectful target spaces retain distinct reference semantics. */
+            // ordinary and effectful target spaces retain distinct reference semantics.
             if (address[31:12]==20'h40000) mmio_ref++;
-            /* stack and compact-register RAM accesses use their architectural address. */
+            // stack and compact-register RAM accesses use their architectural address.
             else if (address[31:16]!=16'h0001) architectural_ram[address[9:2]]=rhs;
           end
-          /* a full implementation barrier is valid for every predecessor/successor mask. */
+          // a full implementation barrier is valid for every predecessor/successor mask.
           FENCE_OP: begin
             check(!d_owned && !mem_busy_o,"FENCE waits for global data completion");
             fence_retired++; case_fences++;
           end
-          /* instruction synchronization discards all younger instruction observations. */
+          // instruction synchronization discards all younger instruction observations.
           FENCEI_OP: begin
             check(!d_owned && !mem_busy_o,"FENCE.I waits for global data completion");
             check(!dma_enabled || dma_early || dma_done,"external writer acknowledged before FENCE.I");
             taken=1; fencei_retired++; case_fencei++; unused_last_fence_next=next_pc;
           end
           NOP: hints++;
-          /* defer fault checks to the precise trap comparator. */
+          // defer fault checks to the precise trap comparator.
           TRAP: begin end
           default: check(0,"unknown independent operation");
         endcase
-        /* synchronous faults preserve the instruction start even when a later parcel fails. */
+        // synchronous faults preserve the instruction start even when a later parcel fails.
         if (expected.operation==TRAP) begin
           observed_epc=mepc_o;
-          /* mutate only the observed trap PC to calibrate the original-start checker. */
+          // mutate only the observed trap PC to calibrate the original-start checker.
           if ($test$plusargs("mutate_epc") && expected.cause==1 && !mutation_applied) begin
             observed_epc+=2; mutation_applied=1;
           end
@@ -644,18 +644,18 @@ module cpu5_fence_execution_tb #(
               "precise fault and instruction start PC");
           check(!trace_o.rd_write && redirect_valid_o && redirect_pc_o==vector_ref,"trap has no register effect");
           traps++; epc_ref=arch_pc;
-          /* selected trap cases execute a real CSR handler and return to a halfword target. */
+          // selected trap cases execute a real CSR handler and return to a halfword target.
           if (expected.imm==1) arch_pc=vector_ref;
-          /* ordinary terminal traps stop issue while exposed fetch requests still drain. */
+          // ordinary terminal traps stop issue while exposed fetch requests still drain.
           else begin terminal=1; run_enable=0; end
-          /* both fault positions have independent required coverage. */
+          // both fault positions have independent required coverage.
           if (expected.cause==1 && expected.tval==trace_o.packet.pc) first_faults++;
-          /* the second parcel retains only the available low instruction halfword. */
+          // the second parcel retains only the available low instruction halfword.
           if (expected.cause==1 && expected.tval==trace_o.packet.pc+2) second_faults++;
         end
-        /* successful instructions preserve exact writes, targets and physical-effect counts. */
+        // successful instructions preserve exact writes, targets and physical-effect counts.
         else begin
-          /* the link detector exercises the actual rd-result comparison. */
+          // the link detector exercises the actual rd-result comparison.
           if ($test$plusargs("mutate_link") && write_reg && expected.operation inside {JUMP,JREG} && !mutation_applied) begin
             observed_value+=2; mutation_applied=1;
           end
@@ -663,7 +663,7 @@ module cpu5_fence_execution_tb #(
           check(!write_reg || (trace_o.rd==5'(expected.rd) && observed_value==value),"architectural register result");
           check(trace_o.next_pc==next_pc && redirect_valid_o==taken && (!taken || redirect_pc_o==next_pc),
               "architectural next PC and redirect");
-          /* reference registers change only after a successful ordered retirement. */
+          // reference registers change only after a successful ordered retirement.
           if (write_reg) begin regs_ref[expected.rd]=value; defined_ref[expected.rd]=1; end
           retired++; compressed_retired+=int'(expected.length==2);
           straddled_retired+=int'(expected.length==4 && arch_pc[1]);
@@ -674,47 +674,47 @@ module cpu5_fence_execution_tb #(
         retirement_digest=(retirement_digest^{trace_o.packet.mtval,trace_o.packet.cause})*64'h100000001b3;
         live[id]=0; next_order++;
       end
-      /* input ownership is allocated exactly once on its valid/ready transfer. */
+      // input ownership is allocated exactly once on its valid/ready transfer.
       if (input_fire) begin
         check(next_uid<CAPACITY && !live[next_uid],"new instruction UID allocation");
         live[next_uid]=1; originals[next_uid]=accepted_packet; next_uid++;
       end
-      /* the independently observed stage vector must conserve every live instruction. */
+      // the independently observed stage vector must conserve every live instruction.
       for (int uid=0;uid<next_uid;uid++) begin
         count=0;
-        /* each UID has at most one architectural pipeline owner. */
+        // each UID has at most one architectural pipeline owner.
         for (int stage=0;stage<5;stage++) count+=int'(stage_valid_o[stage] && stage_token_o[stage].uid==64'(uid));
         check(count==int'(live[uid]),"instruction conservation across stalls and kills");
       end
-      /* held instructions still own exactly one stage and cannot modify architectural state. */
+      // held instructions still own exactly one stage and cannot modify architectural state.
       if (|hold_i) begin held_edges++; observed_holds|=hold_i; end
       check(regs_ref[0]==0,"x0 reference invariant");
     end
   end
 
-  /* drive a full edge after all previous nonblocking updates and checker activity settle. */
+  // drive a full edge after all previous nonblocking updates and checker activity settle.
   task automatic tick;
-    /* randomized pipeline pressure cannot block the independent target service clocks. */
+    // randomized pipeline pressure cannot block the independent target service clocks.
     if (grid_holds) hold_i=5'b1<<3'(case_steps%5);
-    /* seeded stage stalls complement the deterministic all-stage hold grid. */
+    // seeded stage stalls complement the deterministic all-stage hold grid.
     else if (random_holds) begin
-      /* exercise each stage independently instead of freezing the whole pipe together. */
+      // exercise each stage independently instead of freezing the whole pipe together.
       for (int stage=0;stage<5;stage++) hold_i[stage]=(random_word()%8)==0;
     end
-    /* DMA continues independently while the CPU and its pipeline are stalled. */
+    // DMA continues independently while the CPU and its pipeline are stalled.
     if (dma_enabled && !dma_done && case_steps>=dma_complete_edge) begin
       image[image_index(victim_pc)]=patch_word[15:0];
       image[image_index(victim_pc+2)]=patch_word[31:16];
       image_epoch++; dma_done=1; dma_completed++;
     end
-    /* acknowledge before visibility only when deliberately calibrating the protocol checker. */
+    // acknowledge before visibility only when deliberately calibrating the protocol checker.
     if ($test$plusargs("mutate_dma") && dma_enabled && !dma_early && !dma_done && !mutation_applied) begin
       dma_done=1; mutation_applied=1;
     end
     #2; clk_i=1; #2; clk_i=0;
   endtask
 
-  /* begin a new isolated case with reproducible memory and cleared control schedules. */
+  // begin a new isolated case with reproducible memory and cleared control schedules.
   task automatic begin_case;
     run_enable=0; random_holds=0; hold_i=0; wake_on_idle=0; manual_levels=0; targeted_mode=0; targeted_address=0;
     d_fault_address='1; acceptance_limit=4; response_limit=6; d_accept_setting=2; d_response_setting=3;
@@ -723,31 +723,31 @@ module cpu5_fence_execution_tb #(
     case_fences=0; case_fencei=0; case_code_writes=0; case_old_snapshots=0; case_buffered_old=0;
     case_stale=0; case_target_stale=0; fence_holds=0; unused_patch_length=0; expect_fence=0; unused_expect_old_buffer=0; unused_expect_old_reply=0; unused_reject_store=0;
     force_branch_hold=0; fixed_service=0; grid_holds=0; case_steps=0; builder_pc=0; cases++;
-    /* instruction storage starts reserved so an unintended path cannot silently become valid. */
+    // instruction storage starts reserved so an unintended path cannot silently become valid.
     for (int n=0;n<WORDS;n++) begin image[n]=0; image_fault[n]=0; program_ref[n]='0; end
-    /* distinct nonzero RAM values expose wrong lanes or repeated store effects. */
+    // distinct nonzero RAM values expose wrong lanes or repeated store effects.
     for (int n=0;n<256;n++) begin physical_ram[n]=32'h8f000000+32'(n); architectural_ram[n]=physical_ram[n]; end
     cold_reset_i=1; tick(); cold_reset_i=0; tick(); tick();
   endtask
 
-  /* run until the independently specified terminal and drain every exposed bus owner. */
+  // run until the independently specified terminal and drain every exposed bus owner.
   task automatic execute_program(input bit stalls);
     run_enable=1; random_holds=stalls;
-    /* every case has a finite progress deadline and first-failure trace. */
+    // every case has a finite progress deadline and first-failure trace.
     while (!terminal && case_steps<16000) begin
-      /* the event remains pending after the handler masks it and returns. */
+      // the event remains pending after the handler masks it and returns.
       if (wake_on_idle && idle_o) manual_levels=32'h800;
-      /* hold a real fence at retirement without stopping memory or peripheral clocks. */
+      // hold a real fence at retirement without stopping memory or peripheral clocks.
       if (hold_fence && stage_valid_o[4] && stage_token_o[4].p.pc==fence_pc) begin
         hold_i[4]=fence_holds<12;
         fence_holds++; total_fence_holds++;
-        /* after release the instruction cannot be held again by this case. */
+        // after release the instruction cannot be held again by this case.
         if (fence_holds>=12) begin hold_fence=0; hold_i[4]=0; end
       end
-      /* delay branch retirement until the wrong-path second parcel is visibly owned. */
+      // delay branch retirement until the wrong-path second parcel is visibly owned.
       if (force_branch_hold) begin
         hold_i[4]=1;
-        /* release either before acceptance or after acceptance, according to the case. */
+        // release either before acceptance or after acceptance, according to the case.
         if (i_owned && i_address==targeted_address && (targeted_mode==1 || i_accepted)) begin
           force_branch_hold=0; hold_i[4]=0;
         end
@@ -756,16 +756,16 @@ module cpu5_fence_execution_tb #(
     end
     check(terminal,"program termination deadline");
     run_enable=0; random_holds=0; grid_holds=0; hold_i=0;
-    /* redirects leave old physical owners alive until their one response returns. */
+    // redirects leave old physical owners alive until their one response returns.
     repeat (140) tick();
     check(!i_owned && !d_owned && !fetch_busy && !mem_busy_o,"all exposed requests drain");
     check(case_reads==retired_reads && case_writes==retired_writes && mmio_effects==mmio_ref,
         "physical effects match permitted retirement");
-    /* the trap kills every younger token; no live instruction can disappear silently. */
+    // the trap kills every younger token; no live instruction can disappear silently.
     for (int uid=0;uid<next_uid;uid++) check(!live[uid],"terminal instruction conservation");
   endtask
 
-  /* build an exact 32-bit constant without relying on unspecified register reset values. */
+  // build an exact 32-bit constant without relying on unspecified register reset values.
   task automatic load_constant(input int rd, input logic [31:0] value);
     logic [31:0] upper, lower;
     upper=(value+32'h800)&32'hfffff000;
@@ -774,47 +774,47 @@ module cpu5_fence_execution_tb #(
     emit(enc_i('h13,rd,rd,0,lower),4,ADDI,rd,rd,0,lower);
   endtask
 
-  /* store encodings retain independently specified size and source semantics. */
+  // store encodings retain independently specified size and source semantics.
   task automatic emit_store(input int rs1, rs2, unused_size, input logic [31:0] offset);
     emit({offset[11:5],5'(rs2),5'(rs1),3'(unused_size),offset[4:0],7'h23},4,STORE,0,rs1,rs2,offset);
     program_ref[image_index(32'(builder_pc-4))].size=2'(unused_size);
   endtask
 
-  /* jump from reset ROM into the shared writable executable region. */
+  // jump from reset ROM into the shared writable executable region.
   task automatic enter_code;
     load_constant(1,32'h10000);
     emit(enc_i('h67,0,1,0,0),4,JREG,0,1,0,0);
     builder_pc='h10000;
   endtask
 
-  /* self-modification changes width, alignment and bytes while old fetch owners remain alive. */
+  // self-modification changes width, alignment and bytes while old fetch owners remain alive.
   task automatic self_modify(input int variant, mode);
     int pointer_pc;
     begin_case(); enter_code(); fixed_service=1; acceptance_limit=0; response_limit=1;
     d_accept_setting=2; d_response_setting=38; targeted_mode=mode; required_epoch=variant==2?2:1;
     pointer_pc=builder_pc; load_constant(3,0);
     patch_word=variant==1?32'h45894525:32'h00900513;
-    /* halfword cases also replace the following compact instruction. */
+    // halfword cases also replace the following compact instruction.
     if (variant==3) patch_word=32'h45954525;
     load_constant(4,patch_word);
-    /* a naturally aligned word store or two halfword stores patches the same four bytes. */
+    // a naturally aligned word store or two halfword stores patches the same four bytes.
     if (variant==2) begin
       load_constant(5,{16'b0,patch_word[31:16]});
       emit_store(3,4,1,0); emit_store(3,5,1,2);
     end
     else emit_store(3,4,2,0);
-    /* compact padding places the wide target across an instruction word boundary. */
+    // compact padding places the wide target across an instruction word boundary.
     if (variant==2) emit(32'h00000001,2,NOP,0,0,0,0);
     fence_pc=32'(builder_pc); emit(32'h0000100f,4,FENCEI_OP,0,0,0,0);
     victim_pc=32'(builder_pc); targeted_address=victim_pc&32'hfffffffc;
-    /* independent expected semantics describe the post-synchronization instruction image. */
+    // independent expected semantics describe the post-synchronization instruction image.
     if (variant inside {1,3}) begin
       emit({16'b0,patch_word[15:0]},2,ADDI,10,0,0,9);
       emit({16'b0,patch_word[31:16]},2,ADDI,11,0,0,variant==1?2:5);
     end
     else emit(patch_word,4,ADDI,10,0,0,9);
     finish_program();
-    /* patch the pointer builder without deriving any expected value from DUT state. */
+    // patch the pointer builder without deriving any expected value from DUT state.
     program_ref[image_index(32'(pointer_pc))].raw=(victim_pc&32'hfffff000)|32'h1b7;
     program_ref[image_index(32'(pointer_pc))].imm=victim_pc&32'hfffff000;
     program_ref[image_index(32'(pointer_pc+4))].raw=enc_i('h13,3,3,0,victim_pc&32'hfff);
@@ -828,29 +828,29 @@ module cpu5_fence_execution_tb #(
     expect_fence=1; hold_fence=1; execute_program(0);
     check(case_fencei==1 && case_code_writes==(variant==2?2:1),"one synchronization follows completed code writes");
     check(regs_ref[10]==9,"modified code executes after FENCE.I");
-    /* the buffered case proves instruction-byte invalidation even with no outstanding bus owner. */
+    // the buffered case proves instruction-byte invalidation even with no outstanding bus owner.
     if (mode==0 && variant==0 && !DIAGNOSTIC) check(case_buffered_old>0,"old decoded frontend output is actually buffered");
-    /* delayed old requests must actually be observed in these directed schedules. */
+    // delayed old requests must actually be observed in these directed schedules.
     if (mode!=0 && !DIAGNOSTIC) check(case_target_stale>0,"old physical fetch drains after synchronization");
   endtask
 
-  /* fetch faults on either parcel precede any instruction synchronization action. */
+  // fetch faults on either parcel precede any instruction synchronization action.
   task automatic fence_fetch_fault(input bit upper, second);
     int pc, index;
     begin_case();
-    /* C permits the wide fence to begin at an upper halfword. */
+    // C permits the wide fence to begin at an upper halfword.
     if (upper) emit(32'h00000001,2,NOP,0,0,0,0);
     pc=builder_pc; emit(32'h0000100f,4,TRAP,0,0,0,0); index=image_index(32'(pc));
     program_ref[index].cause=1; program_ref[index].tval=32'(pc)+(second?2:0);
     image_fault[index+int'(second)]=1;
-    /* the low parcel establishes framing before a second-parcel access error. */
+    // the low parcel establishes framing before a second-parcel access error.
     if (second) begin program_ref[index].raw=32'h100f; program_ref[index].raw_valid=3; end
-    /* an unavailable first parcel cannot establish length. */
+    // an unavailable first parcel cannot establish length.
     else begin program_ref[index].length=0; program_ref[index].raw=0; program_ref[index].raw_valid=C_ENABLED?0:12; end
     execute_program(1); check(case_fencei==0,"faulted FENCE.I does not synchronize");
   endtask
 
-  /* all FENCE masks receive the same stronger, exact-once implementation ordering. */
+  // all FENCE masks receive the same stronger, exact-once implementation ordering.
   task automatic fence_masks(input logic [31:0] raw);
     begin_case(); load_constant(3,32'h40000000); load_constant(4,32'h12345678);
     emit(enc_i('h03,0,3,2,0),4,LOAD,0,3,0,0);
@@ -862,16 +862,16 @@ module cpu5_fence_execution_tb #(
     check(case_fences==2 && case_reads==2 && case_writes==1,"FENCE preserves exact side-effect read and write order");
   endtask
 
-  /* unused FENCE.I fields never create operand dependencies or a destination write. */
+  // unused FENCE.I fields never create operand dependencies or a destination write.
   task automatic fencei_fields(input logic [31:0] raw);
     begin_case(); emit(raw,4,ZIFENCEI_ENABLED?FENCEI_OP:TRAP,0,0,0,0);
-    /* disabled builds report the complete original illegal instruction. */
+    // disabled builds report the complete original illegal instruction.
     if (!ZIFENCEI_ENABLED) begin program_ref[0].cause=2; program_ref[0].tval=0; end
     finish_program(); hold_fence=1; execute_program(0);
     check(case_fencei==int'(ZIFENCEI_ENABLED),"configured Zifencei presence");
   endtask
 
-  /* unsupported memory-order opcode functions remain precise illegal instructions. */
+  // unsupported memory-order opcode functions remain precise illegal instructions.
   task automatic illegal_fence(input int function_code);
     logic [31:0] raw;
     begin_case(); raw=32'h1230000f|32'(function_code<<12);
@@ -879,7 +879,7 @@ module cpu5_fence_execution_tb #(
     execute_program(1); check(case_fences==0 && case_fencei==0,"unsupported fence function rejected");
   endtask
 
-  /* an older rejected executable store traps before any younger synchronization. */
+  // an older rejected executable store traps before any younger synchronization.
   task automatic older_error;
     int fault_pc;
     begin_case(); enter_code(); load_constant(3,32'h10100); load_constant(4,32'h00900513);
@@ -892,13 +892,13 @@ module cpu5_fence_execution_tb #(
     check(case_code_writes==0 && case_fencei==0 && case_writes==0,"older store error cancels younger FENCE.I");
   endtask
 
-  /* external completion is established independently before CPU instruction synchronization. */
+  // external completion is established independently before CPU instruction synchronization.
   task automatic external_writer(input bit early);
     int poll_pc;
     logic [31:0] offset;
     begin_case(); enter_code(); dma_enabled=1; dma_early=early;
     load_constant(3,32'h40000010); poll_pc=builder_pc;
-    /* the correct protocol polls the writer's completion flag; the counterexample skips it. */
+    // the correct protocol polls the writer's completion flag; the counterexample skips it.
     if (!early) begin
       emit(enc_i('h03,4,3,2,0),4,LOAD,4,3,0,0);
       offset=32'hfffffffc;
@@ -911,42 +911,42 @@ module cpu5_fence_execution_tb #(
     image[image_index(victim_pc)]=16'h0513; image[image_index(victim_pc+2)]=16'h0010;
     dma_complete_edge=early?3000:250; unused_dma_start_edge=poll_pc;
     execute_program(0);
-    /* a CPU fence neither completes nor waits for an unrelated agent's pending write. */
+    // a CPU fence neither completes nor waits for an unrelated agent's pending write.
     if (early) begin
       check(!dma_done && regs_ref[10]==1,"CPU fence does not finish unrelated DMA"); early_examples++;
     end
     else check(dma_done && regs_ref[10]==9 && dma_reads>0,"completed DMA code is visible after instruction synchronization");
   endtask
 
-  /* finite, reproducible schedules require actual feature and stale-owner coverage. */
+  // finite, reproducible schedules require actual feature and stale-owner coverage.
   initial begin
-    /* initialize history before any failure can print it. */
+    // initialize history before any failure can print it.
     for (int n=0;n<32;n++) begin history_pc[n]=0; history_raw[n]=0; history_valid[n]=0; end
     if (!$value$plusargs("seed=%d",seed)) seed=1;
     rng=seed; program_rng=seed;
-    /* exercise visible modifications before unrelated detector calibration cases. */
+    // exercise visible modifications before unrelated detector calibration cases.
     if (ZIFENCEI_ENABLED) begin
       for (int mode=0;mode<5;mode++) self_modify(0,mode);
-      /* compressed tests cover narrow changes, straddles and both width transitions. */
+      // compressed tests cover narrow changes, straddles and both width transitions.
       if (C_ENABLED) begin
         self_modify(1,0); self_modify(2,2); self_modify(3,0); self_modify(4,0);
       end
       older_error(); external_writer(0); external_writer(1);
     end
     fence_fetch_fault(0,0); fence_fetch_fault(0,1);
-    /* straddled fence fetch faults preserve their original halfword instruction start. */
+    // straddled fence fetch faults preserve their original halfword instruction start.
     if (C_ENABLED) begin fence_fetch_fault(1,0); fence_fetch_fault(1,1); end
-    /* all predecessor/successor masks include empty, I/O/R/W and mixed domains. */
+    // all predecessor/successor masks include empty, I/O/R/W and mixed domains.
     for (int mask=0;mask<256;mask++) fence_masks((32'(mask)<<20)|32'h0000000f);
-    /* all fm values are safe under the documented stronger full barrier. */
+    // all fm values are safe under the documented stronger full barrier.
     for (int fm=0;fm<16;fm++) fence_masks((32'(fm)<<28)|32'h0330000f);
     fence_masks(32'h8330000f); fence_masks(32'h0100000f); fence_masks(32'hfffF8f8f);
-    /* exact unused field patterns remain legal even when source registers are undefined. */
+    // exact unused field patterns remain legal even when source registers are undefined.
     for (int field=0;field<32;field++) fencei_fields((32'(field*131)<<20)|(32'(31-field)<<15)|
         (32'(field)<<7)|32'h0000100f);
     for (int function_code=2;function_code<8;function_code++) illegal_fence(function_code);
     check(fence_retired==(ZIFENCEI_ENABLED?551:550),"all FENCE masks and modes retire");
-    /* enabled overlap builds must reach real obsolete buffered bytes and physical owners. */
+    // enabled overlap builds must reach real obsolete buffered bytes and physical owners.
     if (ZIFENCEI_ENABLED && !DIAGNOSTIC) begin
       check(old_snapshots>0 && buffered_old>0,"old instruction snapshots and buffers exercised");
       check(old_offers>0 && old_accepted>0 && old_errors>0 && same_edge_drops>0,

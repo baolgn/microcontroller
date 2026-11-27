@@ -27,6 +27,26 @@ missing_python = []
 missing_cpp = []
 cpp_scopes = 0
 sv_begin = sv_declarations = python_scopes = 0
+misstyled = []
+
+
+def audit_style(relative, content, comm):
+    """report one-line block comments and stacked whole-line // comments."""
+    previous = -1
+    # comments arrive in source order, so a stacked // line directly follows the last one.
+    for m in comm:
+        line = content.count('\n', 0, m.start()) + 1
+        # a block comment must span two or more lines.
+        if m.group().startswith('/*') and '\n' not in m.group():
+            misstyled.append([relative, line, 'one-line block comment'])
+        # consecutive whole-line // comments form one multi-line comment that needs a block.
+        elif m.group().startswith('//') and not content[content.rfind('\n', 0, m.start()) + 1:m.start()].strip():
+            # report each continuation line of the stacked comment.
+            if previous == line - 1:
+                misstyled.append([relative, line, 'stacked line comments'])
+            previous = line
+
+
 # parse strings separately so comment-like literals cannot count as explanations.
 for path in files:
     content = path.read_text()
@@ -37,6 +57,8 @@ for path in files:
         tokens = [m for m in pieces if not m.group().startswith(('/*', '//'))]
         comm = [m for m in pieces if m.group().startswith(('/*', '//'))]
         comments += [(relative, content.count('\n', 0, m.start()) + 1, m.group()) for m in comm]
+        audit_style(relative, content, comm)
+        ends = {m.start() + len(m.group().rstrip()) for m in comm}
         # include declaration scopes, conditionals, loops and named begin scopes.
         for index, token in enumerate(tokens):
             word = token.group()
@@ -45,7 +67,7 @@ for path in files:
                 sv_declarations += 1
                 preceding = content[:token.start()].rstrip()
                 # missing declaration context is an audit failure.
-                if not preceding.endswith('*/'):
+                if len(preceding) not in ends:
                     missing_sv.append([relative, content.count('\n', 0, token.start()) + 1, word])
             # an empty begin scope contains no behavior requiring an explanation.
             if word == 'begin':
@@ -119,6 +141,9 @@ for path in files:
         tokens = [m for m in pieces if not m.group().startswith(('/*', '//'))]
         comm = [m for m in pieces if m.group().startswith(('/*', '//'))]
         comments += [(relative, content.count('\n', 0, m.start()) + 1, m.group()) for m in comm]
+        # linker script syntax has no line comment, so its one-line comments stay blocks.
+        if path.suffix != '.ld':
+            audit_style(relative, content, comm)
         # inspect declarations and executable scopes without treating aggregate data as code.
         for index, token in enumerate(tokens):
             # empty scopes and initializer braces do not require behavioral context.
@@ -174,9 +199,10 @@ result = {
     'python_scopes': python_scopes, 'cpp_scopes': cpp_scopes,
     'methods': {
         'case': 'literal-aware SV extraction; Python tokenize comments and AST docstrings; uppercase acronyms and enumerated mixed-case names allowed',
-        'sv': 'preceding block comments for module/package/function/task/always/initial; token-aware nonempty begin context including loop headers',
+        'sv': 'a comment directly preceding module/package/function/task/always/initial; token-aware nonempty begin context including loop headers',
         'python': 'function/class docstring or preceding comment; comments before if/for/while/with/try/except and continuation suites',
         'cpp': 'literal-aware comments and nonempty executable/declaration braces; initializers excluded',
+        'style': 'SV, Verilog, C, C++ and assembly comments of one line use //; block comments span two or more lines, so one-line blocks and consecutive whole-line // comments are findings; linker scripts keep one-line blocks because their syntax has no line comment',
         'manual': 'new verification runners, formal fixtures, platform macros, execution capture and replay blocks reviewed for explanatory meaning',
         'limits': 'lexical checks do not prove prose truth or concision; single-statement SV arms and Makefile recipes require manual semantic judgment',
     },
@@ -185,10 +211,11 @@ result = {
     'missing_sv_context': missing_sv,
     'missing_python_context': missing_python,
     'missing_cpp_context': missing_cpp,
+    'misstyled_comments': misstyled,
     'source_sha256': {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
 }
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(result, indent=2) + '\n')
 # no unresolved lexical finding may be summarized as a passing audit.
-assert not unexpected and not missing_sv and not missing_python and not missing_cpp, 'comment audit findings remain'
+assert not unexpected and not missing_sv and not missing_python and not missing_cpp and not misstyled, 'comment audit findings remain'
 print(f'COMMENT_AUDIT_PASS files={len(files)} comments={len(comments)} SV_begin={sv_begin} Python_scopes={python_scopes}')

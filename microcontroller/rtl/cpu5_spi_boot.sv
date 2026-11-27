@@ -1,4 +1,4 @@
-/* validate persistent application banks before releasing the CPU from reset. */
+// validate persistent application banks before releasing the CPU from reset.
 module cpu5_spi_boot #(
   parameter logic [31:0] ROM_CRC32 = 32'b0,
   parameter integer HALF_PERIOD = 2,
@@ -39,18 +39,18 @@ module cpu5_spi_boot #(
   logic [31:0] assembled_word;
   logic unused_spi_state;
 
-  /* CRC-32/ISO-HDLC uses reflected polynomial, all-one initialization and final inversion. */
+  // CRC-32/ISO-HDLC uses reflected polynomial, all-one initialization and final inversion.
   function automatic logic [31:0] crc_byte(input logic [31:0] current, input logic [7:0] value);
     logic [31:0] next_crc;
     next_crc = current ^ {24'b0, value};
-    /* each received byte advances exactly eight polynomial steps. */
+    // each received byte advances exactly eight polynomial steps.
     for (integer bit_index = 0; bit_index < 8; bit_index = bit_index + 1) begin
       next_crc = (next_crc >> 1) ^ (next_crc[0] ? 32'hedb88320 : 32'b0);
     end
     return next_crc;
   endfunction
 
-  /* all transfers use standard SPI reads; this engine cannot program or erase flash. */
+  // all transfers use standard SPI reads; this engine cannot program or erase flash.
   cpu5_spi_read #(.HALF_PERIOD(HALF_PERIOD)) reader (
     .clk_i, .reset_i(reset_i || fault_o), .start_i(spi_start_q), .address_i(spi_address_q),
     .length_i(spi_length_q), .miso_i(flash_miso_i), .cs_n_o(flash_cs_n_o), .sck_o(flash_sck_o),
@@ -65,10 +65,10 @@ module cpu5_spi_boot #(
   assign done_o = state_q == COMPLETE;
   assign unused_spi_state = spi_busy;
 
-  /* header validity, word ownership and CRC state advance only on their actual handshakes. */
+  // header validity, word ownership and CRC state advance only on their actual handshakes.
   always_ff @(posedge clk_i) begin
     spi_start_q <= 0;
-    /* whole-platform reset is the only cancellation of an exposed boot memory write. */
+    // whole-platform reset is the only cancellation of an exposed boot memory write.
     if (reset_i) begin
       state_q <= INITIAL;
       force_a_q <= 0;
@@ -95,15 +95,15 @@ module cpu5_spi_boot #(
       write_data_o <= 0;
       fault_o <= 0;
       reason_o <= 0;
-    /* every boot attempt terminates in a validated image or a reset-held failure. */
+    // every boot attempt terminates in a validated image or a reset-held failure.
     end else begin
       case (state_q)
-        /* the surrounding board synchronizes a held recovery switch before this sample. */
+        // the surrounding board synchronizes a held recovery switch before this sample.
         INITIAL: begin
           force_a_q <= force_a_i;
           state_q <= HEADER_START;
         end
-        /* each bank header is read independently of application memory contents. */
+        // each bank header is read independently of application memory contents.
         HEADER_START: begin
           spi_address_q <= header_bank_q ? 24'h420000 : 24'h400000;
           spi_length_q <= 256;
@@ -114,13 +114,13 @@ module cpu5_spi_boot #(
           word_q <= 0;
           state_q <= HEADER_BYTES;
         end
-        /* malformed fields reject a bank without issuing any IRAM write. */
+        // malformed fields reject a bank without issuing any IRAM write.
         HEADER_BYTES: begin
-          /* byte order is little-endian for header words and payload words. */
+          // byte order is little-endian for header words and payload words.
           if (spi_valid) begin
             if (header_byte_q[1:0] != 3) word_q[header_byte_q[1:0]*8 +: 8] <= spi_byte;
             if (header_byte_q < 248) header_crc_q <= crc_byte(header_crc_q, spi_byte);
-            /* every fixed field and reserved word has one defined accepted value. */
+            // every fixed field and reserved word has one defined accepted value.
             if (header_byte_q[1:0] == 3) begin
               case (header_byte_q[7:2])
                 0: if (assembled_word != 32'h35555043) header_invalid_q <= 1;
@@ -135,14 +135,14 @@ module cpu5_spi_boot #(
                 default: if (assembled_word != 0) header_invalid_q <= 1;
               endcase
             end
-            /* the final reserved word is checked before the later commit marker. */
+            // the final reserved word is checked before the later commit marker.
             if (header_byte_q == 255) state_q <= HEADER_DONE;
             else header_byte_q <= header_byte_q + 1'b1;
           end
         end
-        /* separate transactions guarantee chip-select deselection between header and commit. */
+        // separate transactions guarantee chip-select deselection between header and commit.
         HEADER_DONE: if (spi_done) state_q <= COMMIT_START;
-        /* the commit lives in its own erase sector at the end of the 128 KiB bank. */
+        // the commit lives in its own erase sector at the end of the 128 KiB bank.
         COMMIT_START: begin
           spi_address_q <= header_bank_q ? 24'h43fffc : 24'h41fffc;
           spi_length_q <= 4;
@@ -151,49 +151,49 @@ module cpu5_spi_boot #(
           word_q <= 0;
           state_q <= COMMIT_BYTES;
         end
-        /* a torn or absent commit can never authorize payload execution. */
+        // a torn or absent commit can never authorize payload execution.
         COMMIT_BYTES: begin
-          /* accumulate the separately programmed four-byte marker. */
+          // accumulate the separately programmed four-byte marker.
           if (spi_valid) begin
             if (commit_byte_q != 3) word_q[commit_byte_q*8 +: 8] <= spi_byte;
-            /* header and commit must both be valid before bank selection. */
+            // header and commit must both be valid before bank selection.
             if (commit_byte_q == 3) begin
               header_valid_q[header_bank_q] <= !header_invalid_q && assembled_word == 32'h54494d43;
               state_q <= COMMIT_DONE;
             end else commit_byte_q <= commit_byte_q + 1'b1;
           end
         end
-        /* both header records are complete before applying generation ordering. */
+        // both header records are complete before applying generation ordering.
         COMMIT_DONE: begin
-          /* completion belongs only to the current reader command. */
+          // completion belongs only to the current reader command.
           if (spi_done) begin
-            /* inspect bank B even when bank A's header is invalid. */
+            // inspect bank B even when bank A's header is invalid.
             if (!header_bank_q) begin
               header_bank_q <= 1;
               state_q <= HEADER_START;
             end else state_q <= SELECT_BANK;
           end
         end
-        /* generations use ordinary unsigned ordering; equal generations select golden bank A. */
+        // generations use ordinary unsigned ordering; equal generations select golden bank A.
         SELECT_BANK: begin
-          /* forced recovery never silently executes bank B. */
+          // forced recovery never silently executes bank B.
           if (force_a_q && !header_valid_q[0]) begin
             fault_o <= 1;
             reason_o <= 2;
             state_q <= FAILED;
-          /* absent valid headers leave the independent configuration port as recovery. */
+          // absent valid headers leave the independent configuration port as recovery.
           end else if (header_valid_q == 0) begin
             fault_o <= 1;
             reason_o <= 1;
             state_q <= FAILED;
-          /* select one candidate, retaining the other only as a CRC-failure fallback. */
+          // select one candidate, retaining the other only as a CRC-failure fallback.
           end else begin
             selected_q <= !force_a_q && header_valid_q[1] &&
                 (!header_valid_q[0] || generation_q[1] > generation_q[0]);
             state_q <= PAYLOAD_START;
           end
         end
-        /* a complete 64 KiB payload overwrites every executable application word. */
+        // a complete 64 KiB payload overwrites every executable application word.
         PAYLOAD_START: begin
           spi_address_q <= selected_q ? 24'h420100 : 24'h400100;
           spi_length_q <= 65536;
@@ -204,14 +204,14 @@ module cpu5_spi_boot #(
           attempted_q[selected_q] <= 1;
           state_q <= PAYLOAD_BYTES;
         end
-        /* one assembled word is exposed only after all four bytes have arrived. */
+        // one assembled word is exposed only after all four bytes have arrived.
         PAYLOAD_BYTES: begin
-          /* the pending word stalls stream consumption until its memory response completes. */
+          // the pending word stalls stream consumption until its memory response completes.
           if (spi_valid) begin
             if (payload_byte_q[1:0] != 3) word_q[payload_byte_q[1:0]*8 +: 8] <= spi_byte;
             data_crc_q <= crc_byte(data_crc_q, spi_byte);
             payload_byte_q <= payload_byte_q + 1'b1;
-            /* stable aligned writes use the existing single-owner data-memory adapter. */
+            // stable aligned writes use the existing single-owner data-memory adapter.
             if (payload_byte_q[1:0] == 3) begin
               write_addr_o <= 32'h00010000 + {15'b0, payload_byte_q[16:2], 2'b0};
               write_data_o <= assembled_word;
@@ -221,41 +221,41 @@ module cpu5_spi_boot #(
             end
           end
         end
-        /* ready means completed response, not mere request acceptance. */
+        // ready means completed response, not mere request acceptance.
         WRITE_WAIT: begin
-          /* completed errors prevent release and cannot trigger unsafe replay. */
+          // completed errors prevent release and cannot trigger unsafe replay.
           if (write_ready_i) begin
             write_valid_o <= 0;
-            /* a failed target response cannot establish a valid executable image. */
+            // a failed target response cannot establish a valid executable image.
             if (write_error_i) begin
               fault_o <= 1;
               reason_o <= 4;
               state_q <= FAILED;
             end else state_q <= payload_byte_q == 65536 ? PAYLOAD_CHECK : PAYLOAD_BYTES;
-          /* an uncertain timeout retains the exposed word until a late response or isolated reset. */
+          // an uncertain timeout retains the exposed word until a late response or isolated reset.
           end else if (write_wait_q == WAIT_BITS'(WRITE_MAX_WAIT - 1)) begin
             fault_o <= 1;
             reason_o <= 5;
             state_q <= DRAIN;
           end else write_wait_q <= write_wait_q + 1'b1;
         end
-        /* release follows both the final write response and complete-payload CRC validation. */
+        // release follows both the final write response and complete-payload CRC validation.
         PAYLOAD_CHECK: begin
           if (~data_crc_q == payload_crc_q[selected_q]) state_q <= COMPLETE;
-          /* a rejected application is overwritten completely by the other committed candidate. */
+          // a rejected application is overwritten completely by the other committed candidate.
           else if (!force_a_q && header_valid_q[!selected_q] && !attempted_q[!selected_q]) begin
             selected_q <= !selected_q;
             state_q <= PAYLOAD_START;
-          /* corrupt forced recovery or two corrupt payloads remain safely halted. */
+          // corrupt forced recovery or two corrupt payloads remain safely halted.
           end else begin
             fault_o <= 1;
             reason_o <= 3;
             state_q <= FAILED;
           end
         end
-        /* a timeout never withdraws or replays an externally owned write. */
+        // a timeout never withdraws or replays an externally owned write.
         DRAIN: begin
-          /* late completion drains the original owner but cannot restore boot success. */
+          // late completion drains the original owner but cannot restore boot success.
           if (write_ready_i) begin
             write_valid_o <= 0;
             state_q <= FAILED;
@@ -267,7 +267,7 @@ module cpu5_spi_boot #(
   end
 
 `ifndef SYNTHESIS
-  /* finite write service is a platform assumption, not permission to cancel an owner. */
+  // finite write service is a platform assumption, not permission to cancel an owner.
   initial begin
     assert (WRITE_MAX_WAIT >= 1) else $fatal(1, "boot write bound must be positive");
   end

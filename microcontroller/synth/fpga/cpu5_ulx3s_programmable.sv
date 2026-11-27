@@ -1,4 +1,4 @@
-/* load validated flash applications without changing the persistent FPGA configuration. */
+// load validated flash applications without changing the persistent FPGA configuration.
 module cpu5_ulx3s_programmable #(
   parameter integer CLOCK_HZ = 25000000,
   parameter integer STAGE = 2,
@@ -23,29 +23,29 @@ module cpu5_ulx3s_programmable #(
   cpu5_control_pkg::trace_t trace_record;
   logic unused_observation;
 
-  /* actual clock and analysis profile are generated together by the qualified route driver. */
+  // actual clock and analysis profile are generated together by the qualified route driver.
   cpu5_board_pll pll (.clk25_i, .clk_cpu_o(clk_cpu), .locked_o(locked));
   assign reset_async = reset_btn_i || !locked;
   assign reset = reset_release_q[1];
   assign flash_hold_n_o = 1;
   assign flash_wp_n_o = 1;
 
-  /* keep SCK driven until a read abort has deselected flash; reset may terminate a read immediately. */
+  // keep SCK driven until a read abort has deselected flash; reset may terminate a read immediately.
   USRMCLK flash_clock (.USRMCLKI(flash_sck), .USRMCLKTS(reset || (!boot_busy && flash_cs_n_o)));
 
-  /* a held board reset or PLL loss asserts reset immediately; release waits two working clocks. */
+  // a held board reset or PLL loss asserts reset immediately; release waits two working clocks.
   always_ff @(posedge clk_cpu or posedge reset_async) begin
     if (reset_async) reset_release_q <= 2'b11;
     else reset_release_q <= {reset_release_q[0], 1'b0};
   end
 
-  /* the recovery button synchronizes even while reset is held, before the boot choice is sampled. */
+  // the recovery button synchronizes even while reset is held, before the boot choice is sampled.
   always_ff @(posedge clk_cpu) begin
     force_meta_q <= event_btn_i;
     force_sync_q <= force_meta_q;
   end
 
-  /* hardware performs read-only SPI validation; ordinary firmware has no flash-programming port. */
+  // hardware performs read-only SPI validation; ordinary firmware has no flash-programming port.
   cpu5_programmable_system #(.CLOCK_HZ(CLOCK_HZ), .ROM_FILE(ROM_FILE), .ROM_CRC32(32'h7309d786)) system (
     .clk_i(clk_cpu), .reset_i(reset), .force_a_i(force_sync_q), .flash_miso_i,
     .flash_cs_n_o, .flash_sck_o(flash_sck), .flash_mosi_o,
@@ -58,7 +58,7 @@ module cpu5_ulx3s_programmable #(
   );
 
 `ifndef SYNTHESIS
-  /* progressive earlier images use a separate top, never an ambiguous unsupported parameter. */
+  // progressive earlier images use a separate top, never an ambiguous unsupported parameter.
   initial begin
     assert (STAGE == 2) else $fatal(1, "programmable top supports stage two only");
   end

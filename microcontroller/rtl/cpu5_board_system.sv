@@ -1,4 +1,4 @@
-/* run the local CPU image with physical UART output and retained diagnostic interrupts. */
+// run the local CPU image with physical UART output and retained diagnostic interrupts.
 module cpu5_board_system #(
   parameter integer CLOCK_HZ = 80000000,
   parameter ROM_FILE = "rom.hex",
@@ -33,11 +33,11 @@ module cpu5_board_system #(
   logic [2:0] fetch_reason;
   cpu5_control_pkg::fatal_record_t core_record;
 
-  /* only rising synchronized button edges request source three; contact bounce may coalesce. */
+  // only rising synchronized button edges request source three; contact bounce may coalesce.
   assign events = {28'b0, event_sync_q && !event_previous_q,
                    output_valid_o && output_data_o == 8'h52 && !diagnostic_sent_q, 1'b0};
 
-  /* source two loops back only the first diagnostic request per reset, independently of UART drain. */
+  // source two loops back only the first diagnostic request per reset, independently of UART drain.
   cpu5_soc #(.ROM_FILE(ROM_FILE), .IRAM_FILE(IRAM_FILE), .DRAM_FILE(DRAM_FILE),
       .FORWARDING(FORWARDING)) soc (
     .clk_i, .reset_i, .isolated_i(reset_i), .permit_i(!uart_overflow_o), .hold_i(5'b0),
@@ -55,15 +55,15 @@ module cpu5_board_system #(
     .ext_pending_o(ext_pending), .ext_enable_o(ext_enable)
   );
 
-  /* the twenty-byte self-test burst fits without assuming CPU polling or serial service. */
+  // the twenty-byte self-test burst fits without assuming CPU polling or serial service.
   cpu5_uart_tx #(.CLOCK_HZ(CLOCK_HZ)) uart (
     .clk_i, .reset_i, .valid_i(output_valid_o), .data_i(output_data_o),
     .tx_o(uart_tx_o), .busy_o(uart_busy_o), .overflow_o(uart_overflow_o), .queued_o(uart_queued_o)
   );
 
-  /* a fabric heartbeat continues during WFI, CPU stalls and all exception handling. */
+  // a fabric heartbeat continues during WFI, CPU stalls and all exception handling.
   always_ff @(posedge clk_i) begin
-    /* the synchronous board reset initializes control only, never ordinary CPU storage. */
+    // the synchronous board reset initializes control only, never ordinary CPU storage.
     if (reset_i) begin
       event_meta_q <= 0;
       event_sync_q <= 0;
@@ -71,13 +71,13 @@ module cpu5_board_system #(
       heartbeat_count_q <= 0;
       heartbeat_q <= 0;
       diagnostic_sent_q <= 0;
-    /* synchronize the external button before forming a fabric-domain event. */
+    // synchronize the external button before forming a fabric-domain event.
     end else begin
       event_meta_q <= event_btn_i;
       event_sync_q <= event_meta_q;
       event_previous_q <= event_sync_q;
       if (output_valid_o && output_data_o == 8'h52) diagnostic_sent_q <= 1;
-      /* toggle at one hertz without gating the CPU or peripheral clocks. */
+      // toggle at one hertz without gating the CPU or peripheral clocks.
       if (heartbeat_count_q == HEARTBEAT - 1) begin
         heartbeat_count_q <= 0;
         heartbeat_q <= !heartbeat_q;
@@ -85,7 +85,7 @@ module cpu5_board_system #(
     end
   end
 
-  /* LEDs expose activity, verdict, containment and output congestion. */
+  // LEDs expose activity, verdict, containment and output congestion.
   assign led_o = {reset_i, uart_overflow_o, fatal_o, status_o == 3,
                   status_o == 1 && !fatal_o && !uart_overflow_o, uart_busy_o, idle_o, heartbeat_q};
   assign unused_observation = ^{iv, ir, ia, it, ip, rv, rr, rt, rd, rp, rf, rs,

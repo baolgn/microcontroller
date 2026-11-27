@@ -1,4 +1,4 @@
-/* compare decoded transfers with independent widened arithmetic in both modes. */
+// compare decoded transfers with independent widened arithmetic in both modes.
 module cpu5_branch_tb;
   logic [31:0] pc_i, rs1_i, rs2_i, imm_i;
   logic [3:0] kind_i;
@@ -13,7 +13,7 @@ module cpu5_branch_tb;
     32'hfffffffc, 32'hfffffffe, 32'hffffffff, 32'h55aa55aa
   };
 
-  /* optional short lengths exercise future decoded micro-ops, not a C decoder. */
+  // optional short lengths exercise future decoded micro-ops, not a C decoder.
   for (genvar c = 0; c < 2; c = c + 1) begin : configs
     cpu5_branch #(.C_ENABLED(c != 0)) dut (
       .pc_i, .rs1_i, .rs2_i, .imm_i, .kind_i, .cond_i, .length_i,
@@ -22,15 +22,15 @@ module cpu5_branch_tb;
     );
   end
 
-  /* count every checked field and fail with the responsible input values. */
+  // count every checked field and fail with the responsible input values.
   task automatic check(input bit condition, input string label_text);
     checks = checks + 1;
-    /* parser errors and unrelated exits cannot satisfy this comparator signature. */
+    // parser errors and unrelated exits cannot satisfy this comparator signature.
     if (!condition) $fatal(1, "BRANCH_CHECK_FAILED %s pc=%h a=%h b=%h imm=%h kind=%d cond=%d len=%d",
                           label_text, pc_i, rs1_i, rs2_i, imm_i, kind_i, cond_i, length_i);
   endtask
 
-  /* a local generator makes traffic reproducible without simulator random state. */
+  // a local generator makes traffic reproducible without simulator random state.
   task automatic random_word(output logic [31:0] value);
     random_state = random_state ^ (random_state << 13);
     random_state = random_state ^ (random_state >> 17);
@@ -38,7 +38,7 @@ module cpu5_branch_tb;
     value = random_state;
   endtask
 
-  /* use signed 64-bit values and modulo arithmetic independently of DUT logic. */
+  // use signed 64-bit values and modulo arithmetic independently of DUT logic.
   task automatic compare;
     longint signed a_signed, b_signed;
     longint unsigned target_wide, link_wide;
@@ -48,7 +48,7 @@ module cpu5_branch_tb;
     b_signed = $signed({{32{rs2_i[31]}}, rs2_i});
     compare_value = 0;
     condition_ok = 1;
-    /* each legal condition uses its direct mathematical relation. */
+    // each legal condition uses its direct mathematical relation.
     case (cond_i)
       0: compare_value = a_signed == b_signed;
       1: compare_value = a_signed != b_signed;
@@ -59,20 +59,20 @@ module cpu5_branch_tb;
       default: condition_ok = 0;
     endcase
     #1;
-    /* invalid fields and both alignment modes are checked for every stimulus. */
+    // invalid fields and both alignment modes are checked for every stimulus.
     for (int c = 0; c < 2; c = c + 1) begin
       expected_valid = (length_i == 4 || (c != 0 && length_i == 2)) &&
                        (kind_i == 5 || kind_i == 6 || (kind_i == 7 && condition_ok));
       expected_taken = 0; expected_target = 0; expected_link = 0;
       expected_next = 0; expected_fault = 0;
-      /* retain diagnostic arithmetic on a valid misaligned transfer. */
+      // retain diagnostic arithmetic on a valid misaligned transfer.
       if (expected_valid) begin
         target_wide = (kind_i == 6 ? {32'b0, rs1_i} : {32'b0, pc_i}) + {32'b0, imm_i};
         link_wide = {32'b0, pc_i} + {61'b0, length_i};
         check(target_wide <= 64'h1fffffffe && link_wide <= 64'h100000006,
               "reference arithmetic range");
         expected_target = target_wide[31:0];
-        /* JALR rounds down only after the modulo address addition. */
+        // JALR rounds down only after the modulo address addition.
         if (kind_i == 6) expected_target = (expected_target / 2) * 2;
         expected_link = link_wide[31:0];
         expected_taken = kind_i == 7 ? compare_value : 1;
@@ -90,34 +90,34 @@ module cpu5_branch_tb;
     cases = cases + 1;
   endtask
 
-  /* combine directed alias examples, boundary products and full-width random words. */
+  // combine directed alias examples, boundary products and full-width random words.
   initial begin
     mutate_target = $test$plusargs("mutate_target");
     pc_i = 32'h100; rs1_i = 32'h80000001; rs2_i = 0; imm_i = 2;
     kind_i = 6; cond_i = 3; length_i = 4;
     compare();
-    /* rd=rs1 callers retain this old operand until the independently computed link commits. */
+    // rd=rs1 callers retain this old operand until the independently computed link commits.
     check(target_o[1] == 32'h80000002 && link_o[1] == 32'h104,
           "JALR uses captured source rather than link");
-    /* an odd untaken conditional target must not produce a target-alignment fault. */
+    // an odd untaken conditional target must not produce a target-alignment fault.
     pc_i = 0; rs1_i = 0; rs2_i = 1; imm_i = 1; kind_i = 7; cond_i = 0;
     compare();
     check(!misaligned_o[0] && !taken_o[0] && next_pc_o[0] == 4, "untaken target ignored");
-    /* exhaust signs, equality, wrap, negative offsets, condition codes and all lengths. */
+    // exhaust signs, equality, wrap, negative offsets, condition codes and all lengths.
     for (int a = 0; a < 12; a = a + 1) begin
-      /* boundary pairs include both signed overflow directions. */
+      // boundary pairs include both signed overflow directions.
       for (int b = 0; b < 12; b = b + 1) begin
-        /* each immediate also changes the independent instruction PC. */
+        // each immediate also changes the independent instruction PC.
         for (int offset = 0; offset < 12; offset = offset + 1) begin
           pc_i = VALUES[(offset + 5) % 12];
           rs1_i = VALUES[a]; rs2_i = VALUES[b]; imm_i = VALUES[offset];
-          /* include every operation selector so unsupported kinds have benign outputs. */
+          // include every operation selector so unsupported kinds have benign outputs.
           for (int operation = 0; operation < 16; operation = operation + 1) begin
             kind_i = 4'(operation);
-            /* invalid condition values are active only for conditional transfers. */
+            // invalid condition values are active only for conditional transfers.
             for (int condition = 0; condition < 8; condition = condition + 1) begin
               cond_i = 3'(condition);
-              /* unsupported original widths must reject every kind. */
+              // unsupported original widths must reject every kind.
               for (int length = 0; length < 8; length = length + 1) begin
                 length_i = 3'(length);
                 compare();
@@ -127,7 +127,7 @@ module cpu5_branch_tb;
         end
       end
     end
-    /* exercise arbitrary addresses and full-width signed operands after the boundaries. */
+    // exercise arbitrary addresses and full-width signed operands after the boundaries.
     for (int sample = 0; sample < 20000; sample = sample + 1) begin
       logic [31:0] selectors;
       random_word(pc_i); random_word(rs1_i); random_word(rs2_i); random_word(imm_i);

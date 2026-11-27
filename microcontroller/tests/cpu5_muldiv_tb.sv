@@ -1,4 +1,4 @@
-/* compare RV32M against widened host arithmetic and an independent lifecycle oracle. */
+// compare RV32M against widened host arithmetic and an independent lifecycle oracle.
 module cpu5_muldiv_tb;
   logic clk_i = 0, cold_reset_i = 1, start_i = 0, ready_i = 0;
   logic [2:0] op_i = 0;
@@ -23,7 +23,7 @@ module cpu5_muldiv_tb;
     32'hffffffff, 32'h55555555, 32'haaaaaaaa, 32'hffff0000
   };
 
-  /* retain a compact public-interface trace before any assertion failure. */
+  // retain a compact public-interface trace before any assertion failure.
   typedef struct packed {
     logic reset, start, ready, busy, valid;
     logic [2:0] op;
@@ -32,17 +32,17 @@ module cpu5_muldiv_tb;
   } sample_t;
   sample_t history [0:63];
 
-  /* the unit has no pipeline reset, cancellation, or debug control port. */
+  // the unit has no pipeline reset, cancellation, or debug control port.
   cpu5_muldiv dut (.*);
 
-  /* every comparison reports a reproducible job and the preceding 64 sampled edges. */
+  // every comparison reports a reproducible job and the preceding 64 sampled edges.
   task automatic check(input bit condition, input string label_text);
     checks++;
-    /* terminate on the first mismatch before any subsequent job can obscure it. */
+    // terminate on the first mismatch before any subsequent job can obscure it.
     if (!condition) begin
-      /* emit samples in temporal order, including idle and reset boundaries. */
+      // emit samples in temporal order, including idle and reset boundaries.
       for (int offset = 63; offset >= 0; offset--) begin
-        /* startup has fewer than 64 initialized samples. */
+        // startup has fewer than 64 initialized samples.
         if (edges > unsigned'(offset)) begin
           $display("MULDIV_TRACE edge=%0d state=%h", edges - unsigned'(offset),
                    history[(edges - unsigned'(offset)) % 64]);
@@ -54,7 +54,7 @@ module cpu5_muldiv_tb;
     end
   endtask
 
-  /* sample after nonblocking updates without depending on simulator scheduling order. */
+  // sample after nonblocking updates without depending on simulator scheduling order.
   task automatic tick;
     #5;
     clk_i = 1;
@@ -66,13 +66,13 @@ module cpu5_muldiv_tb;
     clk_i = 0;
   endtask
 
-  /* the LCG accepts seed zero and is independent of Verilator's initialization RNG. */
+  // the LCG accepts seed zero and is independent of Verilator's initialization RNG.
   function automatic logic [31:0] random_word;
     random_state = random_state * 32'd1664525 + 32'd1013904223;
     return random_state;
   endfunction
 
-  /* 64-bit division avoids host overflow at the RV32 signed minimum. */
+  // 64-bit division avoids host overflow at the RV32 signed minimum.
   function automatic logic [31:0] reference_result(input logic [2:0] operation,
       input logic [31:0] lhs, rhs);
     logic [63:0] unsigned_product;
@@ -81,28 +81,28 @@ module cpu5_muldiv_tb;
     signed_lhs = {{32{lhs[31]}}, lhs};
     signed_rhs = {{32{rhs[31]}}, rhs};
     mixed_rhs = $signed({32'b0, rhs});
-    /* full-width host operators differ from the DUT's partial products and restoring steps. */
+    // full-width host operators differ from the DUT's partial products and restoring steps.
     case (operation)
       0: return unsigned_product[31:0];
-      /* signed widening defines the high product independently of correction terms. */
+      // signed widening defines the high product independently of correction terms.
       1: begin
         return 32'((signed_lhs * signed_rhs) >>> 32);
       end
-      /* only the lhs is sign-extended for mixed multiplication. */
+      // only the lhs is sign-extended for mixed multiplication.
       2: begin
         return 32'((signed_lhs * mixed_rhs) >>> 32);
       end
       3: return unsigned_product[63:32];
-      /* signed quotient truncates toward zero. */
+      // signed quotient truncates toward zero.
       4: begin
-        /* zero division is specified by the ISA, never delegated to host behavior. */
+        // zero division is specified by the ISA, never delegated to host behavior.
         if (rhs == 0) return 32'hffffffff;
         return 32'(signed_lhs / signed_rhs);
       end
       5: return rhs == 0 ? 32'hffffffff : lhs / rhs;
-      /* signed modulo retains the dividend's sign. */
+      // signed modulo retains the dividend's sign.
       6: begin
-        /* widened modulo produces the signed remainder, including RV32 overflow. */
+        // widened modulo produces the signed remainder, including RV32 overflow.
         if (rhs == 0) return lhs;
         return 32'(signed_lhs % signed_rhs);
       end
@@ -110,7 +110,7 @@ module cpu5_muldiv_tb;
     endcase
   endfunction
 
-  /* vary irrelevant inputs to catch accidental recomputation from live operands. */
+  // vary irrelevant inputs to catch accidental recomputation from live operands.
   task automatic scramble_inputs;
     lhs_i = random_word();
     rhs_i = random_word();
@@ -118,7 +118,7 @@ module cpu5_muldiv_tb;
     uid_i = {random_word(), random_word()};
   endtask
 
-  /* execute one job with explicit latency, identity, backpressure, and single-consumption checks. */
+  // execute one job with explicit latency, identity, backpressure, and single-consumption checks.
   task automatic execute(input logic [2:0] operation, input logic [31:0] lhs, rhs,
       input int unsigned hold_cycles, input bit early_ready);
     int unsigned latency;
@@ -142,7 +142,7 @@ module cpu5_muldiv_tb;
     tick();
     check(busy_o && !valid_o && uid_o == active_uid, "atomic acceptance");
     start_i = 0;
-    /* a legal caller may already request consumption while arithmetic is unfinished. */
+    // a legal caller may already request consumption while arithmetic is unfinished.
     for (int unsigned elapsed = 1; elapsed <= latency; elapsed++) begin
       active_elapsed = elapsed;
       scramble_inputs();
@@ -158,7 +158,7 @@ module cpu5_muldiv_tb;
     check(observed_result == wanted, "arithmetic result");
     latency_min[operation] = latency < latency_min[operation] ? latency : latency_min[operation];
     latency_max[operation] = latency > latency_max[operation] ? latency : latency_max[operation];
-    /* result backpressure cannot release ownership or alter either public result field. */
+    // result backpressure cannot release ownership or alter either public result field.
     for (int unsigned held = 0; held < hold_cycles; held++) begin
       scramble_inputs();
       tick();
@@ -178,7 +178,7 @@ module cpu5_muldiv_tb;
     early_ready_cases += int'(early_ready);
   endtask
 
-  /* cold reset must remove every unfinished or held identity before a fresh job. */
+  // cold reset must remove every unfinished or held identity before a fresh job.
   task automatic reset_during(input logic [2:0] operation, input int unsigned elapsed);
     start_i = 1;
     ready_i = 0;
@@ -188,12 +188,12 @@ module cpu5_muldiv_tb;
     uid_i = 64'hffff1234ffff5678;
     tick();
     start_i = 0;
-    /* include every arithmetic edge and the first held-result edge. */
+    // include every arithmetic edge and the first held-result edge.
     repeat (elapsed) begin
       tick();
     end
     cold_reset_i = 1;
-    /* reset wins even over a simultaneous new command. */
+    // reset wins even over a simultaneous new command.
     start_i = 1;
     tick();
     check(!busy_o && !valid_o && uid_o == 0 && result_o == 0, "cold reset ownership");
@@ -205,9 +205,9 @@ module cpu5_muldiv_tb;
     execute(3'(elapsed % 8), 32'h87654321, 32'hffff0003, elapsed % 4, 1);
   endtask
 
-  /* boundary cross-products precede random coverage so all special cases are deterministic. */
+  // boundary cross-products precede random coverage so all special cases are deterministic.
   initial begin
-    /* seed zero is a distinct reproducible stream. */
+    // seed zero is a distinct reproducible stream.
     if (!$value$plusargs("seed=%d", seed)) begin
       seed = 1;
     end
@@ -220,7 +220,7 @@ module cpu5_muldiv_tb;
     tick();
     check(!busy_o && !valid_o && result_o == 0 && uid_o == 0, "initial reset");
     cold_reset_i = 0;
-    /* this deliberate contract violation must activate the unit assertion. */
+    // this deliberate contract violation must activate the unit assertion.
     if (misuse_start) begin
       start_i = 1;
       op_i = 4;
@@ -228,20 +228,20 @@ module cpu5_muldiv_tb;
       tick();
       $fatal(1, "missing busy-start assertion");
     end
-    /* every signedness flavor sees every pair of critical 32-bit values. */
+    // every signedness flavor sees every pair of critical 32-bit values.
     for (int operation = 0; operation < 8; operation++) begin
-      /* include both operand positions; MULHSU is deliberately asymmetric. */
+      // include both operand positions; MULHSU is deliberately asymmetric.
       for (int lhs = 0; lhs < 16; lhs++) begin
-        /* zero, signed extrema, limb boundaries, and dense patterns are independent. */
+        // zero, signed extrema, limb boundaries, and dense patterns are independent.
         for (int rhs = 0; rhs < 16; rhs++) begin
           execute(3'(operation), BOUNDARY[lhs], BOUNDARY[rhs], unsigned'(lhs + rhs) % 8,
                   (lhs + rhs) % 2 != 0);
         end
       end
     end
-    /* random operands and result stalls use a retained seed rather than wall-clock entropy. */
+    // random operands and result stalls use a retained seed rather than wall-clock entropy.
     repeat (8192) begin
-      /* each random round exercises every opcode for equal coverage. */
+      // each random round exercises every opcode for equal coverage.
       for (int operation = 0; operation < 8; operation++) begin
         logic [31:0] random_lhs, random_rhs;
         logic [3:0] flags;
@@ -251,17 +251,17 @@ module cpu5_muldiv_tb;
         execute(3'(operation), random_lhs, random_rhs, 32'(flags[2:0]), flags[3]);
       end
     end
-    /* reset covers the multiplier's two stages, divider's 33 stages, and held results. */
+    // reset covers the multiplier's two stages, divider's 33 stages, and held results.
     for (int operation = 0; operation < 8; operation++) begin
-      /* varying ready never shortens computation, including a zero divisor. */
+      // varying ready never shortens computation, including a zero divisor.
       for (int elapsed = 0; elapsed <= (operation < 4 ? 3 : 34); elapsed++) begin
         reset_during(3'(operation), unsigned'(elapsed));
       end
     end
-    /* explicit long stalls exercise result lifetime beyond the arithmetic bound. */
+    // explicit long stalls exercise result lifetime beyond the arithmetic bound.
     execute(2, 32'hffffffff, 32'hffffffff, 257, 1);
     execute(4, 32'h80000000, 0, 257, 1);
-    /* completeness counters must not silently shrink after fixture changes. */
+    // completeness counters must not silently shrink after fixture changes.
     for (int operation = 0; operation < 8; operation++) begin
       check(op_cases[operation] >= 8448, "opcode coverage");
       check(latency_min[operation] == (operation < 4 ? 2 : 33) &&

@@ -1,4 +1,4 @@
-/* compose the CPU, Debug Module and JTAG transport with ordered reset and SBA guards. */
+// compose the CPU, Debug Module and JTAG transport with ordered reset and SBA guards.
 module cpu5_debug_system #(
   parameter logic [31:0] JTAG_IDCODE = 32'h00000001,
   parameter integer MAX_WAIT_CYCLES = 128
@@ -81,13 +81,13 @@ module cpu5_debug_system #(
   fatal_record_t fatal_record;
   logic unused_observation;
 
-  /* assert domain reset asynchronously and release it only on fabric clock edges. */
+  // assert domain reset asynchronously and release it only on fabric clock edges.
   always_ff @(posedge clk_i or posedge power_reset_i) begin
     if (power_reset_i) fabric_reset_q <= 2'b11;
     else fabric_reset_q <= {fabric_reset_q[0], 1'b0};
   end
 
-  /* a simulation IDCODE is not an assigned physical-board JTAG identity. */
+  // a simulation IDCODE is not an assigned physical-board JTAG identity.
   cpu5_debug_transport #(.IDCODE(JTAG_IDCODE)) transport (
     .clk_i, .power_reset_i, .tck_i, .tms_i, .tdi_i, .tdo_o,
     .dmi_req_valid_o(dmi_req_valid), .dmi_req_ready_i(dmi_req_ready),
@@ -96,7 +96,7 @@ module cpu5_debug_system #(
     .dmi_rsp_data_i(dmi_rdata), .dmi_rsp_op_i(dmi_rsp_op)
   );
 
-  /* the DM survives non-debug reset and exposes actual hart availability. */
+  // the DM survives non-debug reset and exposes actual hart availability.
   cpu5_debug_module dm (
     .clk_i, .power_reset_i(fabric_reset_q[1]), .hart_reset_i(reset_q),
     .system_reset_pending_i(reset_pending_q),
@@ -115,7 +115,7 @@ module cpu5_debug_system #(
     .sb_rsp_rdata_i(dm_sb_rdata), .sb_rsp_error_i(dm_sb_error)
   );
 
-  /* latched SBA admission survives permission changes until its original reply. */
+  // latched SBA admission survives permission changes until its original reply.
   cpu5_lsu #(.IRAM_WRITE(1), .TIMER_ENABLED(1)) sba_guard (
     .addr_i(sb_req_addr_o), .store_value_i(32'b0), .rsp_data_i(32'b0), .size_i(sb_req_size_o),
     .write_i(sb_req_write_o), .signed_i(1'b0), .allowed_o(sb_region_allowed),
@@ -138,11 +138,11 @@ module cpu5_debug_system #(
   assign system_reset_o = reset_q;
   assign irq_event_o = {irq_valid, irq_pc, irq_cause, mtvec};
 
-  /* reset and resume cannot abandon an exposed SBA operation or reuse its effects. */
+  // reset and resume cannot abandon an exposed SBA operation or reuse its effects.
   always_ff @(posedge clk_i) begin
-    /* preserve successful and rejected abstract accesses independently of retirement. */
+    // preserve successful and rejected abstract accesses independently of retirement.
     debug_access_o <= {reg_valid && reg_ready, reg_error, reg_write, reg_addr, reg_wdata, reg_rdata};
-    /* only positively isolated power reset revokes external transaction ownership. */
+    // only positively isolated power reset revokes external transaction ownership.
     if (fabric_reset_q[1]) begin
       assert (isolated_i) else $fatal(1, "debug power reset requires isolation");
       sb_owned_q <= 0;
@@ -154,39 +154,39 @@ module cpu5_debug_system #(
       reset_pending_q <= 0;
       containment_q <= 0;
       debug_access_o <= 0;
-    /* normal operation retains outstanding reset and transaction obligations. */
+    // normal operation retains outstanding reset and transaction obligations.
     end else begin
-      /* registered containment breaks status-feedback paths and remains sticky. */
+      // registered containment breaks status-feedback paths and remains sticky.
       if (fatal_o) containment_q <= 1;
-      /* a target must not save an unowned reply for a future SBA descriptor. */
+      // a target must not save an unowned reply for a future SBA descriptor.
       if (sb_rsp_valid_i && (!sb_owned_q || sb_denied_q || !sb_accepted_q ||
           sb_rsp_error_i == 5 || sb_rsp_error_i == 6)) sb_fatal_q <= 1;
-      /* evaluate access once, before exposing the request to a peripheral. */
+      // evaluate access once, before exposing the request to a peripheral.
       if (dm_sb_valid && !sb_owned_q) begin
         sb_owned_q <= 1;
         sb_denied_q <= !sb_permitted;
         sb_accepted_q <= 0;
         sb_age_q <= 0;
       end
-      /* timeout contains an uncertain owner without inventing a completion or retry. */
+      // timeout contains an uncertain owner without inventing a completion or retry.
       if (sb_owned_q && !(dm_sb_response && dm_sb_response_ready)) begin
         if (sb_age_q == SBA_AGE_BITS'(MAX_WAIT_CYCLES - 1)) sb_fatal_q <= 1;
         else if (!sb_fatal_q) sb_age_q <= sb_age_q + 1'b1;
       end
-      /* denial is also a two-phase accepted request and one response. */
+      // denial is also a two-phase accepted request and one response.
       if (dm_sb_valid && dm_sb_ready) sb_accepted_q <= 1;
-      /* uncertain completion survives DM reset and prohibits resume until recovery. */
+      // uncertain completion survives DM reset and prohibits resume until recovery.
       if (dm_sb_response && dm_sb_response_ready) begin
         sb_owned_q <= 0;
         sb_accepted_q <= 0;
         if (dm_sb_error == 7 || dm_sb_error == 1) sb_fatal_q <= 1;
       end
-      /* non-debug reset waits for CPU and SBA owners; clocks continue throughout. */
+      // non-debug reset waits for CPU and SBA owners; clocks continue throughout.
       if (dm_reset) reset_pending_q <= 1;
-      /* even a short control request causes at least one actual drained reset edge. */
+      // even a short control request causes at least one actual drained reset edge.
       if ((reset_pending_q || dm_reset) && !reset_q &&
           ((halted_o && !fetch_busy && !mem_busy && !sb_owned_q && !dm_sb_valid) || isolated_i)) reset_q <= 1;
-      /* after one actual reset edge, deassertion releases the request obligation. */
+      // after one actual reset edge, deassertion releases the request obligation.
       if (reset_q && !dm_reset) begin
         reset_q <= 0;
         reset_pending_q <= 0;
@@ -194,7 +194,7 @@ module cpu5_debug_system #(
     end
   end
 
-  /* redirect generation rejects pre-halt instruction parcels on every resume. */
+  // redirect generation rejects pre-halt instruction parcels on every resume.
   cpu5_frontend #(.C_ENABLED(1), .GEN_BITS(2), .MAX_WAIT_CYCLES(MAX_WAIT_CYCLES)) frontend (
     .clk_i, .cold_reset_i(fabric_reset_q[1]), .isolated_i, .hart_reset_i(reset_q),
     .permit_i(!halted_o && !reset_q), .entry_pending_i(entry_pending),
@@ -208,7 +208,7 @@ module cpu5_debug_system #(
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* direct abstract access is confined to halted state inside the core. */
+  // direct abstract access is confined to halted state inside the core.
   cpu5_control #(.C_ENABLED(1), .M_ENABLED(1), .IRQ_ENABLED(1), .TIMER_ENABLED(1),
       .ZIFENCEI_ENABLED(1), .IRAM_WRITE(1), .DIAGNOSTIC(0), .DEBUG_ENABLED(1),
       .D_MAX_WAIT_CYCLES(MAX_WAIT_CYCLES)) core (
@@ -235,7 +235,7 @@ module cpu5_debug_system #(
     .debug_reg_rdata_o(reg_rdata), .debug_reg_error_o(reg_error)
   );
 
-  /* optional internal observations have no feedback into execution. */
+  // optional internal observations have no feedback into execution.
   assign unused_observation = ^{idle, stages, kills, stage_tokens[0], stage_tokens[1], stage_tokens[2],
       stage_tokens[3], stage_tokens[4], kill_uids[0], kill_uids[1], kill_uids[2], kill_uids[3], kill_uids[4],
       transfers, fetch_generation, packet_generation, fetch_discard, fetch_launch, fetch_accept, fetch_complete,

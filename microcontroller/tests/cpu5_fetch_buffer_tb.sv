@@ -1,4 +1,4 @@
-/* check fetch framing independently of the external transaction manager. */
+// check fetch framing independently of the external transaction manager.
 module cpu5_fetch_buffer_tb;
   logic clk = 0;
   logic reset [0:1], restart [0:1], fill_valid [0:1], ready [0:1];
@@ -15,7 +15,7 @@ module cpu5_fetch_buffer_tb;
   logic [31:0] observed_raw;
   bit mutate_raw;
 
-  /* exercise the default 32-bit configuration and optional framing separately. */
+  // exercise the default 32-bit configuration and optional framing separately.
   for (genvar c = 0; c < 2; c = c + 1) begin : configs
     cpu5_fetch_buffer #(.C_FETCH(c != 0)) dut (
       .clk_i(clk), .reset_i(reset[c]), .restart_i(restart[c]),
@@ -32,20 +32,20 @@ module cpu5_fetch_buffer_tb;
     );
   end
 
-  /* use explicit edges so read-side checks cannot hide an extra clock. */
+  // use explicit edges so read-side checks cannot hide an extra clock.
   task automatic tick;
     #5; clk = 1; #5; clk = 0;
     edges = edges + 1;
   endtask
 
-  /* make every failed comparison identify this checker rather than a tool crash. */
+  // make every failed comparison identify this checker rather than a tool crash.
   task automatic check(input bit condition, input string label_text);
     checks = checks + 1;
-    /* terminate at the first independently observed mismatch. */
+    // terminate at the first independently observed mismatch.
     if (!condition) $fatal(1, "FETCH_BUFFER_CHECK_FAILED %s edge=%0d", label_text, edges);
   endtask
 
-  /* invalidation masks same-edge valid and discards all earlier buffered bytes. */
+  // invalidation masks same-edge valid and discards all earlier buffered bytes.
   task automatic new_stream(input bit c, input logic [31:0] start_pc, input logic [7:0] gen);
     restart_pc[c] = start_pc;
     restart_generation[c] = gen;
@@ -60,12 +60,12 @@ module cpu5_fetch_buffer_tb;
     #1;
   endtask
 
-  /* compare the exact missing required parcel set before supplying a reply. */
+  // compare the exact missing required parcel set before supplying a reply.
   task automatic expect_need(input bit c, input logic [31:0] addr, input logic [1:0] mask);
     check(need_valid[c] && need_addr[c] == addr && need_parcels[c] == mask, "required parcel request");
   endtask
 
-  /* inject only captured live outcomes; bus ownership is tested in the manager suite. */
+  // inject only captured live outcomes; bus ownership is tested in the manager suite.
   task automatic fill(input bit c, input logic [31:0] addr, input logic [1:0] mask,
                       input logic [31:0] data, input logic [1:0] errors, input logic [7:0] gen);
     fill_valid[c] = 1;
@@ -79,7 +79,7 @@ module cpu5_fetch_buffer_tb;
     #1;
   endtask
 
-  /* compare all public packet fields with independent expected instruction bytes. */
+  // compare all public packet fields with independent expected instruction bytes.
   task automatic expect_packet(input bit c, input logic [31:0] expected_pc,
       input logic [31:0] expected_raw, input logic [3:0] expected_mask,
       input logic [1:0] expected_kind, input bit expected_supported,
@@ -94,14 +94,14 @@ module cpu5_fetch_buffer_tb;
           cause[c] == expected_cause && mtval[c] == expected_mtval, "packet metadata");
   endtask
 
-  /* a transferred terminal packet parks until a new stream is explicitly selected. */
+  // a transferred terminal packet parks until a new stream is explicitly selected.
   task automatic consume(input bit c, input bit park);
     ready[c] = 1;
     tick();
     ready[c] = 0;
     #1;
     check(!valid[c], "one output transfer");
-    /* terminal output never advances using an invented unsupported length. */
+    // terminal output never advances using an invented unsupported length.
     if (park) begin
       check(!need_valid[c], "terminal packet parks fetch");
       tick();
@@ -109,10 +109,10 @@ module cpu5_fetch_buffer_tb;
     end
   endtask
 
-  /* exercise directed edge cases before exhaustively checking prefix framing. */
+  // exercise directed edge cases before exhaustively checking prefix framing.
   initial begin
     mutate_raw = $test$plusargs("mutate_raw");
-    /* establish every input before the first synchronous reset edge. */
+    // establish every input before the first synchronous reset edge.
     for (int c = 0; c < 2; c = c + 1) begin
       reset[c] = 1; restart[c] = 0; fill_valid[c] = 0; ready[c] = 0;
       restart_pc[c] = 0; restart_generation[c] = 0;
@@ -126,25 +126,25 @@ module cpu5_fetch_buffer_tb;
     check(!valid[0], "assembly uses the following edge");
     tick();
     expect_packet(0, 0, 32'h12340013, 15, 2, 1, 4, 1, 0, 0, 0);
-    /* backpressure, duplicate data and stale generations cannot mutate the packet. */
+    // backpressure, duplicate data and stale generations cannot mutate the packet.
     for (int hold_cycle = 0; hold_cycle < 5; hold_cycle = hold_cycle + 1) begin
       fill(0, 0, 3, 32'hffffffff, 3, 8'(hold_cycle + 1));
       expect_packet(0, 0, 32'h12340013, 15, 2, 1, 4, 1, 0, 0, 0);
     end
     consume(0, 0);
     expect_need(0, 4, 3);
-    /* a successful upper parcel remains observable after a non-C first fault. */
+    // a successful upper parcel remains observable after a non-C first fault.
     fill(0, 4, 3, 32'hbeef0000, 1, 1);
     tick();
     expect_packet(0, 4, 32'hbeef0000, 12, 0, 0, 0, 1, 1, 1, 4);
     consume(0, 1);
-    /* a first fault never waits for an absent later parcel. */
+    // a first fault never waits for an absent later parcel.
     new_stream(0, 8, 2);
     fill(0, 8, 1, 0, 1, 2);
     check(!need_valid[0], "first fault stops further requests");
     tick();
     expect_packet(0, 8, 0, 0, 0, 0, 0, 2, 1, 1, 8);
-    /* a required second fault outranks every observed prefix category. */
+    // a required second fault outranks every observed prefix category.
     for (int prefix = 0; prefix < 3; prefix = prefix + 1) begin
       new_stream(0, 12, 3);
       fill(0, 12, 3, prefix == 0 ? 32'h00000001 :
@@ -154,7 +154,7 @@ module cpu5_fetch_buffer_tb;
                     3, 2'(prefix + 1), prefix == 1, prefix == 1 ? 4 : 0, 3, 1, 1, 14);
       consume(0, 1);
     end
-    /* both configurations reject a misaligned cursor locally without a request. */
+    // both configurations reject a misaligned cursor locally without a request.
     for (int c = 0; c < 2; c = c + 1) begin
       new_stream(1'(c), c == 0 ? 2 : 3, 4);
       check(!need_valid[c], "misaligned cursor never requests");
@@ -162,7 +162,7 @@ module cpu5_fetch_buffer_tb;
       expect_packet(1'(c), c == 0 ? 2 : 3, 0, 0, 0, 0, 0, 4, 1, 0, c == 0 ? 2 : 3);
       consume(1'(c), 1);
     end
-    /* straddling across address wrap rotates the already captured next word. */
+    // straddling across address wrap rotates the already captured next word.
     new_stream(1, 32'hfffffffe, 5);
     expect_need(1, 32'hfffffffc, 2);
     fill(1, 32'hfffffffc, 2, 32'h00130000, 0, 5);
@@ -177,7 +177,7 @@ module cpu5_fetch_buffer_tb;
     expect_packet(1, 2, 1, 3, 1, 1, 2, 5, 0, 0, 0);
     consume(1, 0);
     expect_need(1, 4, 1);
-    /* a wrapped second-parcel fault preserves the first bytes and wrapped mtval. */
+    // a wrapped second-parcel fault preserves the first bytes and wrapped mtval.
     new_stream(1, 32'hfffffffe, 6);
     fill(1, 32'hfffffffc, 2, 32'h001f0000, 0, 6);
     expect_need(1, 0, 1);
@@ -185,12 +185,12 @@ module cpu5_fetch_buffer_tb;
     tick();
     expect_packet(1, 32'hfffffffe, 31, 3, 3, 0, 0, 6, 1, 1, 0);
     consume(1, 1);
-    /* first faults use the required upper halfword address, never its word base. */
+    // first faults use the required upper halfword address, never its word base.
     new_stream(1, 258, 7);
     fill(1, 256, 2, 0, 2, 7);
     tick();
     expect_packet(1, 258, 0, 0, 0, 0, 0, 7, 1, 1, 258);
-    /* redirect and fill collision cannot insert bytes into the selected generation. */
+    // redirect and fill collision cannot insert bytes into the selected generation.
     restart[1] = 1; restart_pc[1] = 512; restart_generation[1] = 8;
     ready[1] = 1;
     fill(1, 256, 2, 32'h00010000, 0, 7);
@@ -199,18 +199,18 @@ module cpu5_fetch_buffer_tb;
     expect_need(1, 512, 1);
     fill(1, 512, 1, 1, 0, 7);
     expect_need(1, 512, 1);
-    /* held reset discards matching fills as well as mismatched old generations. */
+    // held reset discards matching fills as well as mismatched old generations.
     reset[1] = 1;
     fill(1, 512, 1, 1, 0, 8);
     tick();
     check(!valid[1] && !need_valid[1], "held reset suppresses activity");
     reset[1] = 0; #1;
     expect_need(1, 512, 1);
-    /* all halfword prefixes cover short, 32-bit and every longer-width marker. */
+    // all halfword prefixes cover short, 32-bit and every longer-width marker.
     for (int c = 0; c < 2; c = c + 1) begin
-      /* every C prefix starts in each halfword position, including aligned long forms. */
+      // every C prefix starts in each halfword position, including aligned long forms.
       for (int position = 0; position < (c == 0 ? 1 : 2); position = position + 1) begin
-      /* enumerate the complete first-parcel encoding space without random sampling. */
+      // enumerate the complete first-parcel encoding space without random sampling.
       for (int prefix = 0; prefix < 65536; prefix = prefix + 1) begin
         logic [31:0] start_pc, expected_raw;
         logic [1:0] expected_kind;
@@ -226,7 +226,7 @@ module cpu5_fetch_buffer_tb;
         fill(1'(c), 256, c == 0 ? 3 : upper_start ? 2 : 1,
              c == 0 ? {16'habcd, 16'(prefix)} : upper_start ? {16'(prefix), 16'b0} :
              {16'b0, 16'(prefix)}, 0, 9);
-        /* the framing-only configuration requests a second parcel only if required. */
+        // the framing-only configuration requests a second parcel only if required.
         if (c != 0 && needs_second) begin
           expect_need(1'(c), upper_start ? 260 : 256, upper_start ? 1 : 2);
           fill(1'(c), upper_start ? 260 : 256, upper_start ? 1 : 2,

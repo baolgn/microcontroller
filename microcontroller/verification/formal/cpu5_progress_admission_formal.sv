@@ -1,4 +1,4 @@
-/* prove early admission and terminal progress under explicit finite service and no external flush. */
+// prove early admission and terminal progress under explicit finite service and no external flush.
 module cpu5_progress_admission_formal #(
   parameter bit PROGRESS = 1,
   parameter bit SINGLE = 1,
@@ -60,7 +60,7 @@ module cpu5_progress_admission_formal #(
   logic [63:0] unused_cycle, unused_instret;
   fatal_record_t unused_fatal_record;
 
-  /* the packet subset exercises transfers, effects, redirects and synchronous exceptions. */
+  // the packet subset exercises transfers, effects, redirects and synchronous exceptions.
   always_comb begin
     packet = '0;
     packet.pc = {24'b0, allocated, 2'b0};
@@ -75,28 +75,28 @@ module cpu5_progress_admission_formal #(
     packet.mem_addr = 32'h20000000;
     packet.mem_wdata = {24'b0, value_i};
     packet.mem_size = 2;
-    /* trusted packets deliberately avoid making a raw decoder correctness claim. */
+    // trusted packets deliberately avoid making a raw decoder correctness claim.
     case (operation_i)
       1: packet.op = OP_LOAD;
-      /* stores preserve their data access without a register write. */
+      // stores preserve their data access without a register write.
       2: begin packet.op = OP_STORE; packet.rd_write = 0; end
-      /* redirect packets exercise younger instruction discard. */
+      // redirect packets exercise younger instruction discard.
       3: begin packet.op = OP_REDIRECT; packet.next_pc = 32'h10000; end
-      /* fault packets exercise precise synchronous traps. */
+      // fault packets exercise precise synchronous traps.
       4: begin packet.fault = 1; packet.cause = 11; end
-      /* fences serialize the memory owner. */
+      // fences serialize the memory owner.
       5: begin packet.op = OP_FENCE; packet.rd_write = 0; end
       default: packet.op = OP_RESULT;
     endcase
     killed_mask = 0;
-    /* the independent scoreboard receives registered disposition lanes only. */
+    // the independent scoreboard receives registered disposition lanes only.
     for (int stage = 0; stage < 5; stage++) begin
       if (killed[stage] && killed_uid[stage] < CAPACITY) killed_mask[killed_uid[stage][4:0]] = 1;
     end
   end
   assign request_ready = target_accept_i;
 
-  /* instantiate the production overlapping controller without replacing its state machine. */
+  // instantiate the production overlapping controller without replacing its state machine.
   cpu5_control #(.DIAGNOSTIC(0), .FORWARDING(1), .D_MAX_WAIT_CYCLES(32)) dut (
     .clk_i, .cold_reset_i(reset), .isolated_i(1'b1), .hart_reset_i(1'b0),
     .mip_levels_i(32'b0), .fetch_busy_i(1'b0), .entry_pending_o(unused_entry), .idle_o(unused_idle),
@@ -120,11 +120,11 @@ module cpu5_progress_admission_formal #(
     .debug_reg_rdata_o(unused_debug_value), .debug_reg_error_o(unused_debug_error)
   );
 
-  /* assumptions describe the source and memory service, never the desired disposition. */
+  // assumptions describe the source and memory service, never the desired disposition.
   always @(posedge clk_i) begin
     if (boot != 2) boot <= boot + 1'b1;
     elapsed <= elapsed + 1'b1;
-    /* two-edge reset drains pre-reset kill reports and initializes the actual controller and the independent scoreboards. */
+    // two-edge reset drains pre-reset kill reports and initializes the actual controller and the independent scoreboards.
     if (reset) begin
       allocated <= 0;
       live <= 0;
@@ -136,41 +136,41 @@ module cpu5_progress_admission_formal #(
       accepted <= 0;
       offer_age <= 0;
       reply_age <= 0;
-      /* progress fairness ages begin at their real reset values. */
+      // progress fairness ages begin at their real reset values.
       for (int stage = 0; stage < 5; stage++) hold_age[stage] <= 0;
-    /* normal cycles retain all independent observation state. */
+    // normal cycles retain all independent observation state.
     end else begin
-      /* this responsive environment permits no external flush after startup. */
+      // this responsive environment permits no external flush after startup.
       assume(!flush_i);
-      /* two reset edges and recovery must admit the one offered packet by edge four. */
+      // two reset edges and recovery must admit the one offered packet by edge four.
       if (elapsed >= 4) assert(allocated == 1);
-      /* no external cancellation exists, so disposal must be a terminal event. */
+      // no external cancellation exists, so disposal must be a terminal event.
       assert(!killed_mask[0]);
-      /* the universally selected tracked identity remains constant for this run. */
+      // the universally selected tracked identity remains constant for this run.
       assume(watched == $past(watched));
-      /* a source cannot withdraw or change a packet already offered under backpressure. */
+      // a source cannot withdraw or change a packet already offered under backpressure.
       if ($past(input_valid && !input_ready && !reset)) begin
         assume(input_valid);
         assume(packet == $past(packet));
       end
-      /* the isolated progress profile offers exactly one instruction immediately. */
+      // the isolated progress profile offers exactly one instruction immediately.
       if (PROGRESS && SINGLE) begin
         assume(input_valid_i);
         assume(watched == 0);
       end
-      /* only progress mode limits stalls; the safety proof allows indefinite holds. */
+      // only progress mode limits stalls; the safety proof allows indefinite holds.
       for (int stage = 0; stage < 5; stage++) begin
         if (holds_i[stage]) hold_age[stage] <= hold_age[stage] + 1'b1;
         else hold_age[stage] <= 0;
         if (PROGRESS && hold_age[stage] == 2) assume(!holds_i[stage]);
       end
-      /* targets may delay acceptance by two and responses by three sampled clocks. */
+      // targets may delay acceptance by two and responses by three sampled clocks.
       if (PROGRESS && request_valid && offer_age == 2) assume(target_accept_i);
       if (PROGRESS && owned && accepted && reply_age == 3) assume(target_response_i);
-      /* no second physical acceptance can belong to the same owner. */
+      // no second physical acceptance can belong to the same owner.
       if (request_valid) begin
         if (!PROGRESS) assert(!accepted);
-        /* first presentation records the descriptor before acceptance. */
+        // first presentation records the descriptor before acceptance.
         if (!owned) begin
           if (!PROGRESS) assert($past(launch));
           owned <= 1;
@@ -178,45 +178,45 @@ module cpu5_progress_admission_formal #(
           owner_write <= request_write;
           owner_descriptor <= {request_address, request_data, request_write, request_size, request_strobes, request_tag};
         end
-        /* acceptance starts the independent response deadline. */
+        // acceptance starts the independent response deadline.
         if (request_ready) begin accepted <= 1; offer_age <= 0; reply_age <= 0; end
         else offer_age <= offer_age + 1'b1;
       end
-      /* the target remembers the accepted owner until its one terminal response. */
+      // the target remembers the accepted owner until its one terminal response.
       if (owned && accepted) reply_age <= reply_age + 1'b1;
-      /* a response releases the external target owner once. */
+      // a response releases the external target owner once.
       if (response_valid && response_ready) begin owned <= 0; accepted <= 0; reply_age <= 0; end
-      /* a held request cannot change, even if a redirect is selected meanwhile. */
+      // a held request cannot change, even if a redirect is selected meanwhile.
       if ($past(request_valid && !request_ready && !reset)) begin
         if (!PROGRESS) assert(request_valid);
         if (!PROGRESS) assert({request_address, request_data, request_write, request_size, request_strobes, request_tag} ==
             $past({request_address, request_data, request_write, request_size, request_strobes, request_tag}));
       end
-      /* acceptance never releases descriptor or instruction ownership before response. */
+      // acceptance never releases descriptor or instruction ownership before response.
       if (owned) begin
         if (!PROGRESS) assert(busy && valid[3] && token[3].uid == owner_uid);
         if (!PROGRESS) assert({request_address, request_data, request_write, request_size, request_strobes, request_tag} == owner_descriptor);
       end
-      /* launch reserves the first presentation cycle before the target observes valid. */
+      // launch reserves the first presentation cycle before the target observes valid.
       if (busy) if (!PROGRESS) assert(owned || $past(launch));
-      /* first exposure belongs to exactly one still-live memory instruction. */
+      // first exposure belongs to exactly one still-live memory instruction.
       if (launch) begin
         if (!PROGRESS) assert(!owned && !busy);
         if (!PROGRESS) assert(valid[3] && live[token[3].uid[4:0]]);
         memory_seen_o <= 1;
         owner_uid <= token[3].uid;
       end
-      /* progress checks omit the independent safety assertions already proved separately. */
-      /* actual GPR state may change only with the corresponding terminal write. */
+      /* progress checks omit the independent safety assertions already proved separately.
+         actual GPR state may change only with the corresponding terminal write. */
       if (!PROGRESS) assert(unused_defined == (expected_defined || (terminal.valid && terminal.rd_write)));
-      /* retirement supplies the sole new value for the exercised destination. */
+      // retirement supplies the sole new value for the exercised destination.
       if (terminal.valid && terminal.rd_write) begin
         if (!PROGRESS) assert(unused_inspect == terminal.value);
         expected_defined <= 1;
         expected_value <= terminal.value;
-      /* undefined initial GPR data has no asserted reset value. */
+      // undefined initial GPR data has no asserted reset value.
       end else if (expected_defined) if (!PROGRESS) assert(unused_inspect == expected_value);
-      /* machine trap state follows synchronous terminal events in this configuration. */
+      // machine trap state follows synchronous terminal events in this configuration.
       if (terminal.valid && terminal.trap) begin
         if (!PROGRESS) assert(unused_epc == terminal.packet.pc);
         if (!PROGRESS) assert(unused_cause == terminal.packet.cause);
@@ -224,20 +224,20 @@ module cpu5_progress_admission_formal #(
         expected_epc <= terminal.packet.pc;
         expected_cause <= terminal.packet.cause;
         expected_tval <= terminal.packet.mtval;
-      /* no CSR instructions or interrupts may independently write these three fields. */
+      // no CSR instructions or interrupts may independently write these three fields.
       end else begin
         if (!PROGRESS) assert(unused_epc == expected_epc);
         if (!PROGRESS) assert(unused_cause == expected_cause);
         if (!PROGRESS) assert(unused_tval == expected_tval);
       end
-      /* successful dispositions and exceptions share one monotonically ordered terminal lane. */
+      // successful dispositions and exceptions share one monotonically ordered terminal lane.
       if (terminal.valid) begin
         if (!PROGRESS) assert(terminal.uid < allocated && terminal.uid < CAPACITY);
         if (!PROGRESS) assert(live[terminal.uid[4:0]] && !disposed[terminal.uid[4:0]]);
         if (!PROGRESS) assert(terminal.order == terminal_order);
         if (!PROGRESS) assert(!have_terminal || terminal.uid > last_terminal);
         if (!PROGRESS) assert(!killed_mask[terminal.uid[4:0]]);
-        /* no older live instruction may be bypassed by this terminal. */
+        // no older live instruction may be bypassed by this terminal.
         for (int index = 0; index < CAPACITY; index++) begin
           if (index < terminal.uid) if (!PROGRESS) assert(!live[index] || killed_mask[index]);
         end
@@ -249,9 +249,9 @@ module cpu5_progress_admission_formal #(
         have_terminal <= 1;
         retirement_seen_o <= 1;
       end
-      /* every killed identity is disposed once and is never accepted as a later terminal. */
+      // every killed identity is disposed once and is never accepted as a later terminal.
       for (int stage = 0; stage < 5; stage++) begin
-        /* discard reports must refer to a live allocated identity. */
+        // discard reports must refer to a live allocated identity.
         if (killed[stage]) begin
           if (!PROGRESS) assert(killed_uid[stage] < allocated && killed_uid[stage] < CAPACITY);
           if (!PROGRESS) assert(live[killed_uid[stage][4:0]] && !disposed[killed_uid[stage][4:0]]);
@@ -259,7 +259,7 @@ module cpu5_progress_admission_formal #(
           disposed[killed_uid[stage][4:0]] <= 1;
           kill_seen_o <= 1;
         end
-        /* holds preserve the owner; M may still capture its response while held. */
+        // holds preserve the owner; M may still capture its response while held.
         if ($past(valid[stage] && holds_i[stage] && !reset) && !killed[stage]) begin
           if (!PROGRESS) assert(valid[stage] && token[stage].uid == $past(token[stage].uid));
           if (!PROGRESS) assert(stage == 3 || token[stage] == $past(token[stage]));
@@ -268,23 +268,23 @@ module cpu5_progress_admission_formal #(
           stalled_seen_o <= 1;
         end
       end
-      /* input allocation is counted independently from the controller's UID register. */
+      // input allocation is counted independently from the controller's UID register.
       if (input_valid && input_ready) begin
         live[allocated[4:0]] <= 1;
         allocated <= allocated + 1'b1;
       end
-      /* the one-edge reporting lag is explicit in independent instruction conservation. */
+      // the one-edge reporting lag is explicit in independent instruction conservation.
       if (!PROGRESS) assert($countones(live) == $countones(valid) + $countones(killed) + int'(terminal.valid));
       if ($countones(valid) >= 3) overlap_seen_o <= 1;
-      /* one reachable run must include overlap, hold, memory, retirement and discard. */
+      // one reachable run must include overlap, hold, memory, retirement and discard.
       if (!SINGLE) cover(retirement_seen_o && kill_seen_o && memory_seen_o && overlap_seen_o && stalled_seen_o);
-      /* the progress profile must reach a serviced, stalled memory instruction. */
+      // the progress profile must reach a serviced, stalled memory instruction.
       if (SINGLE) cover(tracked_done_o && memory_seen_o && stalled_seen_o && retirement_seen_o);
-      /* a universally selected UID must retire or be discarded within the stated bound. */
+      // a universally selected UID must retire or be discarded within the stated bound.
       if (input_valid && input_ready && allocated == {1'b0, selected}) tracked_age_o <= 0;
       else if ((SINGLE && allocated != 0 && !tracked_done_o) || (!SINGLE && live[selected] && !disposed[selected])) tracked_age_o <= tracked_age_o + 1'b1;
       if ((terminal.valid && terminal.uid == {59'b0, selected}) || killed_mask[selected]) tracked_done_o <= 1;
-      /* finite service must prevent timeout and bound every accepted instruction. */
+      // finite service must prevent timeout and bound every accepted instruction.
       if (PROGRESS) begin
         assert(!fatal);
         if (allocated != 0 && !tracked_done_o) assert(tracked_age_o <= PROGRESS_BOUND);

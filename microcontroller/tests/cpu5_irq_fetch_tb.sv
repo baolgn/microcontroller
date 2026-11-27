@@ -1,7 +1,7 @@
-/* check real fetch ownership across precise interrupt admission. */
+// check real fetch ownership across precise interrupt admission.
 module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
@@ -39,7 +39,7 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
   logic fetch_busy_i, irq_valid_o, idle_o, entry_pending_o;
   logic [31:0] irq_pc_o, irq_cause_o;
 
-  /* consume diagnostic outputs without replacing independent semantic checks. */
+  // consume diagnostic outputs without replacing independent semantic checks.
   wire unused_core = ^{flush_ready_o, flush_aborted_o, mem_launch_o, mem_busy_o,
       transfer_o, kill_valid_o, kill_uid_o[0], kill_uid_o[1], kill_uid_o[2], kill_uid_o[3],
       kill_uid_o[4], inspect_value_o, inspect_defined_o, mscratch_o, mcountinhibit_o,
@@ -70,7 +70,7 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
   bit d_owner = 0, d_accepted = 0, mutation_applied = 0;
   logic [31:0] data_tag = 0, arch_pc = 0;
 
-  /* the bridge preserves raw bytes and admits every instruction through machine decode. */
+  // the bridge preserves raw bytes and admits every instruction through machine decode.
   always_comb begin
     in_packet_i = '0;
     in_packet_i.op = OP_MACHINE;
@@ -85,7 +85,7 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     fetch_ready = in_ready_o && run_enable;
   end
 
-  /* real manager ownership, rather than a fixture busy flag, delays interrupt entry. */
+  // real manager ownership, rather than a fixture busy flag, delays interrupt entry.
   cpu5_fetch #(.MAX_WAIT_CYCLES(I_LIMIT)) fetch (
     .clk_i, .cold_reset_i, .isolated_i, .hart_reset_i,
     .permit_i(run_enable && launch_enable && !entry_pending_o), .redirect_valid_i(redirect_valid_o),
@@ -103,16 +103,16 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* no debug subsystem, compressed expansion or multiplication is supplied by this fixture. */
+  // no debug subsystem, compressed expansion or multiplication is supplied by this fixture.
   cpu5_control #(.DIAGNOSTIC(0), .FORWARDING(1), .IRQ_ENABLED(1)) dut (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
     .debug_halted_o(unused_debug_halted), .debug_resumeack_o(unused_debug_resumeack), .debug_dpc_o(unused_debug_dpc), .debug_dcsr_o(unused_debug_dcsr), .debug_reg_valid_i(1'b0), .debug_reg_write_i(1'b0),
     .debug_reg_addr_i(16'b0), .debug_reg_wdata_i(32'b0), .debug_reg_ready_o(unused_debug_reg_ready),
     .debug_reg_rdata_o(unused_debug_reg_rdata), .debug_reg_error_o(unused_debug_reg_error),.*);
 
-  /* the original program explicitly initializes every source register it consumes. */
+  // the original program explicitly initializes every source register it consumes.
   function automatic logic [31:0] program_word(input logic [31:0] address);
-    /* IRQ setup precedes a long enough NOP prefix to make eligibility unambiguous. */
+    // IRQ setup precedes a long enough NOP prefix to make eligibility unambiguous.
     case (address)
       0: return 32'h10000093;
       4: return 32'h30509073;
@@ -127,19 +127,19 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     endcase
   endfunction
 
-  /* acceptance and response delays are independently chosen for the targeted offer. */
+  // acceptance and response delays are independently chosen for the targeted offer.
   function automatic int accept_delay(input logic [31:0] address);
     return address == 32'h40 && scenario == 0 ? (I_LIMIT == 4 ? 1 : 20) :
         address == 32'h44 && scenario == 3 ? 20 : 0;
   endfunction
 
-  /* the accepted-owner case spends its delay after physical acceptance. */
+  // the accepted-owner case spends its delay after physical acceptance.
   function automatic int reply_delay(input logic [31:0] address);
     return address == 32'h40 && scenario == 1 ? (I_LIMIT == 4 ? 2 : 20) :
         address == 32'h44 && scenario >= 4 ? 20 : 0;
   endfunction
 
-  /* synchronous target replies are registered by the independently retained owner. */
+  // synchronous target replies are registered by the independently retained owner.
   always_comb begin
     request_ready = request_valid && !i_accepted && !cold_reset_i &&
         (i_owner ? owner_age >= accept_delay(owner_addr) : accept_delay(request_addr) == 0);
@@ -157,15 +157,15 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     d_rsp_status_i = 0;
   end
 
-  /* every diagnostic retains the case, sampling edge and physical instruction owner. */
+  // every diagnostic retains the case, sampling edge and physical instruction owner.
   task automatic check(input bit condition, input string message);
     checks++;
-    /* expected detector failures must name their actual semantic comparator. */
+    // expected detector failures must name their actual semantic comparator.
     if (!condition) $fatal(1, "IRQ_FETCH_CHECK_FAILED %s limit=%0d case=%0d edge=%0d pc=%08x owner=%b accepted=%b addr=%08x tag=%08x age=%0d",
         message, I_LIMIT, scenario, edges, arch_pc, i_owner, i_accepted, owner_addr, owner_tag, owner_age);
   endtask
 
-  /* sample bus obligations before the edge and compare registered architectural events afterward. */
+  // sample bus obligations before the edge and compare registered architectural events afterward.
   task automatic cycle();
     bit req, accept_i, complete_i, accept_d, complete_d, was_busy, was_pending, new_launch;
     logic [31:0] address, tag, observed_epc;
@@ -177,27 +177,27 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     complete_d = d_rsp_valid_i && d_rsp_ready_o;
     address = request_addr; tag = request_tag; parcels = request_parcels;
     was_busy = fetch_busy_i; was_pending = entry_pending_o; new_launch = fetch_launch;
-    /* new grants cannot invalidate an existing offer or bypass an interrupt boundary. */
+    // new grants cannot invalidate an existing offer or bypass an interrupt boundary.
     if (!cold_reset_i) begin
       check(!fatal_o && !fetch_fatal && fetch_fatal_reason == 0, "no fatal containment");
       check(fetch_busy_i == i_owner || (req && !i_owner), "independent physical ownership");
       check(fetch_accept == accept_i && fetch_complete == complete_i, "physical handshakes");
       check(!entry_pending_o || !fetch_launch, "entry veto before new launch");
-      /* the original address, tag and parcel mask survive every acceptance stall. */
+      // the original address, tag and parcel mask survive every acceptance stall.
       if (i_owner && !i_accepted) check(req && address == owner_addr && tag == owner_tag &&
           parcels == owner_parcels, "nonwithdrawable I offer");
-      /* an accepted request cannot be repeated while its response is pending. */
+      // an accepted request cannot be repeated while its response is pending.
       if (i_accepted) check(!req, "no duplicate accepted request");
-      /* the offered reply precedes IRQ redirect, so its fault must remain architecturally suppressed. */
+      // the offered reply precedes IRQ redirect, so its fault must remain architecturally suppressed.
       if (complete_i && response_fault != 0) begin
         check(entry_pending_o && !irq_seen && !fetch_drop && response_fault == 3 && response_data == 0,
             "fault response drains before IRQ redirect");
       end
     end
     clk_i = 1; #1; clk_i = 0; edges++;
-    /* qualified resets occur only after all prior target obligations have drained. */
+    // qualified resets occur only after all prior target obligations have drained.
     if (!cold_reset_i) begin
-      /* first valid reserves an independently checked responder descriptor. */
+      // first valid reserves an independently checked responder descriptor.
       if (req && !i_owner) begin
         check(address < 32'h2000 && address[1:0] == 0 && parcels == 3 && tag == 32'(offers),
             "instruction request identity");
@@ -205,38 +205,38 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
         owner_parcels = parcels; owner_age = 0; response_age = 0;
         first_offer_edge = edges; offers++;
       end
-      /* exactly one physical acceptance samples the synchronous RAM word. */
+      // exactly one physical acceptance samples the synchronous RAM word.
       if (accept_i) begin
         check(i_owner && !i_accepted, "single I acceptance");
         i_accepted = 1; owner_data = program_word(owner_addr); response_age = 0; accepts++;
       end
-      /* each response belongs to the retained request and meets this profile's deadline. */
+      // each response belongs to the retained request and meets this profile's deadline.
       if (complete_i) begin
         check(i_owner && i_accepted, "response has owner");
         check(edges - first_offer_edge + 1 <= I_LIMIT, "I service deadline");
         max_i_age = edges - first_offer_edge + 1 > max_i_age ? edges - first_offer_edge + 1 : max_i_age;
-        /* count the deliberate error independently of retirement records. */
+        // count the deliberate error independently of retirement records.
         if (response_fault != 0) error_replies++;
         i_owner = 0; i_accepted = 0; replies++;
       end
-      /* age only transactions that remained exposed without their terminal reply. */
+      // age only transactions that remained exposed without their terminal reply.
       else if (i_owner && !accept_i) begin
-        /* acceptance delay and response latency use separate clocks. */
+        // acceptance delay and response latency use separate clocks.
         if (i_accepted) response_age++;
         else owner_age++;
       end
-      /* assert the retained source at a measured offered or accepted owner boundary. */
+      // assert the retained source at a measured offered or accepted owner boundary.
       if (scenario < 2 && !trigger_seen && i_owner && owner_addr == 32'h40 &&
           (scenario == 0 ? !i_accepted : i_accepted)) begin
         check(mstatus_o[3] && mie_o == 32'h800 && mtvec_o == 32'h100, "encoded interrupt setup retired");
         mip_levels_i = 32'h800; trigger_seen = 1; level_edge = edges + 1;
       end
-      /* an actual occupied manager must delay IRQ entry, including its completion edge. */
+      // an actual occupied manager must delay IRQ entry, including its completion edge.
       if (trigger_seen && was_busy && was_pending) begin
         waiting_edges++;
         check(!irq_valid_o, "IRQ waits for I owner");
       end
-      /* retirement follows an independently maintained PC, with no wrong-path fault record. */
+      // retirement follows an independently maintained PC, with no wrong-path fault record.
       if (trace_o.valid) begin
         check(!trace_o.trap && !trace_o.packet.fault && trace_o.packet.pc == arch_pc &&
             trace_o.packet.raw == program_word(arch_pc) && trace_o.packet.raw_valid == 15 &&
@@ -244,16 +244,16 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
             trace_o.order == 64'(retirements), "ordered original instruction retirement");
         check(!(scenario < 2 && trace_o.packet.pc == 32'h40) &&
             !(scenario == 5 && trace_o.packet.pc == 32'h44), "wrong-path fetch fault never retires");
-        /* WFI retires once; its sleep edge cannot expose a fresh fetch request. */
+        // WFI retires once; its sleep edge cannot expose a fresh fetch request.
         if (scenario >= 2 && trace_o.packet.pc == 32'h40) begin
           wfi_retirements++;
           check(idle_o && !new_launch, "WFI retirement vetoes first fetch launch");
         end
-        /* an MIE-clear wake resumes exactly at the sequential continuation. */
+        // an MIE-clear wake resumes exactly at the sequential continuation.
         if (scenario >= 2 && scenario < 5 && trace_o.packet.pc == 32'h44) begin
           continuation_retirements++; run_enable = 0;
         end
-        /* the one handler store must retire only after its exactly-once device effect. */
+        // the one handler store must retire only after its exactly-once device effect.
         if (trace_o.packet.pc == 32'h104) begin
           store_retirements++;
           check(store_effects == 1, "handler effect precedes store retirement");
@@ -261,10 +261,10 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
         end
         arch_pc += 4; retirements++;
       end
-      /* IRQ records name the next unretired PC, without inventing an instruction retirement. */
+      // IRQ records name the next unretired PC, without inventing an instruction retirement.
       if (irq_valid_o) begin
         observed_epc = irq_pc_o;
-        /* calibrate the boundary comparator without modifying the DUT or its expected PC. */
+        // calibrate the boundary comparator without modifying the DUT or its expected PC.
         if ($test$plusargs("mutate_epc") && !mutation_applied) begin
           observed_epc ^= 4; mutation_applied = 1;
         end
@@ -277,19 +277,19 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
             "bounded interrupted prefix");
         irq_seen = 1; entry_edge = edges; arch_pc = 32'h100;
       end
-      /* measure actual handler decode arrival through the real fetch/control path. */
+      // measure actual handler decode arrival through the real fetch/control path.
       if (irq_seen && first_handler_d == 0 && stage_valid_o[1] && stage_token_o[1].p.pc == 32'h100) begin
         first_handler_d = edges;
         check(first_handler_d - level_edge <= 224, "first handler D deadline");
       end
-      /* the handler's initialized base and value determine the sole permitted store. */
+      // the handler's initialized base and value determine the sole permitted store.
       if (accept_d) begin
         check(!d_owner && irq_seen && d_req_addr_o == 32'h20000000 && d_req_wdata_o == 32'h800 &&
             d_req_write_o && d_req_size_o == 2 && d_req_wstrb_o == 15 && d_req_tag_o == 1,
             "exact handler store effect");
         d_owner = 1; d_accepted = 1; data_tag = d_req_tag_o; store_effects++;
       end
-      /* completing the store never replays its independently counted physical effect. */
+      // completing the store never replays its independently counted physical effect.
       if (complete_d) begin
         check(d_owner && d_accepted, "D response has owner");
         d_owner = 0; d_accepted = 0;
@@ -297,9 +297,9 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
     end
   endtask
 
-  /* two scenarios separate offered-owner and accepted-owner interrupt drain. */
+  // two scenarios separate offered-owner and accepted-owner interrupt drain.
   initial begin
-    /* each case starts a new isolated CPU, fetch-tag and memory-target epoch. */
+    // each case starts a new isolated CPU, fetch-tag and memory-target epoch.
     for (scenario = 0; scenario < 2; scenario++) begin
       cold_reset_i = 1; run_enable = 0; mip_levels_i = 0;
       i_owner = 0; i_accepted = 0; d_owner = 0; d_accepted = 0;
@@ -307,10 +307,10 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
       trigger_seen = 0; irq_seen = 0; entry_edge = 0; level_edge = 0; first_handler_d = 0;
       error_replies = 0; store_effects = 0; store_retirements = 0; waiting_edges = 0;
       cycle(); cold_reset_i = 0; run_enable = 1;
-      /* a finite bound makes deadlock an explicit failure with the current owner vector. */
+      // a finite bound makes deadlock an explicit failure with the current owner vector.
       for (int attempt = 0; attempt < 2000 && store_retirements == 0; attempt++) cycle();
       run_enable = 0;
-      /* drain any ordinary handler prefetch without authorizing a new one. */
+      // drain any ordinary handler prefetch without authorizing a new one.
       for (int attempt = 0; attempt < 40 && (i_owner || fetch_busy_i || d_owner); attempt++) cycle();
       check(trigger_seen && irq_seen && first_handler_d != 0 && waiting_edges > 0 &&
           store_retirements == 1 && store_effects == 1 && error_replies == 1 &&
@@ -322,7 +322,7 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
           I_LIMIT, scenario, entry_edge-level_edge, first_handler_d-level_edge, max_i_age,
           waiting_edges, offers, accepts, replies);
     end
-    /* the free-manager case is qualified at I4; retained idle ownership uses I32 stress. */
+    // the free-manager case is qualified at I4; retained idle ownership uses I32 stress.
     for (scenario = 2; scenario < (I_LIMIT == 4 ? 3 : 6); scenario++) begin
       cold_reset_i = 1; run_enable = 0; launch_enable = 1; mip_levels_i = 0; hold_i = 0;
       i_owner = 0; i_accepted = 0; d_owner = 0; d_accepted = 0;
@@ -331,37 +331,37 @@ module cpu5_irq_fetch_tb #(parameter integer I_LIMIT = 4);
       error_replies = 0; store_effects = 0; store_retirements = 0; waiting_edges = 0;
       wfi_retirements = 0; continuation_retirements = 0;
       cycle(); cold_reset_i = 0; run_enable = 1;
-      /* catch the actual WFI fetch acceptance before the manager can launch its continuation. */
+      // catch the actual WFI fetch acceptance before the manager can launch its continuation.
       for (int attempt = 0; attempt < 2000 && !(stage_valid_o[0] &&
           stage_token_o[0].p.pc == 'h40); attempt++) cycle();
       check(stage_valid_o[0] && stage_token_o[0].p.pc == 'h40, "WFI F arrival timeout");
-      /* only the free-manager case delays fetch permission until the terminal W edge. */
+      // only the free-manager case delays fetch permission until the terminal W edge.
       if (scenario == 2) begin launch_enable = 0; hold_i[4] = 1; end
-      /* the two owned cases deliberately allow one continuation request before idle. */
+      // the two owned cases deliberately allow one continuation request before idle.
       for (int attempt = 0; attempt < 100 && !(stage_valid_o[4] &&
           stage_token_o[4].p.pc == 'h40 && (scenario == 2 || stage_token_o[4].serial_ready)); attempt++) cycle();
       check(stage_valid_o[4] && stage_token_o[4].p.pc == 'h40, "WFI W arrival timeout");
-      /* release W and fetch permission together to test first-valid arbitration. */
+      // release W and fetch permission together to test first-valid arbitration.
       if (scenario == 2) begin
         check(!fetch_busy_i && !i_owner, "WFI free launch fixture owner mismatch");
         hold_i[4] = 0;
-        /* preparation remains separate from retirement while new fetches remain vetoed. */
+        // preparation remains separate from retirement while new fetches remain vetoed.
         for (int attempt = 0; attempt < 8 && !stage_token_o[4].serial_ready; attempt++) cycle();
         check(stage_token_o[4].serial_ready, "WFI preparation timeout");
         launch_enable = 1;
       end
       cycle(); check(idle_o && wfi_retirements == 1, "WFI retirement or idle timeout");
-      /* OFFER and WAIT retain their exact descriptor across idle without new work. */
+      // OFFER and WAIT retain their exact descriptor across idle without new work.
       if (scenario >= 3) check(i_owner && owner_addr == 'h44 &&
           i_accepted == (scenario != 3), "WFI did not retain targeted I owner");
       repeat (2) cycle();
       check(idle_o && wfi_retirements == 1, "WFI idle repeated retirement or woke spuriously");
       mip_levels_i = 'h800; trigger_seen = 1; level_edge = edges + 1;
-      /* local pending wakes with MIE clear; enabled wake drains the owner then traps. */
+      // local pending wakes with MIE clear; enabled wake drains the owner then traps.
       for (int attempt = 0; attempt < 300 &&
           (scenario == 5 ? store_retirements == 0 : continuation_retirements == 0); attempt++) cycle();
       run_enable = 0;
-      /* all physical owners drain even after the architectural stopping point. */
+      // all physical owners drain even after the architectural stopping point.
       for (int attempt = 0; attempt < 40 && (i_owner || fetch_busy_i || d_owner); attempt++) cycle();
       check(wfi_retirements == 1 && !idle_o && offers == accepts && accepts == replies &&
           !i_owner && !fetch_busy_i && !d_owner, "WFI ownership conservation");

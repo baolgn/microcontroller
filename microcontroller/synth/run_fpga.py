@@ -158,8 +158,8 @@ def main():
         pll_text = pll.read_text().replace('locked', 'locked_o')
         pll_text = re.sub(r'(?m)^//[^\n]*\n', '', pll_text)
         pll_text = re.sub(r'//[^\n]*', lambda match: match.group().lower().replace('mhz', 'MHz'), pll_text)
-        pll_text = pll_text.replace('EHXPLLL #(', '/* preserve the generated feedback and divider configuration. */\nEHXPLLL #(')
-        pll.write_text('/* generate the requested clock from the 25 MHz oscillator. */\n' + pll_text)
+        pll_text = pll_text.replace('EHXPLLL #(', '// preserve the generated feedback and divider configuration.\nEHXPLLL #(')
+        pll.write_text('// generate the requested clock from the 25 MHz oscillator.\n' + pll_text)
         result['generated_pll_sha256'] = digest(pll)
     # a failed PLL search cannot supply a routable frequency candidate.
     else:

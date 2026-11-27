@@ -379,7 +379,7 @@ def build(key, build_root, verilator, cache):
     directory = build_root / key
     directory.mkdir(parents=True)
     bind = directory / 'cpu5_wave_bind.sv'
-    bind.write_text(f'/* attach the dump module to the bench top. */\nbind {bench["top"]} cpu5_wave_dump wave_dump ();\n')
+    bind.write_text(f'// attach the dump module to the bench top.\nbind {bench["top"]} cpu5_wave_dump wave_dump ();\n')
     command = [verilator, '--binary', '--timing', '--assert', '-Wall', '-j', '2', '-CFLAGS', '-O0',
                '-Imicrocontroller/rtl', '--trace', '--trace-structs', '--top-module', bench['top'],
                '--Mdir', directory / 'obj', *[f'-G{name}={value}' for name, value in bench['params'].items()],

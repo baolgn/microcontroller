@@ -47,7 +47,7 @@ def schema(directory):
     # committed destination metadata is separate from the tentative packet.
     for name in ['valid','trap','uid','order','rd_write','rd','value']:
         aliases[name.upper()] = name
-    header = ['/* packed trace offsets are generated from the production package. */', '#pragma once',
+    header = ['// packed trace offsets are generated from the production package.', '#pragma once',
               f'#define TRACE_WORDS {(bits+31)//32}']
     header += [f'#define TRACE_{name}_LSB {fields[field]["lsb"]}' for name,field in aliases.items()]
     (directory / 'arch_trace_fields.h').write_text('\n'.join(header) + '\n')

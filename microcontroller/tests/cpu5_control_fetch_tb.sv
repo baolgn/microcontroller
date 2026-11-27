@@ -1,11 +1,11 @@
-/* verify a fetch-to-control bridge without claiming a complete CPU frontend. */
+// verify a fetch-to-control bridge without claiming a complete CPU frontend.
 module cpu5_control_fetch_tb;
   import cpu5_control_pkg::*;
-  /* disconnected debug outputs retain named endpoints in legacy configurations. */
+  // disconnected debug outputs retain named endpoints in legacy configurations.
   logic unused_debug_halted, unused_debug_resumeack, unused_debug_reg_ready;
   logic [31:0] unused_debug_dpc, unused_debug_dcsr, unused_debug_reg_rdata;
   logic [2:0] unused_debug_reg_error;
-  /* preserve the explicitly IRQ-disabled compatibility profile. */
+  // preserve the explicitly IRQ-disabled compatibility profile.
   logic unused_entry_pending, unused_idle, unused_irq_valid;
   logic [31:0] unused_irq_pc, unused_irq_cause;
   logic clk = 0, cold_reset = 0, run_enable = 0, bridge_enable = 0;
@@ -36,7 +36,7 @@ module cpu5_control_fetch_tb;
   logic [4:0] unused_kill;
   logic [63:0] unused_kill_uid [0:4];
   logic [31:0] unused_mstatus, unused_mtvec, unused_mscratch, unused_mepc, unused_mcause, unused_mtval;
-  /* pending-level visibility and machine counters are outside this fetch bridge fixture. */
+  // pending-level visibility and machine counters are outside this fetch bridge fixture.
   logic [31:0] unused_mie, unused_mip, unused_mcountinhibit;
   logic [63:0] unused_mcycle, unused_minstret;
   wire unused_token_fields = ^{stage_token[0], stage_token[1], stage_token[2], stage_token[3], stage_token[4]};
@@ -53,7 +53,7 @@ module cpu5_control_fetch_tb;
   bit accepted_across_redirect = 0;
   bit mutate_target_fault = 0, mutate_stale_drop = 0;
 
-  /* preserve the original instruction bytes and fetch fault at the packet boundary. */
+  // preserve the original instruction bytes and fetch fault at the packet boundary.
   always_comb begin
     bridge_packet = '0;
     bridge_packet.op = OP_CONTROL;
@@ -67,7 +67,7 @@ module cpu5_control_fetch_tb;
     fetch_ready = input_ready && run_enable && bridge_enable;
   end
 
-  /* the stress deadline permits deliberately delayed replies, not F80 timing claims. */
+  // the stress deadline permits deliberately delayed replies, not F80 timing claims.
   cpu5_fetch #(.MAX_WAIT_CYCLES(32)) fetch (
     .clk_i(clk), .cold_reset_i(cold_reset), .isolated_i(1'b1), .hart_reset_i(1'b0),
     .permit_i(run_enable), .redirect_valid_i(redirect_valid), .redirect_pc_i(redirect_pc),
@@ -85,7 +85,7 @@ module cpu5_control_fetch_tb;
     .launch_o(fetch_launch), .accept_o(fetch_accept), .complete_o(fetch_complete), .drop_o(fetch_drop)
   );
 
-  /* this bridge admits only fetched control instructions or precise fault packets. */
+  // this bridge admits only fetched control instructions or precise fault packets.
   cpu5_control #(.IRQ_ENABLED(0), .FORWARDING(0), .DIAGNOSTIC(0)) control (
     .debug_haltreq_i(1'b0), .debug_resumereq_i(1'b0), .debug_resethaltreq_i(1'b0),
     .debug_halted_o(unused_debug_halted), .debug_resumeack_o(unused_debug_resumeack), .debug_dpc_o(unused_debug_dpc), .debug_dcsr_o(unused_debug_dcsr), .debug_reg_valid_i(1'b0), .debug_reg_write_i(1'b0),
@@ -112,17 +112,17 @@ module cpu5_control_fetch_tb;
     .mcountinhibit_o(unused_mcountinhibit), .mcycle_o(unused_mcycle), .minstret_o(unused_minstret)
   );
 
-  /* delay acceptance independently from the post-acceptance response schedule. */
+  // delay acceptance independently from the post-acceptance response schedule.
   function automatic int unsigned acceptance_delay(input logic [31:0] addr);
     return scenario == 2 && addr == 4 ? 18 : addr == 32'h100 ? 2 : 1;
   endfunction
 
-  /* the wrong-path reply arrives after redirect in both accepted and offered cases. */
+  // the wrong-path reply arrives after redirect in both accepted and offered cases.
   function automatic int unsigned response_delay(input logic [31:0] addr);
     return scenario == 1 && addr == 4 ? 18 : addr == 32'h100 ? 3 : 1;
   endfunction
 
-  /* target outputs depend only on its independent transaction record. */
+  // target outputs depend only on its independent transaction record.
   always_comb begin
     request_ready = target_active && !target_accepted &&
                     acceptance_wait >= acceptance_delay(target_addr) && !cold_reset;
@@ -134,14 +134,14 @@ module cpu5_control_fetch_tb;
     response_status = captured_status;
   end
 
-  /* every failure identifies the independent bridge checker. */
+  // every failure identifies the independent bridge checker.
   task automatic check(input bit condition, input string label_text);
     checks = checks + 1;
-    /* unrelated simulator exits never qualify as an intended detector. */
+    // unrelated simulator exits never qualify as an intended detector.
     if (!condition) $fatal(1, "CONTROL_FETCH_CHECK_FAILED %s case=%0d edge=%0d", label_text, scenario, edges);
   endtask
 
-  /* sample handshakes before the edge and update the target only afterward. */
+  // sample handshakes before the edge and update the target only afterward.
   task automatic cycle;
     bit req, accept, complete, launch, drop, redirect, stalled_w, output_blocked;
     logic [31:0] addr, tag;
@@ -153,51 +153,51 @@ module cpu5_control_fetch_tb;
     addr = request_addr; tag = request_tag; parcels = request_parcels;
     stalled_w = stage_valid[4] && stage_token[4].p.pc == 0 && hold[4];
     output_blocked = fetch_valid && !bridge_enable;
-    /* the fixture independently observes manager handshakes and held packet identity. */
+    // the fixture independently observes manager handshakes and held packet identity.
     if (!cold_reset) begin
       check(fetch_accept == accept && fetch_complete == complete, "handshake observations");
       check(!(launch && complete), "no completion-edge owner reuse");
       check(!redirect || !launch, "redirect prevents a new I offer");
       check(!fetch_fatal && fetch_fatal_reason == 0 && !control_fatal && control_fatal_record == '0 && !d_request_valid,
             "no fatal or data access");
-      /* numerical stream changes cannot restore an already revoked owner. */
+      // numerical stream changes cannot restore an already revoked owner.
       if (target_active && target_stale) check(fetch_discard, "sticky stale request disposition");
-      /* backpressure cannot turn the original JAL into a different packet. */
+      // backpressure cannot turn the original JAL into a different packet.
       if (output_blocked) begin
         check(fetch_pc == 0 && fetch_raw == 32'h100000ef && fetch_raw_valid == 15 &&
               fetch_kind == 2 && fetch_supported && fetch_length == 4 && !fetch_fault,
               "held original fetch packet");
       end
-      /* any useful output belongs to the selected fetch generation. */
+      // any useful output belongs to the selected fetch generation.
       if (fetch_valid) check(fetch_generation == current_generation, "active stream generation");
     end
     clk = 1; #1; clk = 0;
     edges = edges + 1;
-    /* positive isolation is used only after all preceding modeled obligations drained. */
+    // positive isolation is used only after all preceding modeled obligations drained.
     if (!cold_reset) begin
-      /* launch and first-valid observation are separate conservation counters. */
+      // launch and first-valid observation are separate conservation counters.
       if (launch) launches = launches + 1;
-      /* redirect revokes the existing target record before same-edge completion. */
+      // redirect revokes the existing target record before same-edge completion.
       if (redirect && target_active) begin
         target_stale = 1;
-        /* scenario two specifically crosses redirect while acceptance is withheld. */
+        // scenario two specifically crosses redirect while acceptance is withheld.
         if (!target_accepted && !accept && target_addr == 4) offered_across_redirect = 1;
-        /* scenario one keeps a request accepted before its later stream revocation. */
+        // scenario one keeps a request accepted before its later stream revocation.
         if (target_accepted && target_addr == 4) accepted_across_redirect = 1;
       end
-      /* a live offered descriptor cannot disappear or change before acceptance. */
+      // a live offered descriptor cannot disappear or change before acceptance.
       if (target_active && !target_accepted) begin
         check(req && addr == target_addr && tag == target_tag && parcels == target_parcels,
               "nonwithdrawable I offer");
       end
-      /* an accepted request cannot be offered again while awaiting its reply. */
+      // an accepted request cannot be offered again while awaiting its reply.
       if (target_active && target_accepted) check(!req, "no duplicate accepted offer");
-      /* a completed stale reply must drain without producing an architectural fault. */
+      // a completed stale reply must drain without producing an architectural fault.
       if (complete) begin
         check(target_active && target_accepted, "response owns an accepted request");
         check((drop ^ (mutate_stale_drop && scenario != 0 && target_addr == 4)) == target_stale,
               "live versus stale reply disposition");
-        /* both delayed wrong-path errors must occur after actual invalidation. */
+        // both delayed wrong-path errors must occur after actual invalidation.
         if (scenario != 0 && target_addr == 4) begin
           check(target_stale && captured_fault == 3 && drop, "wrong-path access error discarded");
           stale_errors = stale_errors + 1;
@@ -205,7 +205,7 @@ module cpu5_control_fetch_tb;
         target_active = 0; target_accepted = 0; response_pending = 0;
         completions = completions + 1;
       end
-      /* target memory data are sampled once at physical acceptance. */
+      // target memory data are sampled once at physical acceptance.
       else if (accept) begin
         check(target_active && !target_accepted, "single physical acceptance");
         target_accepted = 1;
@@ -213,56 +213,56 @@ module cpu5_control_fetch_tb;
         response_wait = 0;
         captured_data = ram[target_addr[12:2]];
         captured_fault = 0; captured_status = 0;
-        /* the allowed target rejects its requested beat without bus side effects. */
+        // the allowed target rejects its requested beat without bus side effects.
         if (scenario == 0 && target_addr == 32'h100) begin
           captured_data = 0; captured_fault = 3; captured_status = 1;
         end
-        /* stale fault parcels remain canonical even though they will be discarded. */
+        // stale fault parcels remain canonical even though they will be discarded.
         else if (scenario != 0 && target_addr == 4) begin
           captured_data = 0; captured_fault = 3;
         end
       end
-      /* response latency starts only after the independently scheduled acceptance. */
+      // response latency starts only after the independently scheduled acceptance.
       else if (target_active && target_accepted && !response_pending) begin
-        /* hold the final response stable until the actual ready handshake. */
+        // hold the final response stable until the actual ready handshake.
         if (response_wait >= response_delay(target_addr)) response_pending = 1;
-        /* continue the independent response timer before its selected deadline. */
+        // continue the independent response timer before its selected deadline.
         else response_wait = response_wait + 1;
       end
-      /* acceptance latency is independent of downstream instruction readiness. */
+      // acceptance latency is independent of downstream instruction readiness.
       else if (target_active && !target_accepted) acceptance_wait = acceptance_wait + 1;
-      /* first valid creates exactly one responder-side offered record. */
+      // first valid creates exactly one responder-side offered record.
       else if (req) begin
         check(addr < 8192 && addr[1:0] == 0 && parcels == 3 && tag == 32'(offers),
               "RAM request identity and width");
-        /* target access cannot precede the source jump's architectural completion. */
+        // target access cannot precede the source jump's architectural completion.
         if (addr == 32'h100) check(normal_records == 1, "target fetch follows retired JAL");
         target_active = 1; target_accepted = 0; target_stale = redirect;
         target_addr = addr; target_tag = tag; target_parcels = parcels;
         acceptance_wait = 0;
         offers = offers + 1;
-        /* prove that a wrong-path request existed, rather than merely assuming one. */
+        // prove that a wrong-path request existed, rather than merely assuming one.
         if (addr == 4) wrongpath_offered = 1;
-        /* first observation can coincide with revocation of an already presented offer. */
+        // first observation can coincide with revocation of an already presented offer.
         if (redirect && addr == 4) offered_across_redirect = 1;
       end
-      /* hold the real fetch packet for four clocks before allowing F admission. */
+      // hold the real fetch packet for four clocks before allowing F admission.
       if (output_blocked) begin
         held_output = held_output + 1;
-        /* release only after repeated stable-output observations. */
+        // release only after repeated stable-output observations.
         if (held_output == 4) bridge_enable = 1;
       end
-      /* keep W occupied long enough to expose duplicate redirect or link commits. */
+      // keep W occupied long enough to expose duplicate redirect or link commits.
       if (stalled_w) begin
         held_writeback = held_writeback + 1;
         check(!trace_record.valid && !redirect_valid, "held W has no retirement or redirect");
-        /* the release waits for a concrete wrong-path transaction. */
+        // the release waits for a concrete wrong-path transaction.
         if (held_writeback >= 5 && wrongpath_offered) hold[4] = 0;
       end
-      /* the supplied sentinel is deliberately outside this control-only bridge. */
+      // the supplied sentinel is deliberately outside this control-only bridge.
       if (trace_record.valid) begin
         check(inspect_defined && inspect_value == 4, "retired link retained");
-        /* the source JAL retires before any target failure and writes its link once. */
+        // the source JAL retires before any target failure and writes its link once.
         if (!trace_record.trap) begin
           check(trace_record.packet.pc == 0 && trace_record.packet.raw == 32'h100000ef &&
                 trace_record.packet.raw_valid == 15 && trace_record.packet.length == 4 &&
@@ -272,7 +272,7 @@ module cpu5_control_fetch_tb;
           normal_records = normal_records + 1;
           jump_redirects = jump_redirects + 1;
         end
-        /* target bus rejection and the successful-fetch sentinel have distinct faults. */
+        // target bus rejection and the successful-fetch sentinel have distinct faults.
         else begin
           check(normal_records == 1 && trace_record.packet.pc == 32'h100 &&
                 (trace_record.packet.cause ^ (mutate_target_fault && scenario == 0 ? 32'd1 : 32'd0)) ==
@@ -289,12 +289,12 @@ module cpu5_control_fetch_tb;
           run_enable = 0;
         end
       end
-      /* no autonomous redirect may appear without its same-edge terminal record. */
+      // no autonomous redirect may appear without its same-edge terminal record.
       if (redirect_valid) check(trace_record.valid, "redirect accompanies W disposition");
     end
   endtask
 
-  /* each scenario starts from an isolated, empty pair of managers. */
+  // each scenario starts from an isolated, empty pair of managers.
   task automatic start_case(input int unsigned number);
     check(!target_active && !fetch_busy, "previous transaction drainage");
     scenario = number;
@@ -304,7 +304,7 @@ module cpu5_control_fetch_tb;
     held_output = 0; held_writeback = 0; stale_errors = 0;
     wrongpath_offered = 0; terminal_seen = 0; offered_across_redirect = 0;
     accepted_across_redirect = 0;
-    /* ordinary RAM words provide a non-control sentinel for this restricted bridge. */
+    // ordinary RAM words provide a non-control sentinel for this restricted bridge.
     for (int word_index = 0; word_index < 2048; word_index = word_index + 1) ram[word_index] = 32'h00000013;
     ram[0] = 32'h100000ef;
     cycle(); cycle();
@@ -314,22 +314,22 @@ module cpu5_control_fetch_tb;
     run_enable = 1;
   endtask
 
-  /* prove actual target errors and stale error drainage through the connected modules. */
+  // prove actual target errors and stale error drainage through the connected modules.
   initial begin
     mutate_target_fault = $test$plusargs("mutate_target_fault");
     mutate_stale_drop = $test$plusargs("mutate_stale_drop");
-    /* establish defined DUT state before checking the first empty boundary. */
+    // establish defined DUT state before checking the first empty boundary.
     cold_reset = 1;
     cycle(); cycle();
     cold_reset = 0;
     cycle(); cycle();
-    /* separate accepted and unaccepted wrong-path obligations around the redirect. */
+    // separate accepted and unaccepted wrong-path obligations around the redirect.
     for (int test_case = 0; test_case < 3; test_case = test_case + 1) begin
       start_case(32'(test_case));
-      /* a finite bound turns deadlock into an explicit failing fixture result. */
+      // a finite bound turns deadlock into an explicit failing fixture result.
       for (int budget = 0; budget < 240 && !terminal_seen; budget = budget + 1) cycle();
       check(terminal_seen, "target terminal reached");
-      /* continue clocking old obligations after the architectural terminal. */
+      // continue clocking old obligations after the architectural terminal.
       for (int drain = 0; drain < 80 && (target_active || fetch_busy || redirect_valid); drain = drain + 1) cycle();
       check(!target_active && !fetch_busy && stage_valid == 0, "terminal drainage");
       check(offers == accepts && accepts == completions && launches == offers,

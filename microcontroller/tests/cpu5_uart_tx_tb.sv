@@ -1,4 +1,4 @@
-/* check UART framing, FIFO ownership, overflow and reset against a byte queue. */
+// check UART framing, FIFO ownership, overflow and reset against a byte queue.
 module cpu5_uart_tx_tb;
   parameter integer CLOCK_HZ = 80000000;
   localparam integer BAUD = 115200;
@@ -20,20 +20,20 @@ module cpu5_uart_tx_tb;
   integer cycles = 0;
   bit expected_bit;
 
-  /* observe only public serial and queue-status outputs. */
+  // observe only public serial and queue-status outputs.
   cpu5_uart_tx #(.CLOCK_HZ(CLOCK_HZ), .BAUD(BAUD)) dut (
     .clk_i(clk), .reset_i(reset), .valid_i(valid), .data_i(data),
     .tx_o(tx), .busy_o(busy), .overflow_o(overflow), .queued_o(queued)
   );
 
-  /* check every serial clock against the queued character's independent 8N1 frame. */
+  // check every serial clock against the queued character's independent 8N1 frame.
   task automatic tick;
     #1;
     clk = 1;
     #1;
     cycles++;
     if (cycles > 3000000) $fatal(1, "UART progress deadline");
-    /* reset invalidates all outstanding diagnostics, including a partial character. */
+    // reset invalidates all outstanding diagnostics, including a partial character.
     if (reset) begin
       discarded += expected.size() + integer'(receiving);
       expected.delete();
@@ -42,25 +42,25 @@ module cpu5_uart_tx_tb;
       if (tx !== 1 || busy !== 0 || queued !== 0 || overflow !== 0)
         $fatal(1, "UART reset outputs");
       checks++;
-    /* decode only outside reset. */
+    // decode only outside reset.
     end else begin
-      /* the start bit claims exactly one queued expectation. */
+      // the start bit claims exactly one queued expectation.
       if (!receiving && tx === 0) begin
         if (expected.size() == 0) $fatal(1, "unexpected UART character");
         current = expected.pop_front();
         receiving = 1;
         frame_clock = 0;
-      /* a running frame advances exactly once per input clock. */
+      // a running frame advances exactly once per input clock.
       end else if (receiving) begin
         frame_clock++;
-        /* ten complete bit periods precede frame completion. */
+        // ten complete bit periods precede frame completion.
         if (frame_clock == 10 * DIVISOR) begin
           if (tx !== 1) $fatal(1, "UART stop period shortened");
           receiving = 0;
           completed++;
         end
       end
-      /* validate all clocks, including boundaries that midpoint decoding could miss. */
+      // validate all clocks, including boundaries that midpoint decoding could miss.
       if (receiving) begin
         if (frame_clock < DIVISOR) expected_bit = 0;
         else if (frame_clock >= 9 * DIVISOR) expected_bit = 1;
@@ -74,11 +74,11 @@ module cpu5_uart_tx_tb;
     #1;
   endtask
 
-  /* callers declare which offered bytes the finite-capacity contract admits. */
+  // callers declare which offered bytes the finite-capacity contract admits.
   task automatic offer(input byte unsigned value, input bit admit);
     valid = 1;
     data = value;
-    /* acceptance expectations are independent of the DUT's internal write pointer. */
+    // acceptance expectations are independent of the DUT's internal write pointer.
     if (admit) begin
       expected.push_back(value);
       accepted++;
@@ -87,24 +87,24 @@ module cpu5_uart_tx_tb;
     valid = 0;
   endtask
 
-  /* drain under the explicit free-running clock assumption. */
+  // drain under the explicit free-running clock assumption.
   task automatic drain;
     while (busy || receiving || expected.size() != 0) tick();
     repeat (3) tick();
   endtask
 
-  /* cover full capacity, simultaneous refill, overflow, wrap and partial-frame reset. */
+  // cover full capacity, simultaneous refill, overflow, wrap and partial-frame reset.
   initial begin
     repeat (3) tick();
     reset = 0;
     offer(8'h55, 1);
     while (!receiving) tick();
-    /* hold one serializer byte plus all sixty-four FIFO slots. */
+    // hold one serializer byte plus all sixty-four FIFO slots.
     for (integer i = 0; i < 64; i++) offer(8'(i ^ 8'ha6), 1);
     if (queued != 64 || overflow) $fatal(1, "UART full queue setup");
     while (completed != 1) tick();
     if (queued != 64) $fatal(1, "UART full queue lost bytes");
-    /* the next edge dequeues and refills a full FIFO without loss. */
+    // the next edge dequeues and refills a full FIFO without loss.
     offer(8'he1, 1);
     if (queued != 64 || overflow) $fatal(1, "UART simultaneous full dequeue/refill");
     offer(8'hde, 0);
@@ -112,7 +112,7 @@ module cpu5_uart_tx_tb;
     drain();
     if (completed != 66 || accepted != 66 || !overflow)
       $fatal(1, "UART exact-once burst or sticky overflow");
-    /* idle reset clears the failure latch and both pointer generations. */
+    // idle reset clears the failure latch and both pointer generations.
     reset = 1;
     tick();
     reset = 0;
