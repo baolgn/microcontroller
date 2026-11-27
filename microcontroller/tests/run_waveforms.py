@@ -566,15 +566,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verilator', default='verilator')
     parser.add_argument('--gtkwave', default='gtkwave')
-    parser.add_argument('--build', type=Path, required=True)
+    parser.add_argument('--build', type=Path, help='new build directory; required unless --list is given')
     parser.add_argument('--output', type=Path, default=ROOT / 'docs/waveforms')
     parser.add_argument('--figure', action='append', default=[])
-    parser.add_argument('--list', action='store_true')
+    parser.add_argument('--list', action='store_true', help='print the figure names and exit')
     args = parser.parse_args()
     # listing names the available figures without running anything.
     if args.list:
         print('\n'.join(f'{figure["id"]}: {figure["title"]}' for figure in FIGURES))
         return
+    # every other mode builds benches and needs somewhere to put them.
+    if args.build is None:
+        parser.error('the following arguments are required: --build')
     selected = [figure for figure in FIGURES if not args.figure or figure['id'] in args.figure]
     unknown = set(args.figure) - {figure['id'] for figure in FIGURES}
     # unknown names indicate a mistyped request.
