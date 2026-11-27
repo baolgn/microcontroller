@@ -1,5 +1,6 @@
-"""parse traced VCD dumps, sample them at clock edges and export cycle windows through gtkwave."""
+"""parse traced VCD dumps, sample them at clock edges and export or prepare cycle windows for gtkwave."""
 import contextlib
+import math
 import os
 import shutil
 import subprocess
@@ -268,13 +269,17 @@ def sample(changes, times):
 FLAGS = {'bit': '@28', 'bin': '@28', 'hex': '@22', 'dec': '@24'}
 # tcl metacharacters are rejected in marker labels, which are passed literally.
 TCL_UNSAFE = set('"\\[]{}$;')
+# an interactive view opens at this window width; the margin is what gtkwave draws beside the two panes.
+VIEW_WIDTH, VIEW_MARGIN = 1500, 70
+# at zoom z, gtkwave draws 2**-z time units across one frame of this many pixels.
+ZOOM_FRAME = 200
+# gtkwave keeps twenty-six named markers, lettered from A.
+MARKER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
-def save_file(path, dump, traces, width, signals_width):
-    """write a gtkwave save file that loads one dump and lists aliased traces in order."""
-    lines = [f'[dumpfile] "{dump}"', '[timestart] 0', f'[size] {width} {120 + 21 * len(traces)}', '[pos] 0 0',
-             '[sst_expanded] 0', '[sst_width] 1', f'[signals_width] {signals_width}']
-    flag = None
+def trace_lines(traces):
+    """return the save-file lines that list aliased traces in order with their display formats."""
+    lines, flag = [], None
     # a format line applies to every following trace until the next format line.
     for fmt, alias, name in traces:
         # emit a format line only when the format changes.
@@ -282,7 +287,37 @@ def save_file(path, dump, traces, width, signals_width):
             flag = FLAGS[fmt]
             lines.append(flag)
         lines.append(f'+{{{alias}}} {name}')
-    Path(path).write_text('\n'.join(lines) + '\n')
+    return lines
+
+
+def save_file(path, dump, traces, width, signals_width):
+    """write a gtkwave save file that loads one dump and lists aliased traces in order."""
+    lines = [f'[dumpfile] "{dump}"', '[timestart] 0', f'[size] {width} {120 + 21 * len(traces)}', '[pos] 0 0',
+             '[sst_expanded] 0', '[sst_width] 1', f'[signals_width] {signals_width}']
+    Path(path).write_text('\n'.join(lines + trace_lines(traces)) + '\n')
+
+
+def view_file(path, dump, traces, start, end, markers):
+    """write a gtkwave save file that itself carries the time window and named markers of one figure."""
+    signals_width = max(190, 9 * max(len(alias) for _, alias, _ in traces) + 50)
+    pixels = max(200, VIEW_WIDTH - signals_width - VIEW_MARGIN)
+    # the window must fit the wave pane, so a longer window needs a more negative zoom.
+    zoom = -math.log2((end - start) * ZOOM_FRAME / pixels)
+    times = ['-1'] * len(MARKER_LETTERS)
+    names = []
+    # each named marker fills the slot of its letter; unused slots stay at -1.
+    for letter, time, label in markers:
+        # a marker needs one known letter, and its label is the rest of a save-file line.
+        if len(letter) != 1 or letter not in MARKER_LETTERS or '\n' in label or '\r' in label:
+            raise ValueError(f'unsafe marker: {letter!r} {label!r}')
+        times[MARKER_LETTERS.index(letter)] = str(time)
+        names.append(f'[markername] {letter}{label}')
+    # the second field of the zoom line is the primary marker, which a view leaves unset.
+    lines = [f'[dumpfile] "{dump}"', f'[timestart] {max(0, start)}',
+             f'[size] {VIEW_WIDTH} {150 + 24 * len(traces)}', '[pos] -1 -1',
+             f'*{zoom:.6f} -1 ' + ' '.join(times), *names,
+             '[sst_expanded] 0', '[sst_width] 1', f'[signals_width] {signals_width}']
+    Path(path).write_text('\n'.join(lines + trace_lines(traces)) + '\n')
 
 
 def grab_script(path, start, end, markers, image):
