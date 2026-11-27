@@ -45,7 +45,7 @@ python3 -B microcontroller/tests/run_waveforms.py \
   --build /tmp/cpu5-waveforms-new
 ```
 
-`--list` prints the figure names. Repeated `--figure NAME` options export a subset without rewriting the manifest. Each bench directory keeps the complete dump beside the figure's save file, so `gtkwave NAME.vcd NAME.gtkw` run in that directory reopens the same view for unrestricted inspection.
+`--list` prints the figure names and needs no other option; every other mode requires `--build`. Repeated `--figure NAME` options export a subset without rewriting the manifest. Each bench directory keeps the complete dump beside the figure's save file, so `gtkwave NAME.vcd NAME.gtkw` run in that directory reloads the figure's traces for unrestricted inspection. The zoom range and markers of an export exist only in its Tcl script. An [interactive view](#interactive-views) writes them into the save file instead.
 
 Read the figures as follows:
 
@@ -55,6 +55,30 @@ Read the figures as follows:
 - Named markers sit on the clock edge of each event, and their labels match the captions.
 
 Each figure illustrates one passing run of the sources and tools recorded in the manifest. It does not extend a result to other seeds or profiles and does not qualify hardware timing.
+
+### Interactive views
+
+Repeated `--view NAME` options prepare figures for GTKWave without exporting them. The runner builds, simulates and checks each named figure exactly as it does for an export, then stops before it starts a display server or GTKWave. In the bench directory below the build directory it links `NAME.vcd` to the complete dump and writes `NAME.gtkw` through `view_file()` in [waveform_render.py](waveform_render.py). Nothing under `docs/waveforms/` changes, and `--view` cannot be combined with `--figure`.
+
+The save file selects the same traces, aliases and display formats as the export, and it also carries what the export passes through its Tcl script. `[timestart]` sets the left edge of the cycle window. The line that starts with `*` holds the zoom, an unset primary marker and the times of the 26 named markers, with `-1` for every unused one. One `[markername]` line per event marker holds its letter and label. GTKWave draws `2**-zoom` time units in every 200 pixels, so the zoom follows from the window length and the 1500-pixel window the view requests. GTKWave reads these lines when it loads the save file, which leaves the window free to be scrolled, zoomed and extended with other signals of the dump.
+
+This mode needs Verilator alone. It therefore also serves a host that cannot run the export, such as macOS, which has no `Xvfb`, and a GTKWave build without the Tcl interface, such as the 4.0 pre-release in the OSS CAD Suite for macOS. Use a new build directory:
+
+```sh
+python3 -B microcontroller/tests/run_waveforms.py \
+  --verilator verilator \
+  --build /tmp/cpu5-waveform-views-new \
+  --view branch-redirect
+```
+
+Each `VIEW` line of the output names the save file it wrote, and `VIEWS_PASS` ends a run in which every named figure passed its checks. Open a view from its bench directory:
+
+```sh
+cd /tmp/cpu5-waveform-views-new/base-forwarded
+gtkwave branch-redirect.vcd branch-redirect.gtkw
+```
+
+Figures of the same bench share one build within a run; `pipeline-overlap`, `load-use-stall` and `branch-redirect` all use `base-forwarded`. A view is not a published figure. It adds no manifest entry, and it shows what the sources and tools of that run produce, which need not be the tools the manifest records.
 
 ## Interpreting results
 
