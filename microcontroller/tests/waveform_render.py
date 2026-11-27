@@ -271,7 +271,7 @@ FLAGS = {'bit': '@28', 'bin': '@28', 'hex': '@22', 'dec': '@24'}
 TCL_UNSAFE = set('"\\[]{}$;')
 # an interactive view opens at this window width; the margin is what gtkwave draws beside the two panes.
 VIEW_WIDTH, VIEW_MARGIN = 1500, 70
-# at zoom z, gtkwave draws 2**-z time units across one frame of this many pixels.
+# at zoom z, gtkwave draws the whole part of 2**-z time units across one frame of this many pixels.
 ZOOM_FRAME = 200
 # gtkwave keeps twenty-six named markers, lettered from A.
 MARKER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -302,7 +302,8 @@ def view_file(path, dump, traces, start, end, markers):
     signals_width = max(190, 9 * max(len(alias) for _, alias, _ in traces) + 50)
     pixels = max(200, VIEW_WIDTH - signals_width - VIEW_MARGIN)
     # the window must fit the wave pane, so a longer window needs a more negative zoom.
-    zoom = -math.log2((end - start) * ZOOM_FRAME / pixels)
+    # gtkwave truncates the time units per frame, so the count is rounded up to keep the last cycles in view.
+    zoom = -math.log2(max(1, math.ceil((end - start) * ZOOM_FRAME / pixels)))
     times = ['-1'] * len(MARKER_LETTERS)
     names = []
     # each named marker fills the slot of its letter; unused slots stay at -1.
