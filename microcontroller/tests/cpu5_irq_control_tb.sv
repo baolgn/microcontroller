@@ -95,6 +95,8 @@ module cpu5_irq_control_tb #(parameter bit C_ENABLED = 0);
   bit last_idle = 0, flush_pending = 0;
   logic [31:0] flush_target = 0;
   int seed = 1, random_state = 1;
+  /* containment cases select the identity limit here instead of assigning the DUT counter. */
+  bit uid_limit = 0;
 
   /* reject a mismatch before observed state can replace an independent expectation. */
   function automatic void check(input bit condition, input string message);
@@ -1044,7 +1046,8 @@ module cpu5_irq_control_tb #(parameter bit C_ENABLED = 0);
     /* entry selection owns allocation veto even at the otherwise unreachable UID limit. */
     reset_case(); configure(); fetch_busy_i = 1;
     count_irq = interrupts; count_retired = retired; manual_levels = 'h800; tick();
-    dut.uid_q = 64'hffffffffffffffff;
+    /* one force overrides the counter from here on: the limit while selected, else the scoreboard's count. */
+    uid_limit = 1; force dut.uid_q = uid_limit ? 64'hffffffffffffffff : next_uid;
     in_packet_i = '0; in_packet_i.op = OP_MACHINE; in_packet_i.raw = 'h13;
     in_packet_i.pc = issue_pc; in_packet_i.length = 4; in_packet_i.raw_valid = 15;
     in_valid_i = 1; fetch_busy_i = 0; await_irq(count_irq); in_valid_i = 0;
@@ -1056,8 +1059,8 @@ module cpu5_irq_control_tb #(parameter bit C_ENABLED = 0);
         fatal_record_o.uid == 64'hffffffffffffffff && fatal_record_o.pc == issue_pc &&
         interrupts == count_irq + 1 && retired == count_retired, "permitted UID exhaustion escaped containment");
     /* WFI likewise vetoes allocation until a locally enabled source wakes the hart. */
-    reset_case(); configure(8, 0); send('h10500073); drain();
-    dut.uid_q = 64'hffffffffffffffff;
+    uid_limit = 0; reset_case(); configure(8, 0); send('h10500073); drain();
+    uid_limit = 1;
     in_packet_i = '0; in_packet_i.op = OP_MACHINE; in_packet_i.raw = 'h13;
     in_packet_i.pc = issue_pc; in_packet_i.length = 4; in_packet_i.raw_valid = 15;
     in_valid_i = 1; count_irq = interrupts; count_retired = retired; repeat (4) tick();
@@ -1066,7 +1069,7 @@ module cpu5_irq_control_tb #(parameter bit C_ENABLED = 0);
     allow_fatal = 1; tick(); in_valid_i = 0;
     check(fatal_o && fatal_record_o.reason == 5 && interrupts == count_irq && retired == count_retired,
         "post-WFI permitted UID exhaustion escaped containment");
-    reset_case();
+    uid_limit = 0; reset_case();
   endtask
 
   /* initialize all ledgers before the first reset edge. */

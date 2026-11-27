@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""run traced simulation fixtures and export their cycle windows from gtkwave as figures for the guides."""
+"""run traced simulation fixtures and export their cycle windows from gtkwave as figures, or prepare them as views."""
 import argparse
 import datetime
 import hashlib
@@ -561,26 +561,56 @@ def tool(command, names):
             'executable_sha256': digest(binary)}
 
 
+def prepare_views(selected, build_root, verilator):
+    """check the selected figures and write save files that gtkwave opens by hand, without any export."""
+    cache, runs = {}, {}
+    # each view is written as soon as its figure has been built, simulated and checked.
+    for figure in selected:
+        view, record = produce(figure, build_root, verilator, cache, runs)
+        directory, name = view['dump'].parent, figure['id']
+        (directory / f'{name}.vcd').symlink_to(view['dump'].name)
+        wave.view_file(directory / f'{name}.gtkw', f'{name}.vcd', view['traces'], *view['times'],
+                       [(m['name'], m['time'], m['label']) for m in view['markers']])
+        print(f'VIEW {name} cycles={record["window_cycles"][0]}-{record["window_cycles"][1]} '
+              f'{directory / (name + ".gtkw")}', flush=True)
+    print(f'VIEWS_PASS figures={len(selected)} build={build_root}')
+
+
 def main():
-    """parse arguments, export the selected figures from gtkwave and write their manifest."""
+    """parse arguments, then list the figures, prepare views or export figures with their manifest."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verilator', default='verilator')
     parser.add_argument('--gtkwave', default='gtkwave')
-    parser.add_argument('--build', type=Path, required=True)
+    parser.add_argument('--build', type=Path, help='new build directory; required unless --list is given')
     parser.add_argument('--output', type=Path, default=ROOT / 'docs/waveforms')
-    parser.add_argument('--figure', action='append', default=[])
-    parser.add_argument('--list', action='store_true')
+    parser.add_argument('--figure', action='append', default=[], metavar='NAME',
+                        help='export only this figure and leave the manifest alone; repeatable')
+    parser.add_argument('--view', action='append', default=[], metavar='NAME',
+                        help='check this figure and write its gtkwave save file with zoom and markers, '
+                             'without export; repeatable')
+    parser.add_argument('--list', action='store_true', help='print the figure names and exit')
     args = parser.parse_args()
     # listing names the available figures without running anything.
     if args.list:
         print('\n'.join(f'{figure["id"]}: {figure["title"]}' for figure in FIGURES))
         return
-    selected = [figure for figure in FIGURES if not args.figure or figure['id'] in args.figure]
-    unknown = set(args.figure) - {figure['id'] for figure in FIGURES}
+    # every other mode builds benches and needs somewhere to put them.
+    if args.build is None:
+        parser.error('the following arguments are required: --build')
+    # a view never reaches the export, so one run cannot do both.
+    if args.view and args.figure:
+        parser.error('--view and --figure cannot be combined')
+    names = args.view or args.figure
+    selected = [figure for figure in FIGURES if not names or figure['id'] in names]
+    unknown = set(names) - {figure['id'] for figure in FIGURES}
     # unknown names indicate a mistyped request.
     if unknown:
         raise SystemExit('unknown figure: ' + ', '.join(sorted(unknown)))
     args.build.mkdir(parents=True, exist_ok=False)
+    # a view run stops here: no display server, no gtkwave process and no published file.
+    if args.view:
+        prepare_views(selected, args.build.resolve(), args.verilator)
+        return
     args.output.mkdir(parents=True, exist_ok=True)
     rcfile = args.build.resolve() / 'gtkwaverc'
     # a private rc file keeps a personal gtkwave configuration out of the exported images.
